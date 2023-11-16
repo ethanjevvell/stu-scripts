@@ -1,0 +1,30 @@
+﻿STU DOCK LIGHT AUTOMATOR
+------
+
+This script creates a "landing pad" effect for docks of arbitrary size. Read these instructions carefully to properly configure your dock lights.
+
+First, you will need the following blocks:
+1. One Programmable Block (you've already got one if you're reading this!)
+2. One Event Controller
+3. Two Timer Blocks
+4. A motion sensor of your choice
+5. Two parellel sets of Interior Lights. For instance: [L1, L2, L3] and [R1, R2, R3], where L means "left" and R "right". There must be an equal number of lights in each set.
+
+The blocks must be configured as follows:
+1. Programmable Block 
+	-- Load in this script.
+	-- Above the constructor, be sure to insert the names of the lights you want the script to operate on as an array of strings.
+	-- Names must match exactly.
+2. Event Controller 
+	-- Connect the event controller's trigger to be someone docking at your chosen connector.
+	-- In "Select Actions", configure the first hotbar slot to "Trigger Now" your first Timer Block, which we will call the "Stop" Timer Block.
+	-- Configure the second hotbar slot to "Trigger Now" the second Timer Block, which we will call the "Start" Timer Block.
+3. Timer Blockers
+	-- Start: 1 second delay; first hotbar slot toggles the Programmable Block on; second slot should "Run" the Programmable Block.
+	-- Stop: 1 second delay; first hotbar slot toggles the Programmable Block off; second slot should turn all dock lights on.
+4. Motion Sensor
+	-- Configure the activation distances however you please, and if you want it to work for only ships, etc.
+	-- In "Select Actions", configure the first hotbar slot to "Trigger Now" the Start Timer Block.
+	-- Configure the second hotbar slot to "Trigger Now" the Stop Timer Block.
+5. Lights
+	-- Just be sure you have two equal-sized groups of lights
