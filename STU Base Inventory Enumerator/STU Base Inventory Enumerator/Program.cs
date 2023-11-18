@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame;
 
@@ -43,38 +44,23 @@ namespace IngameScript
             }
         }
 
-        public void displayMaterialCounts(MaterialDictionary materialClass)
+        public void echoMaterialCounts(MaterialDictionary materialClass)
         {
             Echo(materialClass.readableName);
             Echo("------");
             foreach (var material in materialClass.materialCounts.Keys)
             {
-                Echo($"{material}: {materialClass.materialCounts[material]}");
+                int quantity = (int)Math.Round(materialClass.materialCounts[material]);
+                Echo($"{material}: {quantity} kg");
             }
             Echo("");
         }
 
-        public string getMaterialCountsString()
-        {
-            string output = "";
-            foreach (var dict in materialDictionaries.Keys)
-            {
-                output += materialDictionaries[dict].readableName;
-                output += "\n-----\n";
-                foreach (var material in materialDictionaries[dict].materialCounts.Keys)
-                {
-                    output += $"{material}: {materialDictionaries[dict].materialCounts[material]}\n";
-                }
-                output += "\n";
-            }
-            return output;
-        }
-
-        public void displayAllMaterialCounts()
+        public void echoAllMaterialCounts()
         {
             foreach (var dict in materialDictionaries.Keys)
             {
-                displayMaterialCounts(materialDictionaries[dict]);
+                echoMaterialCounts(materialDictionaries[dict]);
             }
         }
 
@@ -130,21 +116,19 @@ namespace IngameScript
         {
             resetMaterialCounts();
             countMaterials();
-            displayAllMaterialCounts();
 
-            IMyTextPanel display = GridTerminalSystem.GetBlockWithName("TEST_LCD") as IMyTextPanel;
-            if (display != null)
-            {
-                var result = display.WriteText(getMaterialCountsString());
-                if (result == true)
-                {
-                    Echo("Success writing");
-                }
-                else
-                {
-                    Echo("Error writing");
-                }
-            }
+            IMyBlockGroup ingotSubscribers = GridTerminalSystem.GetBlockGroupWithName("INGOT_LCDS");
+            IMyBlockGroup oreSubscribers = GridTerminalSystem.GetBlockGroupWithName("ORE_LCDS");
+            IMyBlockGroup componentSubscribers = GridTerminalSystem.GetBlockGroupWithName("COMPONENT_LCDS");
+
+            DisplayService ingotDisplayService = new DisplayService(materialDictionaries, ItemType.MyObjectBuilder_Ingot, ingotSubscribers, Echo);
+            DisplayService oreDisplayService = new DisplayService(materialDictionaries, ItemType.MyObjectBuilder_Ore, oreSubscribers, Echo);
+            DisplayService componentService = new DisplayService(materialDictionaries, ItemType.MyObjectBuilder_Component, componentSubscribers, Echo);
+
+            ingotDisplayService.publish();
+            oreDisplayService.publish();
+            componentService.publish();
+
         }
     }
 }
