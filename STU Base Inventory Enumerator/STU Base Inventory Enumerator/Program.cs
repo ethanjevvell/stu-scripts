@@ -1,83 +1,150 @@
-﻿using Sandbox.Game.EntityComponents;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
-using SpaceEngineers.Game.ModAPI.Ingame;
-using System;
-using System.Collections;
+﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using VRage;
-using VRage.Collections;
-using VRage.Game;
-using VRage.Game.Components;
-using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame;
-using VRage.Game.ModAPI.Ingame.Utilities;
-using VRage.Game.ObjectBuilders.Definitions;
-using VRageMath;
 
 namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        // This file contains your actual script.
-        //
-        // You can either keep all your code here, or you can create separate
-        // code files to make your program easier to navigate while coding.
-        //
-        // In order to add a new utility class, right-click on your project, 
-        // select 'New' then 'Add Item...'. Now find the 'Space Engineers'
-        // category under 'Visual C# Items' on the left hand side, and select
-        // 'Utility Class' in the main area. Name it in the box below, and
-        // press OK. This utility class will be merged in with your code when
-        // deploying your final script.
-        //
-        // You can also simply create a new utility class manually, you don't
-        // have to use the template if you don't want to. Just do so the first
-        // time to see what a utility class looks like.
-        // 
-        // Go to:
-        // https://github.com/malware-dev/MDK-SE/wiki/Quick-Introduction-to-Space-Engineers-Ingame-Scripts
-        //
-        // to learn more about ingame scripts.
+
+        public enum ItemType
+        {
+            MyObjectBuilder_Ingot,
+            MyObjectBuilder_Ore,
+            MyObjectBuilder_Component
+        }
+
+
+        MaterialDictionary ingotDictionary = new MaterialDictionary(ItemType.MyObjectBuilder_Ingot, "Ingots");
+        MaterialDictionary oreDictionary = new MaterialDictionary(ItemType.MyObjectBuilder_Ore, "Ores");
+        MaterialDictionary componentDictionary = new MaterialDictionary(ItemType.MyObjectBuilder_Component, "Components");
+
+        List<IMyTerminalBlock> inventories = new List<IMyTerminalBlock>();
+        Dictionary<string, MaterialDictionary> materialDictionaries = new Dictionary<string, MaterialDictionary>();
 
         public Program()
         {
-            // The constructor, called only once every session and
-            // always before any other method is called. Use it to
-            // initialize your script. 
-            //     
-            // The constructor is optional and can be removed if not
-            // needed.
-            // 
-            // It's recommended to set Runtime.UpdateFrequency 
-            // here, which will allow your script to run itself without a 
-            // timer block.
+            inventories = getInventories();
+            materialDictionaries.Add(ingotDictionary.category, ingotDictionary);
+            materialDictionaries.Add(oreDictionary.category, oreDictionary);
+            materialDictionaries.Add(componentDictionary.category, componentDictionary);
         }
 
-        public void Save()
+        public class MaterialDictionary
         {
-            // Called when the program needs to save its state. Use
-            // this method to save your state to the Storage field
-            // or some other means. 
-            // 
-            // This method is optional and can be removed if not
-            // needed.
+            public Dictionary<string, double> materialCounts = new Dictionary<string, double>();
+            public string category;
+            public string readableName;
+
+            public MaterialDictionary(ItemType category, string readableName)
+            {
+                this.category = category.ToString();
+                this.readableName = readableName;
+            }
         }
 
-        public void Main(string argument, UpdateType updateSource)
+        public void displayMaterialCounts(MaterialDictionary materialClass)
         {
-            // The main entry point of the script, invoked every time
-            // one of the programmable block's Run actions are invoked,
-            // or the script updates itself. The updateSource argument
-            // describes where the update came from. Be aware that the
-            // updateSource is a  bitfield  and might contain more than 
-            // one update type.
-            // 
-            // The method itself is required, but the arguments above
-            // can be removed if not needed.
+            Echo(materialClass.readableName);
+            Echo("------");
+            foreach (var material in materialClass.materialCounts.Keys)
+            {
+                Echo($"{material}: {materialClass.materialCounts[material]}");
+            }
+            Echo("");
+        }
+
+        public string getMaterialCountsString()
+        {
+            string output = "";
+            foreach (var dict in materialDictionaries.Keys)
+            {
+                output += materialDictionaries[dict].readableName;
+                output += "\n-----\n";
+                foreach (var material in materialDictionaries[dict].materialCounts.Keys)
+                {
+                    output += $"{material}: {materialDictionaries[dict].materialCounts[material]}\n";
+                }
+                output += "\n";
+            }
+            return output;
+        }
+
+        public void displayAllMaterialCounts()
+        {
+            foreach (var dict in materialDictionaries.Keys)
+            {
+                displayMaterialCounts(materialDictionaries[dict]);
+            }
+        }
+
+        public List<IMyTerminalBlock> getInventories()
+        {
+            List<IMyTerminalBlock> inventoryBlocks = new List<IMyTerminalBlock>();
+            GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(inventoryBlocks, block => block.HasInventory);
+            return inventoryBlocks;
+        }
+
+        public void countMaterials()
+        {
+            foreach (var inventory in inventories)
+            {
+                List<MyInventoryItem> inventoryItems = new List<MyInventoryItem>();
+                inventory.GetInventory(0).GetItems(inventoryItems, item => materialDictionaries.ContainsKey(item.Type.TypeId));
+
+                foreach (var item in inventoryItems)
+                {
+                    addItem(item);
+                }
+
+                if (inventory.InventoryCount > 1)
+                {
+                    inventory.GetInventory(1).GetItems(inventoryItems, item => materialDictionaries.ContainsKey(item.Type.TypeId));
+
+                    foreach (var item in inventoryItems)
+                    {
+                        addItem(item);
+                    }
+                }
+            }
+        }
+
+        public void addItem(MyInventoryItem item)
+        {
+            if (!materialDictionaries[item.Type.TypeId].materialCounts.ContainsKey(item.Type.SubtypeId))
+            {
+                materialDictionaries[item.Type.TypeId].materialCounts[item.Type.SubtypeId] = 0;
+            }
+            materialDictionaries[item.Type.TypeId].materialCounts[item.Type.SubtypeId] += (double)item.Amount;
+        }
+
+        public void resetMaterialCounts()
+        {
+            foreach (var dict in materialDictionaries.Keys)
+            {
+                materialDictionaries[dict].materialCounts.Clear();
+            }
+        }
+
+        public void Main()
+        {
+            resetMaterialCounts();
+            countMaterials();
+            displayAllMaterialCounts();
+
+            IMyTextPanel display = GridTerminalSystem.GetBlockWithName("TEST_LCD") as IMyTextPanel;
+            if (display != null)
+            {
+                var result = display.WriteText(getMaterialCountsString());
+                if (result == true)
+                {
+                    Echo("Success writing");
+                }
+                else
+                {
+                    Echo("Error writing");
+                }
+            }
         }
     }
 }

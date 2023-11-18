@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\STU Base Inventory Enumerator.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\STU Base Inventory Enumerator.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\STU Base Inventory Enumerator.pdb
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Base Inventory Enumerator\STU Base Inventory Enumerator\obj\x64\Debug\STU Base Inventory Enumerator.pdb
