@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\STU Base Gasses Manager.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\STU Base Gasses Manager.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\STU Base Gasses Manager.pdb
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Base Gasses Manager\STU Base Gasses Manager\obj\x64\Debug\STU Base Gasses Manager.pdb
