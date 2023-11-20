@@ -27,11 +27,48 @@ namespace IngameScript
                 subscribers.GetBlocks(panels);
             }
 
+            private string formatQuantity(double quantity)
+            {
+                if (quantity >= 1000000)
+                {
+                    return $"{quantity / 1000000:F2}m L";
+                }
+                else if (quantity >= 10000 && quantity <= 999999)
+                {
+                    return $"{quantity / 1000:F1}k L";
+                }
+                else if (quantity >= 1000 && quantity <= 9999)
+                {
+                    return $"{Math.Round(quantity)} L";
+                }
+                else
+                {
+                    return $"{quantity:F2} L";
+                }
+            }
+
             public string createGasDisplayString()
             {
-                string hydrogen = ($"Hydrogen level: {(gasDictionary["Hydrogen"] / hydrogenCapacity) * 100}%");
-                string oxygen = ($"Oxygen level: {(gasDictionary["Oxygen"] / oxygenCapacity) * 100}%");
-                return hydrogen + "\n" + oxygen;
+                string output = "";
+
+                double hydrogenLevel = (gasDictionary["Hydrogen"] / hydrogenCapacity) * 100;
+                double oxygenLevel = (gasDictionary["Oxygen"] / oxygenCapacity) * 100;
+
+                output += "BASE GASSES\n";
+                output += "-------------\n\n";
+                output += $"h2: [{getGasStatusBar(hydrogenLevel)}] {hydrogenLevel}%\n";
+                output += $"o2: [{getGasStatusBar(oxygenLevel)}] {oxygenLevel}%\n";
+                output += "\n";
+                output += $"Total h2 capacity: {formatQuantity(hydrogenCapacity)}\n";
+                output += $"Total o2 capacity: {formatQuantity(oxygenCapacity)}\n";
+                return output;
+            }
+
+            public string getGasStatusBar(double level)
+            {
+                int bars = (int)level / 3;
+                int spaces = 33 - bars;
+                return new string('|', bars) + new string(' ', spaces);
             }
 
             public void publish()
