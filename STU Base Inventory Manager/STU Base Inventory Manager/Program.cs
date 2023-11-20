@@ -55,6 +55,9 @@ namespace IngameScript
             ingotDisplayService = new SimpleDisplayService(ingotDictionary, ingotSubscribers, Echo);
             oreDisplayService = new SimpleDisplayService(oreDictionary, oreSubscribers, Echo);
             componentDisplayService = new SimpleDisplayService(componentDictionary, componentSubscribers, Echo);
+
+            // Script will run every 100 ticks
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public class MaterialDictionary
@@ -136,6 +139,7 @@ namespace IngameScript
 
         public void Main()
         {
+            Echo($"Previous runtime: {Runtime.LastRunTimeMs}");
             resetMaterialCounts();
             countMaterials();
 
