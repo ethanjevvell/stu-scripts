@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Base Inventory Manager", "STU Base Inventory Manager\STU Base Inventory Manager.csproj", "{D68F1C1C-65C2-4855-AB44-D8A3738CD26B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D68F1C1C-65C2-4855-AB44-D8A3738CD26B}.Debug|x64.ActiveCfg = Debug|x64
+		{D68F1C1C-65C2-4855-AB44-D8A3738CD26B}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {86A26761-B141-404C-8541-8AC140E41729}
+	EndGlobalSection
+EndGlobal
