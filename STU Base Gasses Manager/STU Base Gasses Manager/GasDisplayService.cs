@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 
 namespace IngameScript
@@ -7,6 +8,7 @@ namespace IngameScript
     {
         public class GasDisplayService
         {
+            private Action<string> Echo;
             public Dictionary<string, double> gasDictionary;
             public IMyBlockGroup subscribers;
             public List<IMyTerminalBlock> panels = new List<IMyTerminalBlock>();
@@ -14,13 +16,15 @@ namespace IngameScript
             double hydrogenCapacity;
             double oxygenCapacity;
 
-            public GasDisplayService(Dictionary<string, double> gasDictionary, IMyBlockGroup subscribers, double hydrogenCapacity, double oxygenCapacity)
+            public GasDisplayService(Dictionary<string, double> gasDictionary, IMyBlockGroup subscribers, double hydrogenCapacity, double oxygenCapacity, Action<string> Echo)
             {
                 this.gasDictionary = gasDictionary;
                 this.subscribers = subscribers;
-                subscribers.GetBlocks(panels);
                 this.hydrogenCapacity = hydrogenCapacity;
                 this.oxygenCapacity = oxygenCapacity;
+                this.Echo = Echo;
+
+                subscribers.GetBlocks(panels);
             }
 
             public string createGasDisplayString()
@@ -36,6 +40,7 @@ namespace IngameScript
                 foreach (IMyTextPanel panel in panels)
                 {
                     panel.WriteText(outputString);
+                    Echo($"Published gas stats to {panel.DisplayNameText}");
                 }
             }
         }

@@ -32,7 +32,7 @@ namespace IngameScript
             };
 
             gasSubscribers = GridTerminalSystem.GetBlockGroupWithName("GAS_LCDS");
-            gasDisplayService = new GasDisplayService(gasDictionary, gasSubscribers, HYDROGEN_CAPACITY, OXYGEN_CAPACITY);
+            gasDisplayService = new GasDisplayService(gasDictionary, gasSubscribers, HYDROGEN_CAPACITY, OXYGEN_CAPACITY, Echo);
 
             // Script will run every 100 ticks
             // Runtime.UpdateFrequency = UpdateFrequency.Update100;
@@ -41,6 +41,8 @@ namespace IngameScript
         public void getTanks()
         {
             GridTerminalSystem.GetBlocksOfType(gasTanks, tank => tank.CubeGrid == Me.CubeGrid);
+
+            // Calculate total base o2/h2 capacities
             foreach (var tank in gasTanks)
             {
                 if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
@@ -58,7 +60,6 @@ namespace IngameScript
         {
             foreach (var tank in gasTanks)
             {
-                Echo($"Calculating capacity for {tank.DisplayNameText}");
                 double capacity = tank.Capacity;
                 double filledRatio = tank.FilledRatio;
                 double quantity = filledRatio * capacity;
