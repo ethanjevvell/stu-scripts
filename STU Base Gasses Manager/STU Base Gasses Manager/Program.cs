@@ -35,7 +35,7 @@ namespace IngameScript
             gasDisplayService = new GasDisplayService(gasDictionary, gasSubscribers, HYDROGEN_CAPACITY, OXYGEN_CAPACITY, Echo);
 
             // Script will run every 100 ticks
-
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public void getTanks()
@@ -91,6 +91,8 @@ namespace IngameScript
 
         public void Main()
         {
+            Echo($"Previous runtime: {Runtime.LastRunTimeMs}");
+
             clearGasMeasurements();
             measureGas();
             gasDisplayService.publish();
