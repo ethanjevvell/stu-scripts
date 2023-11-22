@@ -215,6 +215,7 @@ namespace IngameScript
         public void Main()
         {
             Echo($"Previous runtime: {Runtime.LastRunTimeMs} ms");
+
             resetMaterialCounts();
             clearGasMeasurements();
 
@@ -224,6 +225,7 @@ namespace IngameScript
             ingotDisplayService.publish();
             oreDisplayService.publish();
             componentDisplayService.publish();
+
             gasDisplayService.publish();
         }
     }
