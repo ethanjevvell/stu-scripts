@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Master Logger", "STU Master Logger\STU Master Logger.csproj", "{BA9A333F-1DFB-4F13-819D-E8FA0588A696}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Log", "..\..\Shared Projects\Log\Log.shproj", "{80FD4E5F-CAA7-463F-AA96-3FAB4C4551B4}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Log", "..\..\Shared Projects\Logging\STU Log\STU Log.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,7 +22,7 @@ Global
 		SolutionGuid = {815C4CB9-7E79-44BC-B803-B48E266BACBA}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\..\Shared Projects\Log\Log.projitems*{80fd4e5f-caa7-463f-aa96-3fab4c4551b4}*SharedItemsImports = 13
-		..\..\Shared Projects\Log\Log.projitems*{ba9a333f-1dfb-4f13-819d-e8fa0588a696}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{ba9a333f-1dfb-4f13-819d-e8fa0588a696}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

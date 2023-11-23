@@ -1,6 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
-using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
@@ -10,15 +9,9 @@ namespace IngameScript
     {
         public class LogPublisher
         {
-            private const float FontScale = 1f;
-
-            private const string Font = "Monospace";
-
             List<IMyTerminalBlock> panels = new List<IMyTerminalBlock>();
-            Dictionary<IMyTextSurface, RectangleF> surfaceViewports = new Dictionary<IMyTextSurface, RectangleF>();
+            List<LogLCD> displays = new List<LogLCD>();
             IMyBlockGroup subscribers;
-
-            List<StuLog> Logs = new List<StuLog>();
 
             public LogPublisher(IMyBlockGroup subscribers)
             {
@@ -26,74 +19,61 @@ namespace IngameScript
                 this.subscribers.GetBlocks(panels);
                 foreach (IMyTextSurfaceProvider panel in panels)
                 {
-                    var surface = panel.GetSurface(0);
-                    surface.ScriptBackgroundColor = Color.Black;
-                    surface.ContentType = ContentType.SCRIPT;
-                    var viewport = new RectangleF((surface.TextureSize - surface.SurfaceSize) / 2f, surface.SurfaceSize);
-                    surfaceViewports.Add(surface, viewport);
+                    displays.Add(new LogLCD(panel.GetSurface(0)));
                 }
             }
 
             public void ClearPanels()
             {
-                foreach (IMyTextPanel block in panels)
+                foreach (IMyTextSurface panel in panels)
                 {
-                    block.WriteText("");
+                    panel.WriteText("");
                 }
             }
 
-            public void DrawLineOfText(ref MySpriteDrawFrame frame, ref RectangleF viewport, IMyTextSurface surface, StuLog log)
+            public void DrawLineOfText(ref MySpriteDrawFrame frame, LogLCD display, STULog log)
             {
-                var viewportStart = new Vector2(viewport.Position.X, viewport.Position.Y);
-                var senderSprite = new MySprite()
+                var logString = log.GetLogString();
+
+                var sprite = new MySprite()
                 {
                     Type = SpriteType.TEXT,
-                    Data = log.Sender,
-                    Position = viewport.Position,
-                    RotationOrScale = FontScale,
-                    Color = Color.White,
-                    FontId = Font,
+                    Data = logString,
+                    Position = display.Viewport.Position,
+                    RotationOrScale = display.Surface.FontSize,
+                    Color = STULog.GetColor(log.Type),
+                    FontId = display.Surface.Font,
                 };
 
-                frame.Add(senderSprite);
-                StringBuilder sb = new StringBuilder(log.Message);
-                Vector2 newPos = surface.MeasureStringInPixels(sb, Font, FontScale);
-                viewport.Position.X += viewport.Width - newPos.X;
-
-                var messageSprite = new MySprite()
-                {
-                    Type = SpriteType.TEXT,
-                    Data = log.Message,
-                    Position = viewport.Position,
-                    RotationOrScale = FontScale,
-                    Color = Color.White,
-                    FontId = Font,
-                };
-
-                frame.Add(messageSprite);
-
-                // return to left-hand side of screen
-                viewport.Position = viewportStart;
-                // move to next line
-                viewport.Position.Y += newPos.Y;
+                frame.Add(sprite);
             }
 
-            public void DrawLogs(ref MySpriteDrawFrame frame, RectangleF viewport, IMyTextSurface surface)
+
+            public void DrawLogs(ref MySpriteDrawFrame frame, LogLCD display)
             {
-                foreach (var log in Logs)
+                display.Viewport.Position = new Vector2(0, 0);
+
+                // Scroll effect implemented with a queue
+                if (display.Logs.Count > display.Lines)
                 {
-                    DrawLineOfText(ref frame, ref viewport, surface, log);
+                    display.Logs.Dequeue();
+                }
+
+                foreach (var log in display.Logs)
+                {
+                    DrawLineOfText(ref frame, display, log);
+                    display.GoToNextLine();
                 }
                 frame.Dispose();
             }
 
-            public void Publish(StuLog newLog)
+            public void Publish(STULog newLog)
             {
-                Logs.Add(newLog);
-                foreach (IMyTextSurface surface in surfaceViewports.Keys)
+                foreach (LogLCD display in displays)
                 {
-                    var frame = surface.DrawFrame();
-                    DrawLogs(ref frame, surfaceViewports[surface], surface);
+                    display.Logs.Enqueue(newLog);
+                    var frame = display.Surface.DrawFrame();
+                    DrawLogs(ref frame, display);
                     frame.Dispose();
                 }
             }

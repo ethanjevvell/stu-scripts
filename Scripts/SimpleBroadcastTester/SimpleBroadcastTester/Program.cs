@@ -16,11 +16,20 @@ namespace IngameScript
 
         public void Main()
         {
-            StuLog log = new StuLog { Message = $"Count: {counter}", Sender = "pb" };
-            string serializedLog = log.Serialize();
+            // cycle logtype through ok, warning and error based on counter
+            STULog.LogType logType = STULog.LogType.OK;
+            if (counter % 3 == 0)
+            {
+                logType = STULog.LogType.WARNING;
+            }
+            else if (counter % 3 == 1)
+            {
+                logType = STULog.LogType.ERROR;
+            }
+            STULog log = new STULog { Message = $"{counter}", Sender = "SMPL_BROADCAST", Type = logType };
 
             counter++;
-            IGC.SendBroadcastMessage(MASTER_LOGGER_CHANNEL, serializedLog, TransmissionDistance.CurrentConstruct);
+            IGC.SendBroadcastMessage(MASTER_LOGGER_CHANNEL, log.Serialize(), TransmissionDistance.CurrentConstruct);
         }
     }
 }
