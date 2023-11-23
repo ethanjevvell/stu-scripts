@@ -8,17 +8,22 @@ namespace IngameScript
     {
         public class STULog
         {
-            public STULog() { }
-
-            private string message;
-            private string sender;
-            private LogType type;
-
             public enum LogType
             {
                 OK,
                 ERROR,
                 WARNING,
+            }
+
+            public string Message { get; set; }
+            public string Sender { get; set; }
+            public LogType Type { get; set; }
+
+            public STULog(string sender, string message, LogType type)
+            {
+                Sender = sender;
+                Message = message;
+                Type = type;
             }
 
             /// <summary>
@@ -40,12 +45,7 @@ namespace IngameScript
                     return null;
                 }
 
-                return new STULog
-                {
-                    Sender = components[0],
-                    Message = components[1],
-                    Type = logType
-                };
+                return new STULog(components[0], components[1], logType);
             }
 
             public static Color GetColor(LogType type)
@@ -69,7 +69,7 @@ namespace IngameScript
             /// <returns></returns>
             public string GetLogString()
             {
-                return $"> {sender}: {message}";
+                return $"> {Sender}: {Message}";
             }
 
             /// <summary>
@@ -78,39 +78,8 @@ namespace IngameScript
             /// <returns>string</returns>
             public string Serialize()
             {
-                return $"{sender};{message};{type}";
+                return $"{Sender};{Message};{Type}";
             }
-
-            // GETTERS AND SETTERS
-            public string Message
-            {
-                get
-                {
-                    return message;
-                }
-
-                set { message = value; }
-            }
-
-            public string Sender
-            {
-                get
-                {
-                    return sender;
-                }
-
-                set { sender = value; }
-            }
-
-            public LogType Type
-            {
-                get
-                {
-                    return type;
-                }
-                set { type = value; }
-            }
-
         }
     }
 }

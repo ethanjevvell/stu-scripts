@@ -25,7 +25,7 @@ namespace IngameScript
 
         public void Main()
         {
-            Echo($"Last runtime: {Runtime.LastRunTimeMs.ToString()} ms");
+            Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
             if (listener.HasPendingMessage)
             {
                 message = listener.AcceptMessage();
