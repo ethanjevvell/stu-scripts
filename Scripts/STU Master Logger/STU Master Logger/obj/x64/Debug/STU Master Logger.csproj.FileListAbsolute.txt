@@ -1,0 +1,50 @@
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.pdb
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.exe.config
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.exe
+C:\Users\Admin\Desktop\stu-scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\STU Master Logger.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Master Logger\STU Master Logger\obj\x64\Debug\STU Master Logger.pdb
