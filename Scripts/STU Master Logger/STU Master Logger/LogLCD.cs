@@ -10,8 +10,8 @@ namespace IngameScript {
             public IMyTextSurface Surface { get; set; }
             public RectangleF Viewport { get; set; }
             public Queue<STULog> Logs { get; set; }
-            public float Width { get; set; }
-            public float Height { get; set; }
+            public float ScreenWidth { get; set; }
+            public float ScreenHeight { get; set; }
             public float LineHeight { get; set; }
             public int Lines { get; set; }
 
@@ -30,16 +30,17 @@ namespace IngameScript {
                 Surface.FontSize = fontSize;
                 Surface.Font = font;
                 Viewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                Width = Viewport.Width;
-                Height = Viewport.Height;
+                ScreenWidth = Viewport.Width;
+                ScreenHeight = Viewport.Height;
                 Logs = new Queue<STULog>();
                 LineHeight = CalculateLineHeight();
-                Lines = (int)(Height / LineHeight);
+                Lines = (int)(ScreenHeight / LineHeight);
             }
 
             public void GoToNextLine() {
-                var newPosition = new Vector2(Viewport.Position.X, Viewport.Position.Y + LineHeight);
-                Viewport = new RectangleF(newPosition, Viewport.Size);
+                Viewport = new RectangleF(
+                    new Vector2(Viewport.Position.X, Viewport.Position.Y + LineHeight),
+                    Viewport.Size);
             }
 
             private float CalculateLineHeight() {
@@ -47,6 +48,23 @@ namespace IngameScript {
                 Vector2 stringDimensions = Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize);
                 return stringDimensions.Y;
             }
+
+            public void DrawLineOfText(ref MySpriteDrawFrame frame, STULog log) {
+                var logString = log.GetLogString();
+
+                var sprite = new MySprite() {
+                    Type = SpriteType.TEXT,
+                    Data = logString,
+                    Position = Viewport.Position,
+                    RotationOrScale = Surface.FontSize,
+                    Color = STULog.GetColor(log.Type),
+                    FontId = Surface.Font,
+                };
+
+                frame.Add(sprite);
+                GoToNextLine();
+            }
+
 
         }
     }

@@ -22,22 +22,6 @@ namespace IngameScript {
                 }
             }
 
-            public void DrawLineOfText(ref MySpriteDrawFrame frame, LogLCD display, STULog log) {
-                var logString = log.GetLogString();
-
-                var sprite = new MySprite() {
-                    Type = SpriteType.TEXT,
-                    Data = logString,
-                    Position = display.Viewport.Position,
-                    RotationOrScale = display.Surface.FontSize,
-                    Color = STULog.GetColor(log.Type),
-                    FontId = display.Surface.Font,
-                };
-
-                frame.Add(sprite);
-            }
-
-
             public void DrawLogs(ref MySpriteDrawFrame frame, LogLCD display) {
                 display.Viewport = new RectangleF(new Vector2(0, 0), display.Viewport.Size);
 
@@ -47,8 +31,7 @@ namespace IngameScript {
                 }
 
                 foreach (var log in display.Logs) {
-                    DrawLineOfText(ref frame, display, log);
-                    display.GoToNextLine();
+                    display.DrawLineOfText(ref frame, log);
                 }
                 frame.Dispose();
             }

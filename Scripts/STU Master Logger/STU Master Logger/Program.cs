@@ -27,14 +27,16 @@ namespace IngameScript {
             Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
             if (listener.HasPendingMessage) {
                 message = listener.AcceptMessage();
-                STULog newLog = STULog.Deserialize(message.Data.ToString());
-                if (newLog != null) {
+                STULog newLog;
+                try {
+                    newLog = STULog.Deserialize(message.Data.ToString());
                     publisher.Publish(newLog);
-                } else {
+                } catch (System.ArgumentException) {
+                    // This should never happen; log validity is enforced at the object level.
                     Echo($"Received malformed log from sender {message.Source}");
                 }
             }
-        }
 
+        }
     }
 }

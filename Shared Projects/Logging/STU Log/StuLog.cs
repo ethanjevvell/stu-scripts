@@ -23,19 +23,20 @@ namespace IngameScript {
             }
 
             /// <summary>
-            /// Creates a new <c>Log</c> object
+            /// Creates a new <c>STULog</c> object. Be sure to surround in try-catch.
             /// </summary>
             /// <param name="s"></param>
-            /// <returns>A <c>Log</c> if successful, <c>null</c> otherwise</returns>
+            /// <returns><c>STULog</c></returns>
+            /// <exception cref="ArgumentException">Thrown if deserialization fails.</exception>"
             public static STULog Deserialize(string s) {
                 string[] components = s.Split(';');
                 if (components.Length != 3) {
-                    return null;
+                    throw new ArgumentException("Malformed log string; wrong number of parsed elements.");
                 }
 
                 STULogType logType;
                 if (!Enum.TryParse(components[2], out logType)) {
-                    return null;
+                    throw new ArgumentException("Malformed log string; LogType given is not valid.");
                 }
 
                 return new STULog(components[0], components[1], logType);
