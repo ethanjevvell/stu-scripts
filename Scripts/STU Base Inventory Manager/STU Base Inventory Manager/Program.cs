@@ -3,13 +3,10 @@ using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame;
 
-namespace IngameScript
-{
-    partial class Program : MyGridProgram
-    {
+namespace IngameScript {
+    partial class Program : MyGridProgram {
 
-        public enum ItemType
-        {
+        public enum ItemType {
             MyObjectBuilder_Ingot,
             MyObjectBuilder_Ore,
             MyObjectBuilder_Component,
@@ -40,8 +37,10 @@ namespace IngameScript
 
         Dictionary<ItemType, MaterialDictionary> materialDictionaries = new Dictionary<ItemType, MaterialDictionary>();
 
-        public Program()
-        {
+        STULog log;
+        STUMasterLogBroadcaster masterLogBroadcaster;
+
+        public Program() {
             getInventories();
             getTanks();
             calculateBaseGasCapacities();
@@ -78,121 +77,97 @@ namespace IngameScript
 
             // Script will run every 100 ticks
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+
+            masterLogBroadcaster = new STUMasterLogBroadcaster("LHQ_MASTER_LOGGER", IGC, TransmissionDistance.CurrentConstruct);
         }
 
-        public class MaterialDictionary
-        {
+        public class MaterialDictionary {
             public Dictionary<string, double> materialCounts = new Dictionary<string, double>();
             public ItemType category;
             public string readableName;
 
-            public MaterialDictionary(ItemType category, string readableName)
-            {
+            public MaterialDictionary(ItemType category, string readableName) {
                 this.category = category;
                 this.readableName = readableName;
             }
         }
 
-        public void getInventories()
-        {
+        public void getInventories() {
             GridTerminalSystem.GetBlocksOfType(INVENTORIES, block => block.HasInventory);
         }
 
-        public void getTanks()
-        {
+        public void getTanks() {
             GridTerminalSystem.GetBlocksOfType(GAS_TANKS, tank => tank.CubeGrid == Me.CubeGrid);
         }
 
-        public void calculateBaseGasCapacities()
-        {
-            foreach (var tank in GAS_TANKS)
-            {
-                if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
-                {
+        public void calculateBaseGasCapacities() {
+            foreach (var tank in GAS_TANKS) {
+                if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen")) {
                     HYDROGEN_CAPACITY += tank.Capacity;
-                }
-                else if (tank.BlockDefinition.ToString().Contains("Oxygen"))
-                {
+                } else if (tank.BlockDefinition.ToString().Contains("Oxygen")) {
                     OXYGEN_CAPACITY += tank.Capacity;
                 }
             }
 
         }
 
-        public void countMaterials()
-        {
-            foreach (var inventory in INVENTORIES)
-            {
+        public void countMaterials() {
+            foreach (var inventory in INVENTORIES) {
                 List<MyInventoryItem> inventoryItems = new List<MyInventoryItem>();
                 inventory.GetInventory(0).GetItems(inventoryItems, item => materialDictionaries.ContainsKey(toItemType(item.Type.TypeId)));
 
-                foreach (var item in inventoryItems)
-                {
+                foreach (var item in inventoryItems) {
                     addItem(item);
                 }
 
-                if (inventory.InventoryCount > 1)
-                {
+                if (inventory.InventoryCount > 1) {
                     inventory.GetInventory(1).GetItems(inventoryItems, item => materialDictionaries.ContainsKey(toItemType(item.Type.TypeId)));
 
-                    foreach (var item in inventoryItems)
-                    {
+                    foreach (var item in inventoryItems) {
                         addItem(item);
                     }
                 }
             }
         }
 
-        public void addItem(MyInventoryItem item)
-        {
+        public void addItem(MyInventoryItem item) {
             ItemType itemType = toItemType(item.Type.TypeId);
             string subType = item.Type.SubtypeId;
 
-            if (!materialDictionaries[itemType].materialCounts.ContainsKey(subType))
-            {
+            if (!materialDictionaries[itemType].materialCounts.ContainsKey(subType)) {
                 materialDictionaries[itemType].materialCounts[subType] = 0;
             }
             materialDictionaries[itemType].materialCounts[subType] += (double)item.Amount;
         }
 
 
-        public void measureGas()
-        {
-            foreach (var tank in GAS_TANKS)
-            {
+        public void measureGas() {
+            foreach (var tank in GAS_TANKS) {
                 double capacity = tank.Capacity;
                 double filledRatio = tank.FilledRatio;
                 double quantity = filledRatio * capacity;
 
-                if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
-                {
+                if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen")) {
                     addGas("Hydrogen", quantity);
-                }
-                else if (tank.BlockDefinition.ToString().Contains("Oxygen"))
-                {
+                } else if (tank.BlockDefinition.ToString().Contains("Oxygen")) {
                     addGas("Oxygen", quantity);
                 }
             }
         }
 
-        public void addGas(string gas, double quantity)
-        {
-            if (!gasDictionary.ContainsKey(gas))
-            {
+        public void addGas(string gas, double quantity) {
+            if (!gasDictionary.ContainsKey(gas)) {
                 gasDictionary[gas] = 0;
             }
             gasDictionary[gas] += quantity;
         }
 
-        public void clearGasMeasurements()
-        {
+        public void clearGasMeasurements() {
             gasDictionary.Clear();
         }
 
-        public ItemType toItemType(string s)
-        {
-            switch (s)
-            {
+        public ItemType toItemType(string s) {
+            switch (s) {
                 case "MyObjectBuilder_Ingot":
                     return ItemType.MyObjectBuilder_Ingot;
                 case "MyObjectBuilder_Ore":
@@ -204,16 +179,13 @@ namespace IngameScript
             }
         }
 
-        public void resetMaterialCounts()
-        {
-            foreach (var dict in materialDictionaries.Keys)
-            {
+        public void resetMaterialCounts() {
+            foreach (var dict in materialDictionaries.Keys) {
                 materialDictionaries[dict].materialCounts.Clear();
             }
         }
 
-        public void Main()
-        {
+        public void Main() {
             Echo($"Previous runtime: {Runtime.LastRunTimeMs} ms");
 
             resetMaterialCounts();
@@ -227,6 +199,8 @@ namespace IngameScript
             componentDisplayService.publish();
 
             gasDisplayService.publish();
+            log = new STULog("INV_MNGR", "Enumeration successful", STULogType.OK);
+            masterLogBroadcaster.Log(log);
         }
     }
 }

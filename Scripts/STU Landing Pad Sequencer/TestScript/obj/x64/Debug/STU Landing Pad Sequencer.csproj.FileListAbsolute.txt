@@ -23,3 +23,28 @@ C:\Users\Admin\source\repos\TestScript\TestScript\obj\x64\Debug\STU Landing Pad 
 C:\Users\Admin\source\repos\TestScript\TestScript\obj\x64\Debug\STU Landing Pad Sequencer.csproj.CopyComplete
 C:\Users\Admin\source\repos\TestScript\TestScript\obj\x64\Debug\TestScript.exe
 C:\Users\Admin\source\repos\TestScript\TestScript\obj\x64\Debug\TestScript.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\TestScript.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\TestScript.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\TestScript.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\STU Landing Pad Sequencer.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\STU Landing Pad Sequencer.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\TestScript.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\STU Landing Pad Sequencer.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\STU Landing Pad Sequencer.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\TestScript.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Landing Pad Sequencer\TestScript\obj\x64\Debug\TestScript.pdb
