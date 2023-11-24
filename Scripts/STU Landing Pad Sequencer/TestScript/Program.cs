@@ -1,17 +1,15 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
-        // INSERT LEFT LIGHT NAMES VERBATIM
-        string[] leftLightNames = { };
-        // INSERT RIGHT LIGHT NAMES VERBATIM
-        string[] rightLightNames = { };
 
+        string[] leftLightNames = { };
+        string[] rightLightNames = { };
         private List<IMyInteriorLight> LEFT_LIGHTS = new List<IMyInteriorLight>();
         private List<IMyInteriorLight> RIGHT_LIGHTS = new List<IMyInteriorLight>();
-
         private int LIGHT_INDEX = 0;
         private int TIME_ELAPSED = 0;
         private int SEQUENCE_DELAY = 500;
@@ -22,11 +20,43 @@ namespace IngameScript {
         private string DockNumber;
 
         public Program() {
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            GetLightNames();
+
             LoadLights(leftLightNames, LEFT_LIGHTS);
             LoadLights(rightLightNames, RIGHT_LIGHTS);
+
+            // UNIQUE TO LHQ LIGHT NAMING SCHEME
             DockNumber = leftLightNames[0].Split(' ')[1];
+
             broadcaster = new STUMasterLogBroadcaster("LHQ_MASTER_LOGGER", IGC, TransmissionDistance.CurrentConstruct);
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+        }
+
+        public void GetLightNames() {
+            // Get light names from Custom Data field of programmable block
+            var customData = Me.CustomData.Split('\n');
+            if (customData.Length != 2) {
+                Echo(customData.Length.ToString());
+                Echo(Me.CustomData);
+                throw new ArgumentException("You must insert light names; left lights come on the first line, right lights on the second. All lights separated by commas");
+            }
+
+            leftLightNames = customData[0].Split(',');
+            rightLightNames = customData[1].Split(',');
+
+            foreach (var lightName in leftLightNames) {
+                lightName.Trim();
+                Echo(lightName);
+            }
+
+            foreach (var lightName in rightLightNames) {
+                lightName.Trim();
+                Echo(lightName);
+            }
+
+            if (leftLightNames.Length != rightLightNames.Length) {
+                throw new ArgumentException("You must have the same number of left and right lights");
+            }
         }
 
         public void Main(string argument) {
