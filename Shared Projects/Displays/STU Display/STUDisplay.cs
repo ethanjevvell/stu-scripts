@@ -15,8 +15,9 @@ namespace IngameScript {
             public int Lines { get; set; }
 
             /// <summary>
-            /// A wrapper for a text surface that allows for easy drawing of logs.
+            /// Custom STU wrapper for text surfaces.
             /// Initializes an LCD with the given font and font size.
+            /// Extend this class to create your own display with custom methods / properties.
             /// If not specified, the default font is Monospace and the default font size is 1.
             /// </summary>
             /// <param name="surface"></param>
@@ -35,6 +36,11 @@ namespace IngameScript {
                 Lines = (int)(ScreenHeight / LineHeight);
             }
 
+            /// <summary>
+            /// Moves the viewport to the next line, where the next line is defined by the line height.
+            /// Line height is calculated by measuring the height of a single character in the display's given font.
+            /// Use monospace for best results.
+            /// </summary>
             public void GoToNextLine() {
                 Viewport = new RectangleF(
                     new Vector2(Viewport.Position.X, Viewport.Position.Y + LineHeight),
