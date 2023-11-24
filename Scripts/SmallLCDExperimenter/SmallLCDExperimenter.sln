@@ -5,6 +5,8 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmallLCDExperimenter", "SmallLCDExperimenter.csproj", "{7349B574-7D05-429E-9B1A-2C1FE27F1712}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -18,5 +20,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB12FC71-56E7-437B-830B-9DE7C528D816}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{7349b574-7d05-429e-9b1a-2c1fe27f1712}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

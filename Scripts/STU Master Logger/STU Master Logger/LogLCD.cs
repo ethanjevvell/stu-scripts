@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using VRage.Game.GUI.TextPanel;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -20,7 +21,7 @@ namespace IngameScript {
                 Logs = new Queue<STULog>();
             }
 
-            public void DrawLineOfText(ref MySpriteDrawFrame frame, STULog log) {
+            public void DrawLineOfText(STULog log) {
                 var logString = log.GetLogString();
 
                 var sprite = new MySprite() {
@@ -32,10 +33,22 @@ namespace IngameScript {
                     FontId = Surface.Font,
                 };
 
-                frame.Add(sprite);
+                CurrentFrame.Add(sprite);
                 GoToNextLine();
             }
 
+            public void DrawLogs() {
+                Viewport = new RectangleF(new Vector2(0, 0), Viewport.Size);
+
+                // Scroll effect implemented with a queue
+                if (Logs.Count > Lines) {
+                    Logs.Dequeue();
+                }
+
+                foreach (var log in Logs) {
+                    DrawLineOfText(log);
+                }
+            }
 
         }
     }

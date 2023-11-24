@@ -61,7 +61,13 @@ namespace IngameScript {
 
         public void Main(string argument) {
             ActivateLightsOverTime();
-            log = new STULog($"Dock {DockNumber}", "Ship approaching", STULogType.WARNING);
+
+            log = new STULog {
+                Sender = $"Dock {DockNumber}",
+                Message = "Ship approaching",
+                Type = STULogType.WARNING
+            };
+
             broadcaster.Log(log);
         }
 

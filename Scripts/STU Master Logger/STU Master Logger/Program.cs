@@ -18,8 +18,6 @@ namespace IngameScript {
             masterBlockGroup.GetBlocks(subscribers);
 
             publisher = new LogPublisher(subscribers);
-            publisher.ClearPanels();
-
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 

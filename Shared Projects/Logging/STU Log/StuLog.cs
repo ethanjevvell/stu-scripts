@@ -4,17 +4,24 @@ using VRageMath;
 
 namespace IngameScript {
     partial class Program {
+
         public enum STULogType {
             OK,
             ERROR,
             WARNING,
         }
 
+        /// <summary>
+        /// A custom Log object for use with the STU master logging system.
+        /// All three fields are required to be defind and non-empty to be valid.
+        /// </summary>
         public class STULog {
 
             private string message;
             private string sender;
             private STULogType type;
+
+            public STULog() { }
 
             public STULog(string sender, string message, STULogType type) {
                 Sender = sender;
@@ -60,7 +67,7 @@ namespace IngameScript {
             /// </summary>
             /// <returns></returns>
             public string GetLogString() {
-                return $"> {sender}: {message}";
+                return $"> {Sender}: {Message}";
             }
 
             /// <summary>
@@ -68,9 +75,10 @@ namespace IngameScript {
             /// </summary>
             /// <returns>string</returns>
             public string Serialize() {
-                return $"{sender};{message};{type}";
+                return $"{Sender};{Message};{Type}";
             }
 
+            // GETTERS AND SETTERS // 
 
             public string Sender {
                 get {
@@ -108,5 +116,6 @@ namespace IngameScript {
             }
 
         }
+
     }
 }

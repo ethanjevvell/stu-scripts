@@ -9,10 +9,11 @@ namespace IngameScript {
 
             public IMyTextSurface Surface { get; set; }
             public RectangleF Viewport { get; set; }
-            public float ScreenWidth { get; set; }
-            public float ScreenHeight { get; set; }
-            public float LineHeight { get; set; }
-            public int Lines { get; set; }
+            public MySpriteDrawFrame CurrentFrame { get; set; }
+            public float ScreenWidth { get; private set; }
+            public float ScreenHeight { get; private set; }
+            public float LineHeight { get; private set; }
+            public int Lines { get; private set; }
 
             /// <summary>
             /// Custom STU wrapper for text surfaces.
@@ -34,10 +35,12 @@ namespace IngameScript {
                 ScreenHeight = Viewport.Height;
                 LineHeight = CalculateLineHeight();
                 Lines = (int)(ScreenHeight / LineHeight);
+
+                Clear();
             }
 
             /// <summary>
-            /// Moves the viewport to the next line, where the next line is defined by the line height.
+            /// Moves the viewport to the next line, where the distance to the next line is the line height.
             /// Line height is calculated by measuring the height of a single character in the display's given font.
             /// Use monospace for best results.
             /// </summary>
@@ -51,6 +54,19 @@ namespace IngameScript {
                 StringBuilder sb = new StringBuilder("E");
                 Vector2 stringDimensions = Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize);
                 return stringDimensions.Y;
+            }
+
+            public void StartFrame() {
+                CurrentFrame = Surface.DrawFrame();
+            }
+
+            public void EndAndPaintFrame() {
+                CurrentFrame.Dispose();
+            }
+
+            public void Clear() {
+                StartFrame();
+                EndAndPaintFrame();
             }
 
         }
