@@ -17,7 +17,7 @@ namespace IngameScript
 
         public void Main()
         {
-            STULog log = new STULog("TEST_SENDER", "This is a test log message", STULog.LogType.OK);
+            STULog log = new STULog("TEST", "Successful test", STULogType.OK);
             masterLogBroadcaster.Log(log);
         }
     }

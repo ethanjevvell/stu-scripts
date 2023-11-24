@@ -6,20 +6,21 @@ namespace IngameScript
 {
     partial class Program
     {
+        public enum STULogType
+        {
+            OK,
+            ERROR,
+            WARNING,
+        }
+
         public class STULog
         {
-            public enum LogType
-            {
-                OK,
-                ERROR,
-                WARNING,
-            }
 
-            public string Message { get; set; }
-            public string Sender { get; set; }
-            public LogType Type { get; set; }
+            private string message;
+            private string sender;
+            private STULogType type;
 
-            public STULog(string sender, string message, LogType type)
+            public STULog(string sender, string message, STULogType type)
             {
                 Sender = sender;
                 Message = message;
@@ -39,7 +40,7 @@ namespace IngameScript
                     return null;
                 }
 
-                LogType logType;
+                STULogType logType;
                 if (!Enum.TryParse(components[2], out logType))
                 {
                     return null;
@@ -48,15 +49,15 @@ namespace IngameScript
                 return new STULog(components[0], components[1], logType);
             }
 
-            public static Color GetColor(LogType type)
+            public static Color GetColor(STULogType type)
             {
                 switch (type)
                 {
-                    case LogType.OK:
+                    case STULogType.OK:
                         return Color.Green;
-                    case LogType.ERROR:
+                    case STULogType.ERROR:
                         return Color.Red;
-                    case LogType.WARNING:
+                    case STULogType.WARNING:
                         return Color.Yellow;
                     default:
                         return Color.White;
@@ -69,7 +70,7 @@ namespace IngameScript
             /// <returns></returns>
             public string GetLogString()
             {
-                return $"> {Sender}: {Message}";
+                return $"> {sender}: {message}";
             }
 
             /// <summary>
@@ -78,8 +79,60 @@ namespace IngameScript
             /// <returns>string</returns>
             public string Serialize()
             {
-                return $"{Sender};{Message};{Type}";
+                return $"{sender};{message};{type}";
             }
+
+
+            public string Sender
+            {
+                get
+                {
+                    return sender;
+                }
+                set
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        throw new ArgumentException("Sender cannot be an empty string");
+                    }
+                    else
+                    {
+                        sender = value;
+                    }
+                }
+            }
+
+            public string Message
+            {
+                get
+                {
+                    return message;
+                }
+                set
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        throw new ArgumentException("Message cannot be an empty string");
+                    }
+                    else
+                    {
+                        message = value;
+                    }
+                }
+            }
+
+            public STULogType Type
+            {
+                get
+                {
+                    return type;
+                }
+                set
+                {
+                    type = value;
+                }
+            }
+
         }
     }
 }
