@@ -74,6 +74,7 @@ namespace IngameScript {
             }
 
             public void DrawLogs() {
+                // Place the cursor at the top left of the log section of the display
                 Cursor = TopLeft + new Vector2(0, LineHeight * HeaderLines);
 
                 // Scroll effect implemented with a queue
