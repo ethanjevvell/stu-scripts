@@ -59,8 +59,7 @@ namespace IngameScript {
 
             private float CalculateLineHeight() {
                 StringBuilder sb = new StringBuilder("E");
-                Vector2 stringDimensions = Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize);
-                return stringDimensions.Y;
+                return Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize).Y;
             }
 
             public void StartFrame() {
@@ -93,10 +92,10 @@ namespace IngameScript {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
                 switch (Surface.DisplayName) {
                     case "Large Display":
-                        float offset = 8f;
+                        float offsetPx = 8f;
                         return new RectangleF(
-                            new Vector2(standardViewport.Position.X + offset, standardViewport.Position.Y + offset),
-                            new Vector2(standardViewport.Width - offset * 2, standardViewport.Height - offset * 2));
+                            new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
+                            new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
                     default:
                         return standardViewport;
                 }
