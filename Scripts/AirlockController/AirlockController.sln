@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirlockController", "AirlockController\AirlockController.csproj", "{5E352F90-0CF2-4522-BAB3-5E3547912D74}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E352F90-0CF2-4522-BAB3-5E3547912D74}.Debug|x64.ActiveCfg = Debug|x64
+		{5E352F90-0CF2-4522-BAB3-5E3547912D74}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C872F60-5B36-49A3-8542-B88E014AFD5D}
+	EndGlobalSection
+EndGlobal
