@@ -40,6 +40,12 @@ namespace IngameScript {
                 STULog newLog;
                 try {
                     newLog = STULog.Deserialize(message.Data.ToString());
+                    if (newLog.Metadata != null) {
+                        Echo("Has metadata:\n");
+                        foreach (KeyValuePair<string, string> entry in newLog.Metadata) {
+                            Echo($"{entry.Key}: {entry.Value}");
+                        }
+                    }
                     publisher.Publish(newLog);
                 } catch (System.ArgumentException) {
                     // This should never happen; log validity is enforced at the object level.

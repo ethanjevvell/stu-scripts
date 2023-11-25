@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using VRageMath;
 
 namespace IngameScript {
@@ -20,13 +21,15 @@ namespace IngameScript {
             private string message;
             private string sender;
             private STULogType type;
+            private Dictionary<string, string> metadata;
 
             public STULog() { }
 
-            public STULog(string sender, string message, STULogType type) {
+            public STULog(string sender, string message, STULogType type, Dictionary<string, string> metadata = null) {
                 Sender = sender;
                 Message = message;
                 Type = type;
+                Metadata = metadata;
             }
 
             /// <summary>
@@ -36,17 +39,39 @@ namespace IngameScript {
             /// <returns><c>STULog</c></returns>
             /// <exception cref="ArgumentException">Thrown if deserialization fails.</exception>"
             public static STULog Deserialize(string s) {
+
                 string[] components = s.Split(';');
-                if (components.Length != 3) {
-                    throw new ArgumentException("Malformed log string; wrong number of parsed elements.");
-                }
 
                 STULogType logType;
-                if (!Enum.TryParse(components[2], out logType)) {
-                    throw new ArgumentException("Malformed log string; LogType given is not valid.");
+                if (Enum.TryParse(components[2], out logType) == false) {
+                    throw new ArgumentException($"Malformed log string; invalid log type: {components[2]}.");
                 }
 
-                return new STULog(components[0], components[1], logType);
+                switch (components.Length) {
+                    // No metadata
+                    case 3:
+                        return new STULog(components[0], components[1], logType);
+                    // Contains metadata
+                    case 4:
+                        return new STULog(components[0], components[1], logType, ParseMetadata(components[3]));
+                    // Any other number of components is invalid
+                    default:
+                        throw new ArgumentException($"Malformed log string; invalid number of components: {components.Length}.");
+                }
+
+            }
+
+            private static Dictionary<string, string> ParseMetadata(string metadataString) {
+                Dictionary<string, string> metadata = new Dictionary<string, string>();
+                string[] metadataKeyValuePairs = metadataString.Split('&');
+
+                foreach (string pair in metadataKeyValuePairs) {
+                    string[] keyValue = pair.Split('=');
+                    string key = keyValue[0].Trim();
+                    string value = keyValue[1].Trim();
+                    metadata.Add(key, value);
+                }
+                return metadata;
             }
 
             public static Color GetColor(STULogType type) {
@@ -67,7 +92,18 @@ namespace IngameScript {
             /// </summary>
             /// <returns>string</returns>
             public string Serialize() {
-                return $"{Sender};{Message};{Type}";
+
+                if (Metadata == null) {
+                    return $"{Sender};{Message};{Type}";
+                }
+
+                string[] keyPairStrings = new string[Metadata.Keys.Count];
+                int i = 0;
+                foreach (KeyValuePair<string, string> pair in Metadata) {
+                    keyPairStrings[i] = $"{pair.Key}={pair.Value}";
+                    i++;
+                }
+                return $"{Sender};{Message};{Type};{string.Join("&", keyPairStrings)}";
             }
 
             // GETTERS AND SETTERS // 
@@ -104,6 +140,15 @@ namespace IngameScript {
                 }
                 set {
                     type = value;
+                }
+            }
+
+            public Dictionary<string, string> Metadata {
+                get {
+                    return metadata;
+                }
+                set {
+                    metadata = value;
                 }
             }
 

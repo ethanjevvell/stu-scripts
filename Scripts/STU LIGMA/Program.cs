@@ -1,46 +1,28 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System;
-using System.Collections.Generic;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
+        private const string LIGMA_BROADCAST_CHANNEL = "LIGMA";
+
         Missile missile;
         MissileReadout display;
+        STUMasterLogBroadcaster broadcaster;
+
 
         public Program() {
-            missile = new Missile(LoadThrusters(), LoadGyros());
+
+            broadcaster = new STUMasterLogBroadcaster(LIGMA_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            missile = new Missile(broadcaster, GridTerminalSystem, Me);
             display = new MissileReadout(Me.GetSurface(0), missile);
+
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public void Main() {
+
         }
 
-        public STUThruster[] LoadThrusters() {
-            List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
-            if (thrusterBlocks.Count == 0) {
-                throw new Exception("No thrusters found on grid.");
-            }
-            STUThruster[] thrusters = new STUThruster[thrusterBlocks.Count];
-            for (int i = 0; i < thrusterBlocks.Count; i++) {
-                thrusters[i] = new STUThruster(thrusterBlocks[i] as IMyThrust);
-            }
-            return thrusters;
-        }
-
-        public STUGyro[] LoadGyros() {
-            List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
-            if (gyroBlocks.Count == 0) {
-                throw new Exception("No gyros found on grid.");
-            }
-            STUGyro[] gyros = new STUGyro[gyroBlocks.Count];
-            for (int i = 0; i < gyroBlocks.Count; i++) {
-                gyros[i] = new STUGyro(gyroBlocks[i] as IMyGyro);
-            }
-            return gyros;
-        }
 
     }
 }

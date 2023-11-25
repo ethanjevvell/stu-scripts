@@ -1,5 +1,6 @@
 ﻿
 using Sandbox.ModAPI.Ingame;
+using System.Collections.Generic;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -15,8 +16,16 @@ namespace IngameScript {
 
         public void Main() {
             counter++;
-            STULog log = new STULog("TEST", $"Successful test - {counter}", STULogType.OK);
-            masterLogBroadcaster.Log(log);
+            try {
+                Dictionary<string, string> testMetadata = new Dictionary<string, string> {
+                    { "First Arg", "Second Val" },
+                    { "SecondArg", "SecondVal" }
+                };
+                STULog log = new STULog("TEST", $"Successful test - {counter}", STULogType.OK, testMetadata);
+                masterLogBroadcaster.Log(log);
+            } catch (System.Exception e) {
+                Echo(e.StackTrace);
+            }
         }
     }
 }
