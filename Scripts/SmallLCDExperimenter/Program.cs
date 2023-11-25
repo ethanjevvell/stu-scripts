@@ -13,7 +13,7 @@ namespace IngameScript {
             var surface = block.GetSurface(0);
             Echo(surface.DisplayName);
 
-            LogLCD lcd = new LogLCD(surface);
+            LogLCD lcd = new LogLCD(surface, "Monospace", 0.7f);
             Echo(lcd.Lines.ToString());
             Echo(lcd.LineHeight.ToString());
             Echo(lcd.ScreenHeight.ToString());

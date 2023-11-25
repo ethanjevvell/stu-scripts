@@ -8,6 +8,8 @@ namespace IngameScript {
         public class LogLCD : STUDisplay {
 
             public Queue<STULog> Logs { get; set; }
+            private string HeaderText { get; set; }
+            private int HeaderLines { get; set; }
 
             /// <summary>
             /// An LCD display that can draw STULogs.
@@ -17,17 +19,51 @@ namespace IngameScript {
             /// <param name="surface"></param>
             /// <param name="font"></param>
             /// <param name="fontSize"></param>
-            public LogLCD(IMyTextSurface surface, string font = "Monospace", float fontSize = 1f) : base(surface, font, fontSize) {
+
+            public LogLCD(IMyTextSurface surface, int headerLines, string headerText, string font = "Monospace", float fontSize = 1f) : base(surface, font, fontSize) {
                 Logs = new Queue<STULog>();
+                // Override STUDisplay's default background color
+                Surface.ScriptBackgroundColor = new Color(48, 10, 36);
+                HeaderLines = headerLines;
+                HeaderText = headerText;
+
+                var headerSpriteBackground = new MySprite() {
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = TopLeft + new Vector2(0, LineHeight * HeaderLines / 2f),
+                    Color = new Color(44, 44, 44),
+                    Size = new Vector2(ScreenWidth, LineHeight * HeaderLines),
+                };
+
+                float headerScale = 1.2f;
+                float largerLineHeight = LineHeight * headerScale;
+                var headerSpriteText = new MySprite() {
+                    Type = SpriteType.TEXT,
+                    Data = HeaderText,
+                    Position = TopLeft + new Vector2(ScreenWidth / 2f, ((LineHeight * HeaderLines) - largerLineHeight) / 2f),
+                    // Make header text slightly larger than the rest of the text
+                    RotationOrScale = Surface.FontSize * headerScale,
+                    Alignment = TextAlignment.CENTER,
+                    Color = Color.White,
+                    FontId = Surface.Font,
+                };
+
+                BackgroundSprite = new MySpriteCollection {
+                    Sprites = new MySprite[] {
+                        headerSpriteBackground, headerSpriteText
+                    }
+                };
+
             }
 
+            public string FormatLog(STULog log) => $" > {log.Sender}: {log.Message}";
+
             public void DrawLineOfText(STULog log) {
-                var logString = log.GetLogString();
 
                 var sprite = new MySprite() {
                     Type = SpriteType.TEXT,
-                    Data = logString,
-                    Position = Viewport.Position,
+                    Data = FormatLog(log),
+                    Position = Cursor,
                     RotationOrScale = Surface.FontSize,
                     Color = STULog.GetColor(log.Type),
                     FontId = Surface.Font,
@@ -38,10 +74,10 @@ namespace IngameScript {
             }
 
             public void DrawLogs() {
-                Viewport = new RectangleF(new Vector2(0, 0), Viewport.Size);
+                Cursor = TopLeft + new Vector2(0, LineHeight * HeaderLines);
 
                 // Scroll effect implemented with a queue
-                if (Logs.Count > Lines) {
+                if (Logs.Count > Lines - HeaderLines) {
                     Logs.Dequeue();
                 }
 

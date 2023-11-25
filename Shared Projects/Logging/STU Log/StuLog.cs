@@ -63,14 +63,6 @@ namespace IngameScript {
             }
 
             /// <summary>
-            /// Formats the string for output to an LCD
-            /// </summary>
-            /// <returns></returns>
-            public string GetLogString() {
-                return $"> {Sender}: {Message}";
-            }
-
-            /// <summary>
             /// Returns a string representation of a <c>Log</c>, usually for transmission via IGC
             /// </summary>
             /// <returns>string</returns>

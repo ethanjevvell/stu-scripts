@@ -9,7 +9,14 @@ namespace IngameScript {
 
             public IMyTextSurface Surface { get; set; }
             public RectangleF Viewport { get; set; }
+            public Vector2 TopLeft { get; private set; }
+            public Vector2 Cursor { get; set; }
             public MySpriteDrawFrame CurrentFrame { get; set; }
+            /// <summary>
+            /// The background sprite to be drawn on every frame.
+            /// Background will be blank and black if not overridden.
+            /// </summary>
+            public MySpriteCollection BackgroundSprite { get; set; }
             public float ScreenWidth { get; private set; }
             public float ScreenHeight { get; private set; }
             public float LineHeight { get; private set; }
@@ -30,7 +37,9 @@ namespace IngameScript {
                 Surface.ScriptBackgroundColor = Color.Black;
                 Surface.FontSize = fontSize;
                 Surface.Font = font;
-                Viewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
+                BackgroundSprite = new MySpriteCollection();
+                Viewport = GetViewport();
+                TopLeft = Cursor = Viewport.Position;
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
                 LineHeight = CalculateLineHeight();
@@ -45,9 +54,7 @@ namespace IngameScript {
             /// Use monospace for best results.
             /// </summary>
             public void GoToNextLine() {
-                Viewport = new RectangleF(
-                    new Vector2(Viewport.Position.X, Viewport.Position.Y + LineHeight),
-                    Viewport.Size);
+                Cursor = new Vector2(TopLeft.X, Cursor.Y + LineHeight);
             }
 
             private float CalculateLineHeight() {
@@ -58,6 +65,16 @@ namespace IngameScript {
 
             public void StartFrame() {
                 CurrentFrame = Surface.DrawFrame();
+
+                // Draw background sprite if one is defined
+                // The default MySprite is a struct with certain default values,
+                // so we can't just check if BackgroundSprite is null.
+                // User MUST override this value after instantiating the class to have a custom background.
+                if (!BackgroundSprite.Equals(default(MySpriteCollection))) {
+                    foreach (MySprite sprite in BackgroundSprite.Sprites) {
+                        CurrentFrame.Add(sprite);
+                    }
+                }
             }
 
             public void EndAndPaintFrame() {
@@ -65,8 +82,24 @@ namespace IngameScript {
             }
 
             public void Clear() {
-                StartFrame();
-                EndAndPaintFrame();
+                CurrentFrame.Dispose();
+            }
+
+            public void ResetViewport() {
+                Viewport = GetViewport();
+            }
+
+            private RectangleF GetViewport() {
+                var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
+                switch (Surface.DisplayName) {
+                    case "Large Display":
+                        float offset = 8f;
+                        return new RectangleF(
+                            new Vector2(standardViewport.Position.X + offset, standardViewport.Position.Y + offset),
+                            new Vector2(standardViewport.Width - offset * 2, standardViewport.Height - offset * 2));
+                    default:
+                        return standardViewport;
+                }
             }
 
         }
