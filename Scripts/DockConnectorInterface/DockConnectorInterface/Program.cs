@@ -49,6 +49,8 @@ namespace IngameScript
 
         // v0.1.2 regex solidified
 
+        // v0.1.3 introduced DockActuatorGroup class
+
 
         public STUMasterLogBroadcaster LogBroadcaster;
         public string LogSender = "ATC Computer";
