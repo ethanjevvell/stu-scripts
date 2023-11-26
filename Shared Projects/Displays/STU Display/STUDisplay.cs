@@ -20,7 +20,10 @@ namespace IngameScript {
             public float ScreenWidth { get; private set; }
             public float ScreenHeight { get; private set; }
             public float LineHeight { get; private set; }
+            public float CharacterWidth { get; private set; }
             public int Lines { get; private set; }
+
+            private bool NeedToCenterSprite;
 
             /// <summary>
             /// Custom STU wrapper for text surfaces.
@@ -43,7 +46,9 @@ namespace IngameScript {
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
                 LineHeight = CalculateLineHeight();
+                CharacterWidth = CalculateCharacaterWidth();
                 Lines = (int)(ScreenHeight / LineHeight);
+                NeedToCenterSprite = true;
 
                 Clear();
             }
@@ -61,6 +66,12 @@ namespace IngameScript {
                 StringBuilder sb = new StringBuilder("E");
                 return Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize).Y;
             }
+
+            private float CalculateCharacaterWidth() {
+                StringBuilder sb = new StringBuilder("E");
+                return Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize).X;
+            }
+
 
             public void StartFrame() {
                 CurrentFrame = Surface.DrawFrame();
@@ -99,6 +110,213 @@ namespace IngameScript {
                     default:
                         return standardViewport;
                 }
+            }
+
+            /// <summary>
+            /// Aligns a sprite to the center of its parent sprite.
+            /// </summary>
+            /// <param name="parentSprite"></param>
+            /// <param name="childSprite"></param>
+            public void CenterWithinParent(MySprite parentSprite, ref MySprite childSprite) {
+                childSprite.Alignment = TextAlignment.CENTER;
+
+                switch (childSprite.Type) {
+
+                    case SpriteType.TEXT:
+
+                        switch (parentSprite.Alignment) {
+
+                            // Parent sprite is aligned by its absolute middle
+                            case TextAlignment.CENTER:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X,
+                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                );
+                                return;
+
+                            // Parent sprint is aligned by the middle of its left edge
+                            case TextAlignment.LEFT:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X + (parentSprite.Size.Value.X / 2f),
+                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                );
+                                return;
+
+                            // Parent sprite is aligned by the middle of its right edge
+                            case TextAlignment.RIGHT:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X - (parentSprite.Size.Value.X / 2f),
+                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                );
+                                return;
+                        }
+
+                        break;
+
+                    case SpriteType.TEXTURE:
+
+                        switch (parentSprite.Alignment) {
+
+                            case TextAlignment.CENTER:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X,
+                                    parentSprite.Position.Value.Y
+                                );
+                                return;
+
+                            case TextAlignment.LEFT:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X + (parentSprite.Size.Value.X / 2f),
+                                    parentSprite.Position.Value.Y
+                                );
+                                return;
+
+                            case TextAlignment.RIGHT:
+                                childSprite.Position = new Vector2(
+                                    parentSprite.Position.Value.X - (parentSprite.Size.Value.X / 2f),
+                                    parentSprite.Position.Value.Y
+                                );
+                                return;
+
+                        }
+
+                        break;
+                }
+
+            }
+
+            /// <summary>
+            /// Aligns a sprite to the left of its parent sprite, with optional padding.
+            /// </summary>
+            /// <param name="parentSprite"></param>
+            /// <param name="childSprite"></param>
+            /// <param name="padding"></param>
+            public void AlignLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                if (NeedToCenterSprite) {
+                    CenterWithinParent(parentSprite, ref childSprite);
+                }
+
+                switch (childSprite.Type) {
+
+                    case SpriteType.TEXT:
+                        float stringWidth = childSprite.Data.Length * CharacterWidth;
+                        childSprite.Position -= new Vector2(((parentSprite.Size.Value.X - stringWidth) / 2f) - padding, 0);
+                        break;
+
+                    case SpriteType.TEXTURE:
+                        childSprite.Position -= new Vector2(((parentSprite.Size.Value.X - childSprite.Size.Value.X) / 2f) - padding, 0);
+                        break;
+
+                }
+
+            }
+
+            /// <summary>
+            /// Aligns a sprite to the right of its parent sprite, with optional padding.
+            /// </summary>
+            /// <param name="parentSprite"></param>
+            /// <param name="childSprite"></param>
+            /// <param name="padding"></param>
+            public void AlignRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                if (NeedToCenterSprite) {
+                    CenterWithinParent(parentSprite, ref childSprite);
+                }
+
+                switch (childSprite.Type) {
+
+                    case SpriteType.TEXT:
+                        float stringWidth = childSprite.Data.Length * CharacterWidth;
+                        childSprite.Position += new Vector2(((parentSprite.Size.Value.X - stringWidth) / 2f) - padding, 0);
+                        break;
+
+                    case SpriteType.TEXTURE:
+                        childSprite.Position += new Vector2(((parentSprite.Size.Value.X - childSprite.Size.Value.X) / 2f) - padding, 0);
+                        break;
+
+                }
+
+            }
+
+            /// <summary>
+            /// Aligns a sprite to the top of its parent sprite, with optional padding.
+            /// </summary>
+            /// <param name="parentSprite"></param>
+            /// <param name="childSprite"></param>
+            /// <param name="padding"></param>
+            public void AlignTopWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                if (NeedToCenterSprite) {
+                    CenterWithinParent(parentSprite, ref childSprite);
+                }
+
+                switch (childSprite.Type) {
+
+                    case SpriteType.TEXT:
+                        childSprite.Position -= new Vector2(0, ((parentSprite.Size.Value.Y - LineHeight) / 2f) - padding);
+                        break;
+
+                    case SpriteType.TEXTURE:
+                        childSprite.Position -= new Vector2(0, ((parentSprite.Size.Value.Y - childSprite.Size.Value.Y) / 2f) - padding);
+                        break;
+
+                }
+
+            }
+
+            /// <summary>
+            /// Aligns a sprite to the bottom of its parent sprite, with optional padding
+            /// </summary>
+            /// <param name="parentSprite"></param>
+            /// <param name="childSprite"></param>
+            /// <param name="padding"></param>
+            public void AlignBottomWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                if (NeedToCenterSprite) {
+                    CenterWithinParent(parentSprite, ref childSprite);
+                }
+
+                switch (childSprite.Type) {
+
+                    case SpriteType.TEXT:
+                        childSprite.Position += new Vector2(0, ((parentSprite.Size.Value.Y - LineHeight) / 2f) - padding);
+                        break;
+
+                    case SpriteType.TEXTURE:
+                        childSprite.Position += new Vector2(0, ((parentSprite.Size.Value.Y - childSprite.Size.Value.Y) / 2f) - padding);
+                        break;
+
+                }
+
+            }
+
+            public void AlignTopLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                CenterWithinParent(parentSprite, ref childSprite);
+                NeedToCenterSprite = false;
+                AlignTopWithinParent(parentSprite, ref childSprite, padding);
+                AlignLeftWithinParent(parentSprite, ref childSprite, padding);
+                NeedToCenterSprite = true;
+            }
+
+            public void AlignTopRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                CenterWithinParent(parentSprite, ref childSprite);
+                NeedToCenterSprite = false;
+                AlignTopWithinParent(parentSprite, ref childSprite, padding);
+                AlignRightWithinParent(parentSprite, ref childSprite, padding);
+                NeedToCenterSprite = true;
+            }
+
+            public void AlignBottomLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                CenterWithinParent(parentSprite, ref childSprite);
+                NeedToCenterSprite = false;
+                AlignBottomWithinParent(parentSprite, ref childSprite, padding);
+                AlignLeftWithinParent(parentSprite, ref childSprite, padding);
+                NeedToCenterSprite = true;
+            }
+
+            public void AlignBottomRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
+                CenterWithinParent(parentSprite, ref childSprite);
+                NeedToCenterSprite = false;
+                AlignBottomWithinParent(parentSprite, ref childSprite, padding);
+                AlignRightWithinParent(parentSprite, ref childSprite, padding);
+                NeedToCenterSprite = true;
             }
 
         }

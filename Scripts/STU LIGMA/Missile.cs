@@ -7,12 +7,31 @@ namespace IngameScript {
         public class Missile {
 
             private const string MissileName = "LIGMA-I";
+
             public IMyProgrammableBlock Me { get; set; }
             public STUMasterLogBroadcaster Broadcaster { get; set; }
             public STUThruster[] Thrusters { get; set; }
             public STUGyro[] Gyros { get; set; }
             public STUBattery[] Batteries { get; set; }
             public STUFuelTank[] FuelTanks { get; set; }
+
+            /// <summary>
+            /// Missile's current fuel level in liters
+            /// </summary>
+            public double CurrentFuel { get; set; }
+            /// <summary>
+            /// Missile's current power level in kilowatt-hours
+            /// </summary>
+            public double CurrentPower { get; set; }
+
+            /// <summary>
+            /// Missile's total fuel capacity in liters
+            /// </summary>
+            private double FuelCapacity { get; set; }
+            /// <summary>
+            /// Missile's total power capacity in kilowatt-hours
+            /// </summary>
+            private double PowerCapacity { get; set; }
 
             public Missile(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me) {
                 Me = me;
@@ -21,6 +40,10 @@ namespace IngameScript {
                 Gyros = LoadGyros(grid);
                 Batteries = LoadBatteries(grid);
                 FuelTanks = LoadFuelTanks(grid);
+                PowerCapacity = MeasureTotalPowerCapacity();
+                FuelCapacity = MeasureTotalFuelCapacity();
+                CurrentFuel = MeasureCurrentFuel();
+                CurrentPower = MeasureCurrentPower();
             }
 
             public STUThruster[] LoadThrusters(IMyGridTerminalSystem grid) {
@@ -115,6 +138,52 @@ namespace IngameScript {
                 return fuelTanks;
             }
 
+            private double MeasureTotalPowerCapacity() {
+                double capacity = 0;
+                foreach (STUBattery battery in Batteries) {
+                    capacity += battery.Battery.MaxStoredPower * 1000;
+                }
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Total power capacity: {capacity} kWh",
+                    Type = STULogType.OK
+                });
+                return capacity;
+            }
+
+            private double MeasureTotalFuelCapacity() {
+                double capacity = 0;
+                foreach (STUFuelTank tank in FuelTanks) {
+                    capacity += tank.Tank.Capacity;
+                }
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Total fuel capacity: {capacity} L",
+                    Type = STULogType.OK
+                });
+                return capacity;
+            }
+
+            public double MeasureCurrentFuel() {
+                double currentFuel = 0;
+                foreach (STUFuelTank tank in FuelTanks) {
+                    currentFuel += tank.Tank.FilledRatio * tank.Tank.Capacity;
+                }
+                return currentFuel;
+            }
+
+            public double MeasureCurrentPower() {
+                double currentPower = 0;
+                foreach (STUBattery battery in Batteries) {
+                    currentPower += battery.Battery.CurrentStoredPower * 1000;
+                }
+                return currentPower;
+            }
+
+            public void PingMissionControl() {
+
+            }
+
             public void ToggleThrusters(bool onOrOff) {
                 foreach (STUThruster thruster in Thrusters) {
                     thruster.Thruster.Enabled = onOrOff;
@@ -126,7 +195,6 @@ namespace IngameScript {
                     gyro.Gyro.Enabled = onOrOff;
                 }
             }
-
         }
     }
 }

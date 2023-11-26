@@ -10,6 +10,7 @@ namespace IngameScript {
             OK,
             ERROR,
             WARNING,
+            INFO
         }
 
         /// <summary>

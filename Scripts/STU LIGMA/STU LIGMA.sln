@@ -33,6 +33,8 @@ Global
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
