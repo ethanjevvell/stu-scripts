@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmallLCDExperimenter", "Sma
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Sprite Display Adapter", "..\..\Shared Projects\Sprites\STU Sprite Display Adapter\STU Sprite Display Adapter.shproj", "{5A525E5F-21EC-4003-9C77-1C915E7287D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -22,7 +24,9 @@ Global
 		SolutionGuid = {BB12FC71-56E7-437B-830B-9DE7C528D816}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Sprites\STU Sprite Display Adapter\STU_Sprite_Display_Adapter.projitems*{5a525e5f-21ec-4003-9c77-1c915e7287d9}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{7349b574-7d05-429e-9b1a-2c1fe27f1712}*SharedItemsImports = 4
+		..\..\Shared Projects\Sprites\STU Sprite Display Adapter\STU_Sprite_Display_Adapter.projitems*{7349b574-7d05-429e-9b1a-2c1fe27f1712}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

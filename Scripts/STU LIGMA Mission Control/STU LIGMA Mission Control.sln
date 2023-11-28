@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU LIGMA Mission Control", "STU LIGMA Mission Control.csproj", "{77B2A5BF-4200-45F6-9060-B5803A82E9EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77B2A5BF-4200-45F6-9060-B5803A82E9EC}.Debug|x64.ActiveCfg = Debug|x64
+		{77B2A5BF-4200-45F6-9060-B5803A82E9EC}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E4E163C-A4D6-44FD-9125-1CF169DE2D93}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
+	EndGlobalSection
+EndGlobal

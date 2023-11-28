@@ -19,10 +19,14 @@ namespace IngameScript {
             public MySpriteCollection BackgroundSprite { get; set; }
             public float ScreenWidth { get; private set; }
             public float ScreenHeight { get; private set; }
-            public float LineHeight { get; private set; }
+            public float DefaultLineHeight { get; private set; }
             public float CharacterWidth { get; private set; }
             public int Lines { get; private set; }
 
+            /// <summary>
+            /// Used to determine if a sprite needs to be centered within its parent sprite.
+            /// Flag intended for internal use; do not modify unless you know what you're doing.
+            /// </summary>
             private bool NeedToCenterSprite;
 
             /// <summary>
@@ -45,9 +49,8 @@ namespace IngameScript {
                 TopLeft = Cursor = Viewport.Position;
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
-                LineHeight = CalculateLineHeight();
-                CharacterWidth = CalculateCharacaterWidth();
-                Lines = (int)(ScreenHeight / LineHeight);
+                DefaultLineHeight = GetDefaultLineHeight();
+                Lines = (int)(ScreenHeight / DefaultLineHeight);
                 NeedToCenterSprite = true;
 
                 Clear();
@@ -55,21 +58,11 @@ namespace IngameScript {
 
             /// <summary>
             /// Moves the viewport to the next line, where the distance to the next line is the line height.
-            /// Line height is calculated by measuring the height of a single character in the display's given font.
-            /// Use monospace for best results.
+            /// Line height is calculated by measuring the height of a single character in font you provided in the constructor.
+            /// Monospace is the default font.
             /// </summary>
             public void GoToNextLine() {
-                Cursor = new Vector2(TopLeft.X, Cursor.Y + LineHeight);
-            }
-
-            private float CalculateLineHeight() {
-                StringBuilder sb = new StringBuilder("E");
-                return Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize).Y;
-            }
-
-            private float CalculateCharacaterWidth() {
-                StringBuilder sb = new StringBuilder("E");
-                return Surface.MeasureStringInPixels(sb, Surface.Font, Surface.FontSize).X;
+                Cursor = new Vector2(TopLeft.X, Cursor.Y + DefaultLineHeight);
             }
 
 
@@ -112,17 +105,35 @@ namespace IngameScript {
                 }
             }
 
+            private float GetTextSpriteWidth(MySprite sprite) {
+                StringBuilder builder = new StringBuilder();
+                return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).X;
+            }
+
+            private float GetTextSpriteHeight(MySprite sprite) {
+                StringBuilder builder = new StringBuilder();
+                return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).Y;
+            }
+
+            private float GetDefaultLineHeight() {
+                StringBuilder builder = new StringBuilder();
+                return Surface.MeasureStringInPixels(builder.Append("A"), Surface.Font, Surface.FontSize).Y;
+            }
+
             /// <summary>
             /// Aligns a sprite to the center of its parent sprite.
             /// </summary>
             /// <param name="parentSprite"></param>
             /// <param name="childSprite"></param>
-            public void CenterWithinParent(MySprite parentSprite, ref MySprite childSprite) {
+            public void AlignCenterWithinParent(MySprite parentSprite, ref MySprite childSprite) {
+
                 childSprite.Alignment = TextAlignment.CENTER;
 
                 switch (childSprite.Type) {
 
                     case SpriteType.TEXT:
+
+                        var textSpriteLineHeight = GetTextSpriteHeight(childSprite);
 
                         switch (parentSprite.Alignment) {
 
@@ -130,7 +141,7 @@ namespace IngameScript {
                             case TextAlignment.CENTER:
                                 childSprite.Position = new Vector2(
                                     parentSprite.Position.Value.X,
-                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                    parentSprite.Position.Value.Y - (textSpriteLineHeight / 2f)
                                 );
                                 return;
 
@@ -138,7 +149,7 @@ namespace IngameScript {
                             case TextAlignment.LEFT:
                                 childSprite.Position = new Vector2(
                                     parentSprite.Position.Value.X + (parentSprite.Size.Value.X / 2f),
-                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                    parentSprite.Position.Value.Y - (textSpriteLineHeight / 2f)
                                 );
                                 return;
 
@@ -146,7 +157,7 @@ namespace IngameScript {
                             case TextAlignment.RIGHT:
                                 childSprite.Position = new Vector2(
                                     parentSprite.Position.Value.X - (parentSprite.Size.Value.X / 2f),
-                                    parentSprite.Position.Value.Y - (LineHeight / 2f)
+                                    parentSprite.Position.Value.Y - (textSpriteLineHeight / 2f)
                                 );
                                 return;
                         }
@@ -193,14 +204,13 @@ namespace IngameScript {
             /// <param name="padding"></param>
             public void AlignLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
                 if (NeedToCenterSprite) {
-                    CenterWithinParent(parentSprite, ref childSprite);
+                    AlignCenterWithinParent(parentSprite, ref childSprite);
                 }
 
                 switch (childSprite.Type) {
 
                     case SpriteType.TEXT:
-                        float stringWidth = childSprite.Data.Length * CharacterWidth;
-                        childSprite.Position -= new Vector2(((parentSprite.Size.Value.X - stringWidth) / 2f) - padding, 0);
+                        childSprite.Position -= new Vector2(((parentSprite.Size.Value.X - GetTextSpriteWidth(childSprite)) / 2f) - padding, 0);
                         break;
 
                     case SpriteType.TEXTURE:
@@ -219,14 +229,13 @@ namespace IngameScript {
             /// <param name="padding"></param>
             public void AlignRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
                 if (NeedToCenterSprite) {
-                    CenterWithinParent(parentSprite, ref childSprite);
+                    AlignCenterWithinParent(parentSprite, ref childSprite);
                 }
 
                 switch (childSprite.Type) {
 
                     case SpriteType.TEXT:
-                        float stringWidth = childSprite.Data.Length * CharacterWidth;
-                        childSprite.Position += new Vector2(((parentSprite.Size.Value.X - stringWidth) / 2f) - padding, 0);
+                        childSprite.Position += new Vector2(((parentSprite.Size.Value.X - GetTextSpriteWidth(childSprite)) / 2f) - padding, 0);
                         break;
 
                     case SpriteType.TEXTURE:
@@ -245,13 +254,13 @@ namespace IngameScript {
             /// <param name="padding"></param>
             public void AlignTopWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
                 if (NeedToCenterSprite) {
-                    CenterWithinParent(parentSprite, ref childSprite);
+                    AlignCenterWithinParent(parentSprite, ref childSprite);
                 }
 
                 switch (childSprite.Type) {
 
                     case SpriteType.TEXT:
-                        childSprite.Position -= new Vector2(0, ((parentSprite.Size.Value.Y - LineHeight) / 2f) - padding);
+                        childSprite.Position -= new Vector2(0, ((parentSprite.Size.Value.Y - GetTextSpriteHeight(childSprite)) / 2f) - padding);
                         break;
 
                     case SpriteType.TEXTURE:
@@ -270,13 +279,13 @@ namespace IngameScript {
             /// <param name="padding"></param>
             public void AlignBottomWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
                 if (NeedToCenterSprite) {
-                    CenterWithinParent(parentSprite, ref childSprite);
+                    AlignCenterWithinParent(parentSprite, ref childSprite);
                 }
 
                 switch (childSprite.Type) {
 
                     case SpriteType.TEXT:
-                        childSprite.Position += new Vector2(0, ((parentSprite.Size.Value.Y - LineHeight) / 2f) - padding);
+                        childSprite.Position += new Vector2(0, ((parentSprite.Size.Value.Y - GetTextSpriteHeight(childSprite)) / 2f) - padding);
                         break;
 
                     case SpriteType.TEXTURE:
@@ -288,7 +297,7 @@ namespace IngameScript {
             }
 
             public void AlignTopLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
-                CenterWithinParent(parentSprite, ref childSprite);
+                AlignCenterWithinParent(parentSprite, ref childSprite);
                 NeedToCenterSprite = false;
                 AlignTopWithinParent(parentSprite, ref childSprite, padding);
                 AlignLeftWithinParent(parentSprite, ref childSprite, padding);
@@ -296,7 +305,7 @@ namespace IngameScript {
             }
 
             public void AlignTopRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
-                CenterWithinParent(parentSprite, ref childSprite);
+                AlignCenterWithinParent(parentSprite, ref childSprite);
                 NeedToCenterSprite = false;
                 AlignTopWithinParent(parentSprite, ref childSprite, padding);
                 AlignRightWithinParent(parentSprite, ref childSprite, padding);
@@ -304,7 +313,7 @@ namespace IngameScript {
             }
 
             public void AlignBottomLeftWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
-                CenterWithinParent(parentSprite, ref childSprite);
+                AlignCenterWithinParent(parentSprite, ref childSprite);
                 NeedToCenterSprite = false;
                 AlignBottomWithinParent(parentSprite, ref childSprite, padding);
                 AlignLeftWithinParent(parentSprite, ref childSprite, padding);
@@ -312,7 +321,7 @@ namespace IngameScript {
             }
 
             public void AlignBottomRightWithinParent(MySprite parentSprite, ref MySprite childSprite, float padding = 0) {
-                CenterWithinParent(parentSprite, ref childSprite);
+                AlignCenterWithinParent(parentSprite, ref childSprite);
                 NeedToCenterSprite = false;
                 AlignBottomWithinParent(parentSprite, ref childSprite, padding);
                 AlignRightWithinParent(parentSprite, ref childSprite, padding);

@@ -109,7 +109,7 @@ namespace IngameScript {
                 return new MySprite() {
                     Type = SpriteType.TEXT,
                     Data = $"Velocity: {Velocity} m/s",
-                    Position = TopLeft + new Vector2(ScreenWidth / 2f, (ScreenHeight / 2f) - LineHeight / 2f),
+                    Position = TopLeft + new Vector2(ScreenWidth / 2f, (ScreenHeight / 2f) - DefaultLineHeight / 2f),
                     RotationOrScale = Surface.FontSize,
                     Alignment = TextAlignment.CENTER,
                     Color = Color.White,
