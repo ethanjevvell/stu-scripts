@@ -54,6 +54,8 @@ namespace IngameScript
         // v0.1.4 checking to see how the dock distance lights actually get sorted
         // for future for-loop logic
 
+        //v0.1.5 checking some wonky for-loop stuff
+
 
         public STUMasterLogBroadcaster LogBroadcaster;
         public string LogSender = "ATC Computer";
@@ -76,8 +78,10 @@ namespace IngameScript
         List<string> dockPistons = new List<string>();
         List<string> dockHinge2s = new List<string>();
         List<string> dockConnectors = new List<string>();
-        List<string> dockDistanceLightsOfARunway = new List<string>();
         Dictionary<string, List<string>> dockDistanceLights = new Dictionary<string, List<string>>();
+
+        int numRunways = 16;
+        int numDistanceLightsOfARunway = 17;
 
         public struct DockActuatorParameters
         {
@@ -147,10 +151,19 @@ namespace IngameScript
             GridTerminalSystem.SearchBlocksOfName("Dock Distance Light", dockDistanceLightsRaw, light => light is IMyInteriorLight);
             dockDistanceLightsRaw = dockDistanceLightsRaw.OrderBy(o => o.CustomName).ToList();
 
-            foreach (var light in dockDistanceLightsRaw)
+            // fucky wucky for-loop to cleverly build out the dockDistanceLights dictionary
+            for (int i = 0; i < dockDistanceLightsRaw.Count(); i += numDistanceLightsOfARunway)
             {
-                Echo($"{light.CustomName}");
+                // create a new key and instantiate the list that will serve as the
+                // dictionary's value
+                dockDistanceLights.Add(dockDistanceLightsRaw[i].CustomName.Substring(0, 2), new List<string>());
+                for (int j = 0; j < numDistanceLightsOfARunway; j++)
+                {
+                    // take the name of the light from the Raw list and add it to the dictionary's list
+                    dockDistanceLights[dockDistanceLightsRaw[i].CustomName.Substring(0, 2)].Add(dockDistanceLightsRaw[j+i].CustomName);
+                }
             }
+
         }
 
         public void Save()
@@ -180,8 +193,13 @@ namespace IngameScript
             }
             else { Echo($"could not find key \"{desiredShip}\""); return; }
 
-
-
+            // code to pass the ship parameters and dock into the dock actuator FSM
+            // my initial thought is that the dock actuator FSM logic will contain some
+            // kind of code to determine whether the hardware is actually already at the
+            // requested location, and if it is, just return. This way, the Main() loop of
+            // this program can continue to pass the same arguments to the FSM and the
+            // FSM will just chill.
+            
 
         }
 
