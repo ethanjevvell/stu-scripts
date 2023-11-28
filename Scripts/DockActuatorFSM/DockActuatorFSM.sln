@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockConnectorInterface", "DockConnectorInterface\DockConnectorInterface.csproj", "{ABCA9FD0-51DB-4339-A485-CCF6576E4C39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockActuatorFSM", "DockActuatorFSM\DockActuatorFSM.csproj", "{DBFFFFAD-A79B-4BB9-A89E-A9D7E2F9443E}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Log", "..\..\Shared Projects\Logging\STU Log\STU Log.shproj", "{6EE22094-1878-45BC-805C-D32278F9C704}"
 EndProject
@@ -14,19 +14,19 @@ Global
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ABCA9FD0-51DB-4339-A485-CCF6576E4C39}.Debug|x64.ActiveCfg = Debug|x64
-		{ABCA9FD0-51DB-4339-A485-CCF6576E4C39}.Debug|x64.Build.0 = Debug|x64
+		{DBFFFFAD-A79B-4BB9-A89E-A9D7E2F9443E}.Debug|x64.ActiveCfg = Debug|x64
+		{DBFFFFAD-A79B-4BB9-A89E-A9D7E2F9443E}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {0E44F124-FC7D-43E1-92BA-067409D0D167}
+		SolutionGuid = {A5564837-008C-4026-8CA7-E971476277C7}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
-		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{abca9fd0-51db-4339-a485-ccf6576e4c39}*SharedItemsImports = 4
-		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{abca9fd0-51db-4339-a485-ccf6576e4c39}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{dbffffad-a79b-4bb9-a89e-a9d7e2f9443e}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{dbffffad-a79b-4bb9-a89e-a9d7e2f9443e}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

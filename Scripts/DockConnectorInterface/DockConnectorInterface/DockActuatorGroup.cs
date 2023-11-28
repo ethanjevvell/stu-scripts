@@ -29,6 +29,7 @@ namespace IngameScript
             IMyPistonBase Piston;
             IMyMotorStator Hinge2;
             IMyShipConnector Connector;
+            List<IMyInteriorLight> DistanceLights;
 
             public float currentHingePosition;
             public float currentHingeVelocity;
@@ -39,24 +40,42 @@ namespace IngameScript
             public float pistonDistance;
             public float hinge2angle;
 
+            public float lastHinge1Target;
+            public float lastPistonTarget;
+            public float lastHinge2Target;
+
             Action<string> Echo;
 
-            public DockActuatorGroup(IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, Action<string> echo)
+            public DockActuatorGroup(IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights Action<string> echo)
             {
                 Hinge1 = hinge1;
                 Piston = piston;
                 Hinge2 = hinge2;
                 Connector = connector;
+                DistanceLights = distanceLights;
 
                 Echo = echo;
             }
 
-            public void Move(float hinge1position, float pistonPosition, float  hinge2position)
+            public bool IsStationary()
+            {
+                if (
+                    Hinge1.TargetVelocityRPM < 0.1 &&
+                    Piston.Velocity < 0.1 &&
+                    Hinge2.TargetVelocityRPM < 0.1
+                    ) 
+                    return true;
+
+                else return false;
+            }
+
+            public void Move(float hinge1TargetPosition, float pistonTargetPosition, float  hinge2TargetPosition)
             {
                 MovePiston(Piston, 0);
-                MoveHinge(Hinge1, hinge1position);
-                MoveHinge(Hinge2, hinge2position);
-                MovePiston(Piston, pistonPosition);
+                MoveHinge(Hinge1, hinge1TargetPosition);
+                MoveHinge(Hinge2, hinge2TargetPosition);
+                MovePiston(Piston, pistonTargetPosition);
+
             }
 
             public void MoveHinge(IMyMotorStator hinge, float targetPosition)
@@ -76,10 +95,8 @@ namespace IngameScript
                 if (targetPosition > 90) { targetPosition = 90; };
                 if (targetPosition < -90) { targetPosition = -90; };
 
-                // lock hinge for safety.
-                float oldBrakingTorque = hinge.BrakingTorque;
-                hinge.BrakingTorque = hinge.Torque;
-                hinge.RotorLock = true;
+                // had to remove the logic that locks the hinges because I realized
+                // that this code block runs basically instantaneously due to the FSM construction.
 
                 // set the hinge limits to the extremes
                 hinge.UpperLimitDeg = 90;
@@ -100,9 +117,6 @@ namespace IngameScript
                     hinge.TargetVelocityRPM = (float)Math.Abs((decimal)hinge.TargetVelocityRPM) * -1;
                 }
 
-                // unlock the hinge
-                hinge.BrakingTorque = oldBrakingTorque;
-                hinge.RotorLock = false;
             }
 
             public void MovePiston(IMyPistonBase piston, float targetDistance)
@@ -135,6 +149,16 @@ namespace IngameScript
                     piston.MinLimit = targetDistance;
                     piston.Velocity = Math.Abs(piston.Velocity) * -1;
                 }
+            }
+
+            public void IlluminateLight(List<IMyInteriorLight> distanceLights, int lightIndex)
+            {
+                foreach (var light in distanceLights)
+                {
+                    light.Enabled = false;
+                }
+
+                distanceLights[lightIndex].Enabled = true;
             }
 
             public void Retract(IMyShipConnector Connector)
