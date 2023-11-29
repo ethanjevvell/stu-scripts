@@ -38,8 +38,9 @@ namespace IngameScript {
             /// <param name="surface"></param>
             /// <param name="font"></param>
             /// <param name="fontSize"></param>
-            public STUDisplay(IMyTextSurface surface, string font = "Monospace", float fontSize = 1f) {
-                Surface = surface;
+            public STUDisplay(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1f) {
+                var surface = block as IMyTextSurfaceProvider;
+                Surface = surface.GetSurface(0);
                 Surface.ContentType = ContentType.SCRIPT;
                 Surface.ScriptBackgroundColor = Color.Black;
                 Surface.FontSize = fontSize;
