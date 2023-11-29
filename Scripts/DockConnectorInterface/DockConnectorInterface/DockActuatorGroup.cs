@@ -25,11 +25,11 @@ namespace IngameScript
         
         public class DockActuatorGroup
         {
-            IMyMotorStator Hinge1;
-            IMyPistonBase Piston;
-            IMyMotorStator Hinge2;
-            IMyShipConnector Connector;
-            List<IMyInteriorLight> DistanceLights;
+            public IMyMotorStator Hinge1;
+            public IMyPistonBase Piston;
+            public IMyMotorStator Hinge2;
+            public IMyShipConnector Connector;
+            public List<IMyInteriorLight> DistanceLights;
 
             public float currentHingePosition;
             public float currentHingeVelocity;
@@ -40,21 +40,22 @@ namespace IngameScript
             public float pistonDistance;
             public float hinge2angle;
 
-            public float lastHinge1Target;
-            public float lastPistonTarget;
-            public float lastHinge2Target;
+            public float lastHinge1Target = 0;
+            public float lastPistonTarget = 0;
+            public float lastHinge2Target = 0;
+            public List<float> lastTargetPosition = new List<float>();
+
+            public string name;
 
             Action<string> Echo;
 
-            public DockActuatorGroup(IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights Action<string> echo)
+            public DockActuatorGroup(IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights)
             {
                 Hinge1 = hinge1;
                 Piston = piston;
                 Hinge2 = hinge2;
                 Connector = connector;
                 DistanceLights = distanceLights;
-
-                Echo = echo;
             }
 
             public bool IsStationary()
@@ -71,6 +72,10 @@ namespace IngameScript
 
             public void Move(float hinge1TargetPosition, float pistonTargetPosition, float  hinge2TargetPosition)
             {
+                lastHinge1Target = hinge1TargetPosition;
+                lastPistonTarget = pistonTargetPosition;
+                lastHinge2Target = hinge2TargetPosition;
+
                 MovePiston(Piston, 0);
                 MoveHinge(Hinge1, hinge1TargetPosition);
                 MoveHinge(Hinge2, hinge2TargetPosition);
@@ -178,7 +183,14 @@ namespace IngameScript
                 Connector.Disconnect();
             }
 
+            public List<float> GetTargetPosition()
+            {
+                lastTargetPosition[0] = lastHinge1Target;
+                lastTargetPosition[1] = lastPistonTarget;
+                lastTargetPosition[2] = lastHinge2Target;
 
+                return lastTargetPosition;
+            }
         }
     }
 }
