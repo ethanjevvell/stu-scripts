@@ -20,7 +20,7 @@ namespace IngameScript {
             lcd = GridTerminalSystem.GetBlockWithName("ONE_BY_ONE_LCD");
             wide_lcd = GridTerminalSystem.GetBlockWithName("WIDE_LCD");
 
-            me = new MainDisplay(pb, 1, Echo);
+            me = new MainDisplay(pb, 0, Echo);
             oneByOneDisplay = new MainDisplay(lcd, 0, Echo);
             wideDisplay = new MainDisplay(wide_lcd, 0, Echo);
         }
@@ -47,8 +47,6 @@ namespace IngameScript {
 
             public MainDisplay(IMyTerminalBlock block, int displayIndex, Action<string> echo, string font = "Monospace", float fontSize = 1f) : base(block, displayIndex, font, fontSize) {
 
-                var surface = block as IMyTextSurfaceProvider;
-                Surface = surface.GetSurface(displayIndex);
                 Echo = echo;
                 Surface.BackgroundColor = Color.Black;
                 Surface.Script = "";
@@ -63,7 +61,6 @@ namespace IngameScript {
                 StartFrame();
                 Drawer.Invoke(CurrentFrame, Viewport.Center, 1f);
                 EndAndPaintFrame();
-
             }
         }
 

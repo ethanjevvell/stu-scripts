@@ -15,7 +15,6 @@ namespace IngameScript {
                 frame.Add(new MySprite() {
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
-                    Position = new Vector2(0, 0),
                     Size = new Vector2(5000, 5000),
                     Color = Color.Red,
                     Alignment = TextAlignment.CENTER,
@@ -24,7 +23,6 @@ namespace IngameScript {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.CENTER,
                     Data = errorMessage,
-                    Position = new Vector2(0f, 0f) * scale + centerPos,
                     Color = new Color(255, 255, 255, 255),
                     FontId = "Debug",
                     RotationOrScale = 1f * scale
