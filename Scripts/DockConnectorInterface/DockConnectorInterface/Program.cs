@@ -176,15 +176,17 @@ namespace IngameScript
             {
                 // create a new key and instantiate the list that will serve as each dictionary's value
                 Echo($"\nouter layer i = {i}");
-                dockDistanceLightsDict_Names.Add(dockDistanceLightsRaw[i*numRunways].CustomName.Substring(0, 2), new List<string>());
-                dockDistanceLightsDict_Objects.Add(i*numRunways, new List<IMyInteriorLight>());
-                Echo($"{dockDistanceLightsRaw[i * numRunways].CustomName.Substring(0, 2)}");
+                dockDistanceLightsDict_Names.Add(dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2), new List<string>());
+                Echo("wrote to Names dictionary");
+                dockDistanceLightsDict_Objects.Add(i, new List<IMyInteriorLight>());
+                Echo("wrote to Object dictionary");
+                Echo($"{dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)}");
                 for (int j = 0; j < numDistanceLightsOfARunway; j++)
                 {
                     // take the name of the light from the Raw list and add it to the dictionary's list
                     Echo($"inner layer j = {j}");
-                    dockDistanceLightsDict_Names[dockDistanceLightsRaw[i*numDistanceLightsOfARunway].CustomName.Substring(0, 2)].Add(dockDistanceLightsRaw[j+i].CustomName);
-                    dockDistanceLightsDict_Objects[i * numDistanceLightsOfARunway].Add(dockDistanceLightsRaw[j + i] as IMyInteriorLight);
+                    dockDistanceLightsDict_Names[dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)].Add(dockDistanceLightsRaw[j+i * numDistanceLightsOfARunway].CustomName);
+                    dockDistanceLightsDict_Objects[i].Add(dockDistanceLightsRaw[j * i] as IMyInteriorLight);
                 }
             }
 
