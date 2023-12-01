@@ -35,15 +35,37 @@ namespace IngameScript {
             LargeProgrammableBlockReskin, // automations pb
             SmallProgrammableBlock,
             SmallProgrammableBlockReskin, // automations pb
+            BuggyCockpit,
+            CockpitOpen,
+            DBSmallBlockFighterCockpit,
+            LargeBlockCockpit,
+            LargeBlockCockpitIndustrial,
+            OpenCockpitLarge,
+            OpenCockpitSmall,
+            RoverCockpit,
+            SmallBlockCapCockpit,
+            SmallBlockCockpit,
+            SmallBlockCockpitIndustrial,
+            SmallBlockStandingCockpit,
+            SpeederCockpit,
+            SpeederCockpitCompact,
+            LargeBlockConsole,
         }
-
         public enum STUSubDisplay {
             ScreenArea,
             LargeDisplay,
+            Keyboard,
+            Numpad,
+            ProjectionArea,
+            TopCenterScreen,
+            TopLeftScreen,
+            TopRightScreen,
+            BottomCenterScreen,
+            BottomLeftScreen,
+            BottomRightScreen,
         }
 
         public class STUDisplayType {
-
 
             public static string CreateDisplayIdentifier(STUDisplayBlock block, STUSubDisplay display) {
                 var displayName = display.ToString();
@@ -58,7 +80,6 @@ namespace IngameScript {
                 var surfaceName = surface.DisplayName.Replace(" ", "");
                 return $"{blockName}.{surfaceName}";
             }
-
 
         }
     }

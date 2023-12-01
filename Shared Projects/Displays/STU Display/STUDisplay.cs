@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
@@ -38,9 +39,9 @@ namespace IngameScript {
             /// <param name="surface"></param>
             /// <param name="font"></param>
             /// <param name="fontSize"></param>
-            public STUDisplay(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1f) {
-                var surface = block as IMyTextSurfaceProvider;
-                Surface = surface.GetSurface(displayIndex);
+            public STUDisplay(IMyTerminalBlock block, int displayIndex, Action<string> echo, string font = "Monospace", float fontSize = 1f) {
+                var tempBlock = block as IMyTextSurfaceProvider;
+                Surface = TryGetSurface(tempBlock, displayIndex);
                 Surface.ContentType = ContentType.SCRIPT;
                 Surface.ScriptBackgroundColor = Color.Black;
                 Surface.FontSize = fontSize;
@@ -73,7 +74,7 @@ namespace IngameScript {
                 // Draw background sprite if one is defined
                 // The default MySprite is a struct with certain default values,
                 // so we can't just check if BackgroundSprite is null.
-                // User MUST override this value after instantiating the class to have a custom background.
+                // User MUST override this value to have a custom background.
                 if (!BackgroundSprite.Equals(default(MySpriteCollection))) {
                     foreach (MySprite sprite in BackgroundSprite.Sprites) {
                         CurrentFrame.Add(sprite);
@@ -91,6 +92,14 @@ namespace IngameScript {
 
             public void ResetViewport() {
                 Viewport = GetViewport();
+            }
+
+            private IMyTextSurface TryGetSurface(IMyTextSurfaceProvider tempBlock, int displayIndex) {
+                var surface = tempBlock.GetSurface(displayIndex);
+                if (surface == null) {
+                    throw new Exception($"Failed to get display at index {displayIndex}; double-check the index of the display you're trying to write to.");
+                }
+                return surface;
             }
 
             private RectangleF GetViewport() {

@@ -36,8 +36,13 @@ namespace IngameScript {
                 DisplayDrawMapper = drawMapper;
             }
 
+            /// <summary>
+            /// Adds a display type to the mapper; be sure to use the STUDisplayType.CreateDisplayIdentifier method to create the display identifier for your screen.
+            /// If possible, don't use this function. Instead, instantiate the STUDisplayDrawMapper with its mappings directly defined in the instantiation. 
+            /// </summary>
+            /// <param name="displayType"></param>
+            /// <param name="drawFunction"></param>
             public void Add(string displayType, Action<MySpriteDrawFrame, Vector2, float> drawFunction) {
-                // try to add the key value pari, but if the key already exists, just do nothing
                 try {
                     DisplayDrawMapper.Add(displayType, drawFunction);
                 } catch { }
@@ -51,8 +56,8 @@ namespace IngameScript {
                 try {
                     drawFunction = DisplayDrawMapper[displayIdentifier];
                 } catch {
+
                     errorMessage = $"INVALID DISPLAY: {block.DefinitionDisplayNameText}\n";
-                    errorMessage += $"Available display types: {string.Join(", ", DisplayDrawMapper.Keys)} \n";
                     return DefaultErrorScreen;
                 }
                 return drawFunction;
