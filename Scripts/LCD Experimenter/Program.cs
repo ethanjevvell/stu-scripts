@@ -47,10 +47,8 @@ namespace IngameScript {
             public Action<MySpriteDrawFrame, Vector2, float> Drawer;
             public Action<string> Echo;
 
-            public MainDisplay(IMyTerminalBlock block, int displayIndex, Action<string> echo, string font = "Monospace", float fontSize = 1f) : base(block, displayIndex, echo, font, fontSize) {
+            public MainDisplay(IMyTerminalBlock block, int displayIndex, Action<string> echo, string font = "Monospace", float fontSize = 1f) : base(block, displayIndex, font, fontSize) {
                 Echo = echo;
-                Surface.BackgroundColor = Color.Black;
-                Surface.Script = "";
                 Drawer = TestDisplayDrawMapper.GetDrawFunction(block, displayIndex);
             }
 
@@ -59,7 +57,6 @@ namespace IngameScript {
             }
 
             public void Test() {
-                Echo("Start test");
                 StartFrame();
                 Drawer.Invoke(CurrentFrame, Viewport.Center, 1f);
                 EndAndPaintFrame();

@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\STU Planetary Measurements.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\STU Planetary Measurements.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\STU Planetary Measurements.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.pdb

@@ -8,8 +8,8 @@
     <MDKVersion>1.5.18</MDKVersion>
     <MDKUseGameBinPath>no</MDKUseGameBinPath>
     <MDKGameBinPath>c:\program files (x86)\steam\SteamApps\common\SpaceEngineers\Bin64</MDKGameBinPath>
-    <MDKInstallPath>c:\users\reaga\appdata\local\microsoft\visualstudio\17.0_22db8137\extensions\tmwrtwd5.15o</MDKInstallPath>
-    <MDKOutputPath>C:\Users\reaga\AppData\Roaming\SpaceEngineers\IngameScripts\local</MDKOutputPath>
+    <MDKInstallPath>c:\users\admin\appdata\local\microsoft\visualstudio\17.0_9c47494b\extensions\5tg3puzc.355</MDKInstallPath>
+    <MDKOutputPath>C:\Users\Admin\AppData\Roaming\SpaceEngineers\IngameScripts\local</MDKOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Collections.Immutable">
