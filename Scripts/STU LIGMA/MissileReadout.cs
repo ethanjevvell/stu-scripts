@@ -6,7 +6,7 @@ namespace IngameScript {
 
             public Missile Missile { get; set; }
 
-            public MissileReadout(IMyTextSurface surface, Missile missile) : base(surface, "Monospace", 1f) {
+            public MissileReadout(IMyTerminalBlock block, int displayIndex, Missile missile) : base(block, displayIndex, "Monospace", 1f) {
                 Missile = missile;
             }
 

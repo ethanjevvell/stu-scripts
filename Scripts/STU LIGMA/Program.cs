@@ -1,5 +1,4 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System.Collections.Generic;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -10,28 +9,21 @@ namespace IngameScript {
         MissileReadout display;
         STUMasterLogBroadcaster broadcaster;
 
-
         public Program() {
-
             broadcaster = new STUMasterLogBroadcaster(LIGMA_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            missile = new Missile(broadcaster, GridTerminalSystem, Me);
-            display = new MissileReadout(Me.GetSurface(0), missile);
+            Echo("Broadcaster initiated");
+            missile = new Missile(broadcaster, GridTerminalSystem, Me, Runtime);
+            Echo("Missile initiated");
+            display = new MissileReadout(Me, 0, missile);
+            Echo("display done");
 
+            // Script updates every 100 ticks (roughly 1.67 seconds)
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public void Main() {
 
-            broadcaster.Log(new STULog {
-                Sender = "LIGMA-I",
-                Message = "PING",
-                Type = STULogType.OK,
-                Metadata = new Dictionary<string, string> {
-                    { "Velocity", "12" },
-                    { "CurrentFuel", "1000" },
-                    { "CurrentPower", "2000" }
-                }
-            });
+            missile.PingMissionControl();
 
         }
 
