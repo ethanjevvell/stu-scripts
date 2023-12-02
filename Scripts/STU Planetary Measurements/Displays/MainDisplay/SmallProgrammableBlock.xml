@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-16"?>
+<SpriteContent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BackgroundColor>
+    <R>0</R>
+    <G>0</G>
+    <B>0</B>
+    <A>255</A>
+  </BackgroundColor>
+  <Sprites>
+    <SpriteInfo>
+      <Name>text2</Name>
+      <SpriteType>G_v_w: ( , , )
+G_v_b ( , , )
+</SpriteType>
+      <Position>
+        <X>-110</X>
+        <Y>-82</Y>
+      </Position>
+      <Size>
+        <X>155.19696</X>
+        <Y>63.4378166</Y>
+      </Size>
+      <Color>
+        <R>255</R>
+        <G>255</G>
+        <B>255</B>
+        <A>255</A>
+      </Color>
+      <Rotation>1</Rotation>
+      <Type>TEXT</Type>
+      <Font>Debug</Font>
+    </SpriteInfo>
+    <SpriteInfo>
+      <Name>text1</Name>
+      <SpriteType>STU Planetary Measurements (V 1.0)</SpriteType>
+      <Position>
+        <X>-112</X>
+        <Y>-119</Y>
+      </Position>
+      <Size>
+        <X>222.617615</X>
+        <Y>16.21496</Y>
+      </Size>
+      <Color>
+        <R>255</R>
+        <G>255</G>
+        <B>255</B>
+        <A>255</A>
+      </Color>
+      <Rotation>0.5</Rotation>
+      <Type>TEXT</Type>
+      <Font>Debug</Font>
+    </SpriteInfo>
+    <SpriteInfo>
+      <Name>sprite1</Name>
+      <SpriteType>SquareSimple</SpriteType>
+      <Position>
+        <X>1</X>
+        <Y>-112</Y>
+      </Position>
+      <Size>
+        <X>256</X>
+        <Y>30</Y>
+      </Size>
+      <Color>
+        <R>0</R>
+        <G>0</G>
+        <B>255</B>
+        <A>255</A>
+      </Color>
+      <Rotation>0</Rotation>
+      <Type>TEXTURE</Type>
+      <Font>Debug</Font>
+    </SpriteInfo>
+  </Sprites>
+</SpriteContent>

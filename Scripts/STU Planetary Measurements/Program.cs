@@ -14,8 +14,6 @@ namespace IngameScript {
             BaseNode = Me;
             PBDisplay = new MainDisplay(BaseNode, 0, Echo);
             ControlSeat = GridTerminalSystem.GetBlockWithName("OBSERVER") as IMyShipController;
-
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public void Main() {
@@ -32,10 +30,8 @@ namespace IngameScript {
                     }
             };
 
-            public static Vector3D BodyGravityVector = new Vector3D();
             public static Vector3D WorldGravityVector = new Vector3D();
             public static Vector3D ObserverWorldPosition = new Vector3D();
-            public static double BodyGravityMagnitude = 0;
             public static double WorldGravityMagniutde = 0;
             public Action<string> Echo;
 
@@ -47,10 +43,7 @@ namespace IngameScript {
             public void CalculateMagnitude() {
                 // Distance formula in 3D
                 WorldGravityMagniutde = Math.Sqrt((WorldGravityVector.X * WorldGravityVector.X) + (WorldGravityVector.Y * WorldGravityVector.Y) + (WorldGravityVector.Z * WorldGravityVector.Z));
-                BodyGravityMagnitude = Math.Sqrt((BodyGravityVector.X * BodyGravityVector.X) + (BodyGravityVector.Y * BodyGravityVector.Y) + (BodyGravityVector.Z * BodyGravityVector.Z));
-
                 Echo($"G_w_v: \n{WorldGravityVector}");
-                Echo($"G_b_v: \n{BodyGravityVector}");
                 Echo($"W_p: \n {ObserverWorldPosition}");
             }
 
@@ -61,8 +54,8 @@ namespace IngameScript {
             }
 
             public void Update(IMyShipController observer) {
-                BodyGravityVector = observer.GetNaturalGravity();
-                WorldGravityVector = Vector3D.TransformNormal(BodyGravityVector, observer.WorldMatrix);
+                // IMPORTANT: .GetNaturalGravity() returns a Vector3D in terms of the world's coordinate system, not the observer's.
+                WorldGravityVector = observer.GetNaturalGravity();
                 ObserverWorldPosition = observer.GetPosition();
                 CalculateMagnitude();
                 Draw();
