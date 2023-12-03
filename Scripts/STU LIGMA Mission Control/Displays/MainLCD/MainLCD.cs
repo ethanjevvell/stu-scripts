@@ -1,6 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
-using System.Collections.Generic;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
@@ -8,12 +7,15 @@ namespace IngameScript {
     partial class Program {
         public partial class MainLCD : STUDisplay {
 
-            public Queue<STULog> FlightLogs { get; set; }
             public static double Velocity { get; set; }
             public static double CurrentFuel { get; set; }
             public static double CurrentPower { get; set; }
+            public static double FuelCapacity { get; set; }
+            public static double PowerCapacity { get; set; }
+            public static Vector3D CurrentPosition { get; set; }
 
             private Action<MySpriteDrawFrame, Vector2, float> Drawer;
+
             private static STUDisplayDrawMapper MainLCDMapper = new STUDisplayDrawMapper {
                 DisplayDrawMapper = {
                     { STUDisplayType.CreateDisplayIdentifier(STUDisplayBlock.LargeLCDPanelWide, STUSubDisplay.ScreenArea), LargeWideLCD.ScreenArea },
@@ -21,63 +23,36 @@ namespace IngameScript {
             };
 
             public MainLCD(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize) {
-
-                FlightLogs = new Queue<STULog>();
                 Velocity = 0;
                 CurrentFuel = 0;
                 CurrentPower = 0;
                 Drawer = MainLCDMapper.GetDrawFunction(block, displayIndex);
-
             }
 
-            public string FormatLog(STULog log) => $" > {log.Sender}: {log.Message} ";
-
-            public void DrawLineOfText(STULog log) {
-
-                var sprite = new MySprite() {
-                    Type = SpriteType.TEXT,
-                    Data = FormatLog(log),
-                    Position = Cursor,
-                    RotationOrScale = Surface.FontSize,
-                    Color = STULog.GetColor(log.Type),
-                    FontId = Surface.Font,
-                };
-
-                CurrentFrame.Add(sprite);
-                GoToNextLine();
-            }
-
-            private void DrawLogs() {
-                Cursor = TopLeft;
-
-                // Scroll effect implemented with a queue
-                if (FlightLogs.Count > Lines) {
-                    FlightLogs.Dequeue();
-                }
-
-                // Draw the logs
-                foreach (var log in FlightLogs) {
-                    DrawLineOfText(log);
-                }
-            }
-
-            private void DrawTelemetryData(STULog log) {
+            private void ParseTelemetryData(STULog log) {
                 try {
                     Velocity = double.Parse(log.Metadata["Velocity"]);
                     CurrentFuel = double.Parse(log.Metadata["CurrentFuel"]);
                     CurrentPower = double.Parse(log.Metadata["CurrentPower"]);
+                    FuelCapacity = double.Parse(log.Metadata["FuelCapacity"]);
+                    PowerCapacity = double.Parse(log.Metadata["PowerCapacity"]);
                 } catch {
-                    Velocity = -1;
-                    CurrentFuel = -1;
-                    CurrentPower = -1;
+                    Velocity = 69;
+                    CurrentFuel = 1;
+                    CurrentPower = 1;
+                    FuelCapacity = 1;
+                    PowerCapacity = 1;
                 }
+            }
+
+            private void DrawTelemetryData() {
                 Drawer.Invoke(CurrentFrame, Viewport.Center, 1f);
             }
 
             public void UpdateDisplay(STULog latestLog) {
+                ParseTelemetryData(latestLog);
                 StartFrame();
-                DrawTelemetryData(latestLog);
-                DrawLogs();
+                DrawTelemetryData();
                 EndAndPaintFrame();
             }
         }

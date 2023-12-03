@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-16"?>
+<SpriteContent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BackgroundColor>
+    <R>0</R>
+    <G>0</G>
+    <B>0</B>
+    <A>255</A>
+  </BackgroundColor>
+  <Sprites>
+    <SpriteInfo>
+      <Name>sprite6</Name>
+      <SpriteType>SquareHollow</SpriteType>
+      <Position>
+        <X>0</X>
+        <Y>0</Y>
+      </Position>
+      <Size>
+        <X>1080</X>
+        <Y>534</Y>
+      </Size>
+      <Color>
+        <R>0</R>
+        <G>255</G>
+        <B>0</B>
+        <A>255</A>
+      </Color>
+      <Rotation>0</Rotation>
+      <Type>TEXTURE</Type>
+      <Font>Debug</Font>
+    </SpriteInfo>
+  </Sprites>
+</SpriteContent>

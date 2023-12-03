@@ -5,35 +5,54 @@ using System.Collections.Generic;
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        private const string LIGMA_MISSION_CONTROL_LCDS_GROUP = "LIGMA_MISSION_CONTROL_LCDS";
-        private const string LIGMA_MISSION_CONTROL_AUX_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_LCD:";
+        private const string LIGMA_MISSION_CONTROL_MAIN_LCDS_GROUP = "LIGMA_MISSION_CONTROL_MAIN_LCDS";
+        private const string LIGMA_MISSION_CONTROL_LOG_LCDS_GROUP = "LIGMA_MISSION_CONTROL_LOG_LCDS";
+        private const string LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_MAIN_LCD:";
+        private const string LIGMA_MISSION_CONTROL_AUX_LOG_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_LOG_LCD:";
 
         private const string LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL = "LIGMA_MISSION_CONTROL";
         private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
 
         IMyBroadcastListener listener;
         MyIGCMessage message;
-        IMyBlockGroup masterBlockGroup;
-        List<IMyTerminalBlock> subscribers = new List<IMyTerminalBlock>();
-        List<IMyTerminalBlock> auxSubscribers = new List<IMyTerminalBlock>();
-        LogPublisher publisher;
+
+        // MAIN LCDS
+        IMyBlockGroup mainLCDGroup;
+        List<IMyTerminalBlock> mainSubscribers = new List<IMyTerminalBlock>();
+        List<IMyTerminalBlock> auxMainSubscribers = new List<IMyTerminalBlock>();
+        MainLCDPublisher mainPublisher;
+
+        // LOG LCDS
+        IMyBlockGroup logLCDGroup;
+        List<IMyTerminalBlock> logSubscribers = new List<IMyTerminalBlock>();
+        List<IMyTerminalBlock> auxLogSubscribers = new List<IMyTerminalBlock>();
+        LogLCDPublisher logPublisher;
+
+        // Holds log data temporarily for each run
+        STULog tempLog;
 
         public Program() {
             listener = IGC.RegisterBroadcastListener(LIGMA_VEHICLE_BROADCASTER_CHANNEL);
+
             try {
-                masterBlockGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_LCDS_GROUP);
-                masterBlockGroup.GetBlocks(subscribers);
+                mainLCDGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_MAIN_LCDS_GROUP);
+                mainLCDGroup.GetBlocks(mainSubscribers);
+                logLCDGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_LOG_LCDS_GROUP);
+                logLCDGroup.GetBlocks(logSubscribers);
             } catch {
-                Echo($"No blocks in {LIGMA_MISSION_CONTROL_LCDS_GROUP} group found.");
+                Echo($"Error getting main or log lcds");
             }
 
             try {
-                GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(auxSubscribers, block => block.CustomData.Contains(LIGMA_MISSION_CONTROL_AUX_LCD_TAG));
+                GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(auxMainSubscribers, block => block.CustomData.Contains(LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG));
+                GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(auxLogSubscribers, block => block.CustomData.Contains(LIGMA_MISSION_CONTROL_AUX_LOG_LCD_TAG));
             } catch {
-                Echo($"No blocks with {LIGMA_MISSION_CONTROL_AUX_LCD_TAG} in custom data found.");
+                Echo($"Error gettings main or log aux lcds");
             }
 
-            publisher = new LogPublisher(subscribers, auxSubscribers);
+            mainPublisher = new MainLCDPublisher(mainSubscribers, auxMainSubscribers);
+            logPublisher = new LogLCDPublisher(logSubscribers, auxLogSubscribers);
+
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -51,22 +70,26 @@ namespace IngameScript {
 
             if (listener.HasPendingMessage) {
                 message = listener.AcceptMessage();
-                STULog newLog;
                 try {
-                    newLog = STULog.Deserialize(message.Data.ToString());
-                    publisher.UpdateDisplays(newLog);
+                    tempLog = STULog.Deserialize(message.Data.ToString());
+                    PublishData();
                 } catch {
-                    newLog = new STULog {
+                    tempLog = new STULog {
                         Sender = "LIGMA Missile",
-                        Message = $"Received invalid message: {message.Data.ToString()}",
+                        Message = $"Received invalid message: {message.Data}",
                         Type = STULogType.ERROR
                     };
-                    publisher.UpdateDisplays(newLog);
+                    mainPublisher.UpdateDisplays(tempLog);
                 }
             } else {
                 // TODO: Implement display logic for missile having "NO SIGNAL" etc.
             }
 
+        }
+
+        public void PublishData() {
+            mainPublisher.UpdateDisplays(tempLog);
+            logPublisher.UpdateDisplays(tempLog);
         }
     }
 }

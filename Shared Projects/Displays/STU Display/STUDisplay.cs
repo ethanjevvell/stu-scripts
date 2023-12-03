@@ -22,7 +22,7 @@ namespace IngameScript {
             public float ScreenHeight { get; private set; }
             public float DefaultLineHeight { get; private set; }
             public float CharacterWidth { get; private set; }
-            public int Lines { get; private set; }
+            public int Lines { get; set; }
 
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.

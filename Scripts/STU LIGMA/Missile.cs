@@ -46,6 +46,9 @@ namespace IngameScript {
             /// Missile's total power capacity in kilowatt-hours
             /// </summary>
             public static double PowerCapacity { get; set; }
+            /// <summary>
+            /// Only used for telemetry; does NOT control any FSM's
+            /// </summary>
 
             public Missile(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
@@ -292,7 +295,9 @@ namespace IngameScript {
                 return new Dictionary<string, string> {
                     { "Velocity", Velocity.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
-                    { "CurrentPower", CurrentPower.ToString() }
+                    { "CurrentPower", CurrentPower.ToString() },
+                    { "FuelCapacity", FuelCapacity.ToString() },
+                    { "PowerCapacity", PowerCapacity.ToString() },
                 };
             }
 
