@@ -3,30 +3,82 @@
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        private const string LIGMA_BROADCAST_CHANNEL = "LIGMA_MISSION_CONTROL";
+        private const string LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL = "LIGMA_MISSION_CONTROL";
+        private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
+
+        private string command = "";
 
         Missile missile;
         MissileReadout display;
         STUMasterLogBroadcaster broadcaster;
+        IMyBroadcastListener listener;
+        Phase phase;
+
+        enum Phase {
+            Idle,
+            Launch,
+            Flight,
+            Terminal,
+            Impact
+        }
 
         public Program() {
-            broadcaster = new STUMasterLogBroadcaster(LIGMA_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            Echo("Broadcaster initiated");
+            broadcaster = new STUMasterLogBroadcaster(LIGMA_VEHICLE_BROADCASTER_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            listener = IGC.RegisterBroadcastListener(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL);
             missile = new Missile(broadcaster, GridTerminalSystem, Me, Runtime);
-            Echo("Missile initiated");
             display = new MissileReadout(Me, 0, missile);
-            Echo("display done");
+            phase = Phase.Idle;
 
             // Script updates every 100 ticks (roughly 1.67 seconds)
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            // IMPORTANT: This must match Mission Control update frequency
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
-        public void Main() {
+        public void Main(string argument) {
 
-            missile.PingMissionControl();
+            if (listener.HasPendingMessage) {
+                var message = listener.AcceptMessage();
+                if (message.Data.ToString() == "DETONATE") {
+                    Missile.SelfDestruct();
+                } else {
+                    command = message.Data.ToString();
+                }
+            }
+
+            broadcaster.Log(new STULog {
+                Sender = "LIGMA Missile",
+                Message = $"Current phase: {phase}",
+                Type = STULogType.OK
+            });
+
+            Missile.PingMissionControl();
+
+            switch (phase) {
+
+                case Phase.Idle:
+                    if (command == "LAUNCH") {
+                        phase = Phase.Launch;
+                    }
+                    break;
+
+                case Phase.Launch:
+                    Missile.Launch.Run();
+                    break;
+
+                case Phase.Flight:
+                    // TODO
+                    break;
+
+                case Phase.Terminal:
+                    // TODO
+                    break;
+
+                case Phase.Impact:
+                    // TODO
+                    break;
+
+            }
 
         }
-
-
     }
 }

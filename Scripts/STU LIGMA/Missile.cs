@@ -5,46 +5,47 @@ using VRageMath;
 
 namespace IngameScript {
     partial class Program {
-        public class Missile {
+        public partial class Missile {
 
             private const string MissileName = "LIGMA-I";
 
-            public IMyProgrammableBlock Me { get; set; }
-            public STUMasterLogBroadcaster Broadcaster { get; set; }
-            public IMyGridProgramRuntimeInfo Runtime { get; set; }
-            public STUThruster[] Thrusters { get; set; }
-            public STUGyro[] Gyros { get; set; }
-            public STUBattery[] Batteries { get; set; }
-            public STUFuelTank[] FuelTanks { get; set; }
+            public static IMyProgrammableBlock Me { get; set; }
+            public static STUMasterLogBroadcaster Broadcaster { get; set; }
+            public static IMyGridProgramRuntimeInfo Runtime { get; set; }
+            public static LIGMAThruster[] Thrusters { get; set; }
+            public static LIGMAGyro[] Gyros { get; set; }
+            public static LIGMABattery[] Batteries { get; set; }
+            public static LIGMAFuelTank[] FuelTanks { get; set; }
+            public static LIGMAWarhead[] Warheads { get; set; }
+            public static Vector3D StartPosition { get; set; }
             /// <summary>
             /// Position of the missile at the current time in world coordinates
             /// </summary>
-            public Vector3D CurrentPosition { get; set; }
+            public static Vector3D CurrentPosition { get; set; }
             /// <summary>
             /// Position of the missile the last time it was measured in world coordinates
             /// </summary>
-            public Vector3D PreviousPosition { get; set; }
+            public static Vector3D PreviousPosition { get; set; }
             /// <summary>
             /// Missile's current fuel level in liters
             /// </summary>
-            public double CurrentFuel { get; set; }
+            public static double CurrentFuel { get; set; }
             /// <summary>
             /// Missile's current power level in kilowatt-hours
             /// </summary>
-            public double CurrentPower { get; set; }
+            public static double CurrentPower { get; set; }
             /// <summary>
             /// Missile's current velocity in meters per second
             /// </summary>
-            public double Velocity { get; set; }
-
+            public static double Velocity { get; set; }
             /// <summary>
             /// Missile's total fuel capacity in liters
             /// </summary>
-            private double FuelCapacity { get; set; }
+            public static double FuelCapacity { get; set; }
             /// <summary>
             /// Missile's total power capacity in kilowatt-hours
             /// </summary>
-            private double PowerCapacity { get; set; }
+            public static double PowerCapacity { get; set; }
 
             public Missile(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
@@ -55,6 +56,7 @@ namespace IngameScript {
                 LoadGyros(grid);
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
+                LoadWarheads(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -62,11 +64,14 @@ namespace IngameScript {
                 MeasureCurrentPower();
                 MeasureCurrentPosition();
 
+                CurrentPosition = Me.GetPosition();
                 PreviousPosition = CurrentPosition;
+                StartPosition = CurrentPosition;
+
                 MeasureCurrentVelocity();
             }
 
-            private void LoadThrusters(IMyGridTerminalSystem grid) {
+            private static void LoadThrusters(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0) {
@@ -77,9 +82,9 @@ namespace IngameScript {
                     });
                     throw new Exception("No thrusters found on grid.");
                 }
-                STUThruster[] thrusters = new STUThruster[thrusterBlocks.Count];
+                LIGMAThruster[] thrusters = new LIGMAThruster[thrusterBlocks.Count];
                 for (int i = 0; i < thrusterBlocks.Count; i++) {
-                    thrusters[i] = new STUThruster(thrusterBlocks[i] as IMyThrust);
+                    thrusters[i] = new LIGMAThruster(thrusterBlocks[i] as IMyThrust);
                 }
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
@@ -89,7 +94,7 @@ namespace IngameScript {
                 Thrusters = thrusters;
             }
 
-            private void LoadGyros(IMyGridTerminalSystem grid) {
+            private static void LoadGyros(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gyroBlocks.Count == 0) {
@@ -100,9 +105,9 @@ namespace IngameScript {
                     });
                     throw new Exception("No thrusters found on grid.");
                 }
-                STUGyro[] gyros = new STUGyro[gyroBlocks.Count];
+                LIGMAGyro[] gyros = new LIGMAGyro[gyroBlocks.Count];
                 for (int i = 0; i < gyroBlocks.Count; i++) {
-                    gyros[i] = new STUGyro(gyroBlocks[i] as IMyGyro);
+                    gyros[i] = new LIGMAGyro(gyroBlocks[i] as IMyGyro);
                 }
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
@@ -112,7 +117,7 @@ namespace IngameScript {
                 Gyros = gyros;
             }
 
-            private void LoadBatteries(IMyGridTerminalSystem grid) {
+            private static void LoadBatteries(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> batteryBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyBatteryBlock>(batteryBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (batteryBlocks.Count == 0) {
@@ -123,9 +128,9 @@ namespace IngameScript {
                     });
                     throw new Exception("No batteries found on grid.");
                 }
-                STUBattery[] batteries = new STUBattery[batteryBlocks.Count];
+                LIGMABattery[] batteries = new LIGMABattery[batteryBlocks.Count];
                 for (int i = 0; i < batteryBlocks.Count; i++) {
-                    batteries[i] = new STUBattery(batteryBlocks[i] as IMyBatteryBlock);
+                    batteries[i] = new LIGMABattery(batteryBlocks[i] as IMyBatteryBlock);
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
@@ -135,7 +140,7 @@ namespace IngameScript {
                 Batteries = batteries;
             }
 
-            private void LoadFuelTanks(IMyGridTerminalSystem grid) {
+            private static void LoadFuelTanks(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> fuelTankBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyGasTank>(fuelTankBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (fuelTankBlocks.Count == 0) {
@@ -146,9 +151,9 @@ namespace IngameScript {
                     });
                     throw new Exception("No fuel tanks found on grid.");
                 }
-                STUFuelTank[] fuelTanks = new STUFuelTank[fuelTankBlocks.Count];
+                LIGMAFuelTank[] fuelTanks = new LIGMAFuelTank[fuelTankBlocks.Count];
                 for (int i = 0; i < fuelTankBlocks.Count; i++) {
-                    fuelTanks[i] = new STUFuelTank(fuelTankBlocks[i] as IMyGasTank);
+                    fuelTanks[i] = new LIGMAFuelTank(fuelTankBlocks[i] as IMyGasTank);
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
@@ -158,22 +163,46 @@ namespace IngameScript {
                 FuelTanks = fuelTanks;
             }
 
-            private void MeasureTotalPowerCapacity() {
+            private static void LoadWarheads(IMyGridTerminalSystem grid) {
+                List<IMyTerminalBlock> warheadBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyWarhead>(warheadBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (warheadBlocks.Count == 0) {
+                    Broadcaster.Log(new STULog {
+                        Sender = MissileName,
+                        Message = "No warheads found on grid.",
+                        Type = STULogType.ERROR
+                    });
+                    throw new Exception("No warheads found on grid");
+                }
+                LIGMAWarhead[] warheads = new LIGMAWarhead[warheadBlocks.Count];
+                for (int i = 0; i < warheadBlocks.Count; i++) {
+                    warheads[i] = new LIGMAWarhead(warheadBlocks[i] as IMyWarhead);
+                }
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "Warheads... nominal",
+                    Type = STULogType.OK
+                });
+                Warheads = warheads;
+            }
+
+            private static void MeasureTotalPowerCapacity() {
                 double capacity = 0;
-                foreach (STUBattery battery in Batteries) {
+                foreach (LIGMABattery battery in Batteries) {
                     capacity += battery.Battery.MaxStoredPower * 1000;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = $"Total power capacity: {capacity} kWh",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 PowerCapacity = capacity;
             }
 
-            private void MeasureTotalFuelCapacity() {
+            private static void MeasureTotalFuelCapacity() {
                 double capacity = 0;
-                foreach (STUFuelTank tank in FuelTanks) {
+                foreach (LIGMAFuelTank tank in FuelTanks) {
                     capacity += tank.Tank.Capacity;
                 }
                 Broadcaster.Log(new STULog {
@@ -184,63 +213,76 @@ namespace IngameScript {
                 FuelCapacity = capacity;
             }
 
-            private void MeasureCurrentFuel() {
+            private static void MeasureCurrentFuel() {
                 double currentFuel = 0;
-                foreach (STUFuelTank tank in FuelTanks) {
+                foreach (LIGMAFuelTank tank in FuelTanks) {
                     currentFuel += tank.Tank.FilledRatio * tank.Tank.Capacity;
                 }
                 CurrentFuel = currentFuel;
             }
 
-            private void MeasureCurrentPower() {
+            private static void MeasureCurrentPower() {
                 double currentPower = 0;
-                foreach (STUBattery battery in Batteries) {
+                foreach (LIGMABattery battery in Batteries) {
                     currentPower += battery.Battery.CurrentStoredPower * 1000;
                 }
                 CurrentPower = currentPower;
             }
 
-            private void MeasureCurrentVelocity() {
+            private static void MeasureCurrentVelocity() {
                 PreviousPosition = CurrentPosition;
                 MeasureCurrentPosition();
                 Velocity = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
             }
 
-            private void MeasureCurrentPosition() {
+            private static void MeasureCurrentPosition() {
                 CurrentPosition = Me.GetPosition();
             }
 
-            private void UpdateMeasurements() {
+            private static void UpdateMeasurements() {
                 MeasureCurrentVelocity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
             }
 
-            public void PingMissionControl() {
+            public static void PingMissionControl() {
                 UpdateMeasurements();
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
-                    Message = "PING",
                     Type = STULogType.OK,
-                    Metadata = new Dictionary<string, string> {
-                    { "Velocity", Velocity.ToString() },
-                    { "CurrentFuel", CurrentFuel.ToString() },
-                    { "CurrentPower", CurrentPower.ToString() }
-                }
+                    Metadata = GetTelemetryDictionary()
                 });
             }
 
-            private void ToggleThrusters(bool onOrOff) {
-                foreach (STUThruster thruster in Thrusters) {
+            public static void ToggleThrusters(bool onOrOff) {
+                foreach (LIGMAThruster thruster in Thrusters) {
                     thruster.Thruster.Enabled = onOrOff;
                 }
             }
 
-            private void ToggleGyros(bool onOrOff) {
-                foreach (STUGyro gyro in Gyros) {
+            public static void ToggleGyros(bool onOrOff) {
+                foreach (LIGMAGyro gyro in Gyros) {
                     gyro.Gyro.Enabled = onOrOff;
                 }
             }
+
+            public static void SelfDestruct() {
+                foreach (LIGMAWarhead warhead in Warheads) {
+                    warhead.Arm();
+                }
+                foreach (LIGMAWarhead warhead in Warheads) {
+                    warhead.Detonate();
+                }
+            }
+
+            public static Dictionary<string, string> GetTelemetryDictionary() {
+                return new Dictionary<string, string> {
+                    { "Velocity", Velocity.ToString() },
+                    { "CurrentFuel", CurrentFuel.ToString() },
+                    { "CurrentPower", CurrentPower.ToString() }
+                };
+            }
+
         }
     }
 }

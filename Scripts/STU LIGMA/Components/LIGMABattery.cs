@@ -3,11 +3,11 @@ using Sandbox.ModAPI.Ingame;
 
 namespace IngameScript {
     partial class Program {
-        public class STUBattery {
+        public class LIGMABattery {
 
             public IMyBatteryBlock Battery { get; set; }
 
-            public STUBattery(IMyBatteryBlock battery) {
+            public LIGMABattery(IMyBatteryBlock battery) {
                 Battery = battery;
             }
 

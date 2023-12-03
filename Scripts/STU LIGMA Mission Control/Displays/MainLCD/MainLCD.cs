@@ -47,7 +47,7 @@ namespace IngameScript {
                 GoToNextLine();
             }
 
-            private void DrawLogs(STULog latestLog) {
+            private void DrawLogs() {
                 Cursor = TopLeft;
 
                 // Scroll effect implemented with a queue
@@ -59,9 +59,6 @@ namespace IngameScript {
                 foreach (var log in FlightLogs) {
                     DrawLineOfText(log);
                 }
-
-                // Telemetry data only comes from the most recent log
-                DrawTelemetryData(latestLog);
             }
 
             private void DrawTelemetryData(STULog log) {
@@ -78,8 +75,12 @@ namespace IngameScript {
             }
 
             public void UpdateDisplay(STULog latestLog) {
+                if (string.IsNullOrEmpty(latestLog.Message)) {
+                    FlightLogs.Dequeue();
+                }
                 StartFrame();
-                DrawLogs(latestLog);
+                DrawTelemetryData(latestLog);
+                DrawLogs();
                 EndAndPaintFrame();
             }
         }

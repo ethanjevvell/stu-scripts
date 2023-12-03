@@ -27,7 +27,7 @@ namespace IngameScript {
 
             }
 
-            public void PublishLog(STULog newLog) {
+            public void UpdateDisplays(STULog newLog) {
                 foreach (MainLCD display in Displays) {
                     display.FlightLogs.Enqueue(newLog);
                     display.UpdateDisplay(newLog);

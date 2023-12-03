@@ -5,9 +5,11 @@ using System.Collections.Generic;
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        private const string LIGMA_LOGGER_CHANNEL = "LIGMA_MISSION_CONTROL";
         private const string LIGMA_MISSION_CONTROL_LCDS_GROUP = "LIGMA_MISSION_CONTROL_LCDS";
         private const string LIGMA_MISSION_CONTROL_AUX_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_LCD:";
+
+        private const string LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL = "LIGMA_MISSION_CONTROL";
+        private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
 
         IMyBroadcastListener listener;
         MyIGCMessage message;
@@ -17,7 +19,7 @@ namespace IngameScript {
         LogPublisher publisher;
 
         public Program() {
-            listener = IGC.RegisterBroadcastListener(LIGMA_LOGGER_CHANNEL);
+            listener = IGC.RegisterBroadcastListener(LIGMA_VEHICLE_BROADCASTER_CHANNEL);
             try {
                 masterBlockGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_LCDS_GROUP);
                 masterBlockGroup.GetBlocks(subscribers);
@@ -30,28 +32,34 @@ namespace IngameScript {
             } catch {
                 Echo($"No blocks with {LIGMA_MISSION_CONTROL_AUX_LCD_TAG} in custom data found.");
             }
+
             publisher = new LogPublisher(subscribers, auxSubscribers);
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
-        public void Main() {
+        public void Main(string argument) {
             Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
+
+            if (argument == "DETONATE") {
+                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "DETONATE", TransmissionDistance.AntennaRelay);
+            }
+
+            if (argument == "LAUNCH") {
+                Echo("Launching...");
+                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "LAUNCH", TransmissionDistance.AntennaRelay);
+            }
+
             if (listener.HasPendingMessage) {
                 message = listener.AcceptMessage();
                 STULog newLog;
                 try {
                     newLog = STULog.Deserialize(message.Data.ToString());
-                    if (newLog.Metadata != null) {
-                        Echo("Has metadata:\n");
-                        foreach (KeyValuePair<string, string> entry in newLog.Metadata) {
-                            Echo($"{entry.Key}: {entry.Value}");
-                        }
-                    }
-                    publisher.PublishLog(newLog);
+                    publisher.UpdateDisplays(newLog);
                 } catch (System.ArgumentException) {
-                    // This should never happen; log validity is enforced at the object level.
                     Echo($"Received malformed log from sender {message.Source}");
                 }
+            } else {
+                // TODO: Implement display logic for missile having "NO SIGNAL" etc.
             }
 
         }

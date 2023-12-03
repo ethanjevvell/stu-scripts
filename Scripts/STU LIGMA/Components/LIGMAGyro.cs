@@ -2,11 +2,11 @@
 
 namespace IngameScript {
     partial class Program {
-        public class STUGyro {
+        public class LIGMAGyro {
 
             public IMyGyro Gyro { get; set; }
 
-            public STUGyro(IMyGyro gyro) {
+            public LIGMAGyro(IMyGyro gyro) {
                 Gyro = gyro;
             }
         }

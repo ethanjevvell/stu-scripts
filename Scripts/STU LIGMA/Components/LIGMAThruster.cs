@@ -3,11 +3,11 @@ using Sandbox.ModAPI.Ingame;
 
 namespace IngameScript {
     partial class Program {
-        public class STUThruster {
+        public class LIGMAThruster {
 
             public IMyThrust Thruster { get; set; }
 
-            public STUThruster(IMyThrust thruster) {
+            public LIGMAThruster(IMyThrust thruster) {
                 Thruster = thruster;
             }
 

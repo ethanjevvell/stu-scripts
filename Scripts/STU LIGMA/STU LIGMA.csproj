@@ -38,10 +38,11 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
+    <Compile Include="Components\LIGMAWarhead.cs" />
     <Compile Include="MissileReadout.cs" />
-    <Compile Include="STUBattery.cs" />
-    <Compile Include="STUFuelTank.cs" />
-    <Compile Include="STUGyro.cs" />
+    <Compile Include="Components\LIGMABattery.cs" />
+    <Compile Include="Components\LIGMAFuelTank.cs" />
+    <Compile Include="Components\LIGMAGyro.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -50,11 +51,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
     <Compile Include="Missile.cs" />
+    <Compile Include="Phases\Launch.cs" />
     <Compile Include="Program.cs" />
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
-    <Compile Include="STUThruster.cs" />
+    <Compile Include="Components\LIGMAThruster.cs" />
   </ItemGroup>
   <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />

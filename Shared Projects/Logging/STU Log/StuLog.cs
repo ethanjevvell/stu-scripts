@@ -128,9 +128,7 @@ namespace IngameScript {
                 }
                 set {
                     if (string.IsNullOrEmpty(value)) {
-                        throw new ArgumentException("Message cannot be an empty string");
-                    } else {
-                        message = value;
+                        message = "";
                     }
                 }
             }
