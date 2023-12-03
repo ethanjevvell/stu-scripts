@@ -12,7 +12,8 @@ namespace IngameScript {
 
                 public enum LaunchPhase {
                     Idle,
-                    InitialBurn,
+                    StartBurn,
+                    FirstBurnCoast,
                     Terminal
                 }
 
@@ -23,11 +24,19 @@ namespace IngameScript {
                     switch (phase) {
 
                         case LaunchPhase.Idle:
-                            phase = LaunchPhase.InitialBurn;
+                            phase = LaunchPhase.StartBurn;
                             break;
 
-                        case LaunchPhase.InitialBurn:
-                            InitialBurn();
+                        case LaunchPhase.StartBurn:
+                            StartBurn();
+                            phase = LaunchPhase.FirstBurnCoast;
+                            break;
+
+                        case LaunchPhase.FirstBurnCoast:
+                            var distance = Vector3D.Distance(StartPosition, CurrentPosition);
+                            if (distance > SELF_DESTRUCT_THRESHOLD) {
+                                phase = LaunchPhase.Terminal;
+                            }
                             break;
 
                         case LaunchPhase.Terminal:
@@ -38,17 +47,8 @@ namespace IngameScript {
 
                 }
 
-                public static void InitialBurn() {
+                public static void StartBurn() {
                     Array.ForEach(Thrusters, thruster => thruster.Thruster.ThrustOverride = thruster.Thruster.MaxThrust);
-                    var distance = Vector3D.Distance(StartPosition, CurrentPosition);
-                    if (distance > SELF_DESTRUCT_THRESHOLD) {
-                        Broadcaster.Log(new STULog {
-                            Sender = "LIGMA Missile",
-                            Message = $"SELF-DESTRUCT: Distance detected = {distance}",
-                            Type = STULogType.OK
-                        });
-                        phase = LaunchPhase.Terminal;
-                    }
                 }
 
             }

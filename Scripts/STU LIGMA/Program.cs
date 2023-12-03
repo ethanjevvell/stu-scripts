@@ -45,12 +45,6 @@ namespace IngameScript {
                 }
             }
 
-            broadcaster.Log(new STULog {
-                Sender = "LIGMA Missile",
-                Message = $"Current phase: {phase}",
-                Type = STULogType.OK
-            });
-
             Missile.PingMissionControl();
 
             switch (phase) {

@@ -76,7 +76,7 @@ namespace IngameScript {
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0) {
                     Broadcaster.Log(new STULog {
-                        Sender = "LIGMA-I",
+                        Sender = MissileName,
                         Message = "No thrusters found on grid",
                         Type = STULogType.ERROR
                     });
@@ -89,7 +89,8 @@ namespace IngameScript {
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
                     Message = "Thrusters... nominal",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 Thrusters = thrusters;
             }
@@ -99,7 +100,7 @@ namespace IngameScript {
                 grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gyroBlocks.Count == 0) {
                     Broadcaster.Log(new STULog {
-                        Sender = "LIGMA-I",
+                        Sender = MissileName,
                         Message = "No gyros found on grid",
                         Type = STULogType.ERROR
                     });
@@ -110,9 +111,10 @@ namespace IngameScript {
                     gyros[i] = new LIGMAGyro(gyroBlocks[i] as IMyGyro);
                 }
                 Broadcaster.Log(new STULog {
-                    Sender = "LIGMA-I",
+                    Sender = MissileName,
                     Message = "Gyros... nominal",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 Gyros = gyros;
             }
@@ -135,7 +137,8 @@ namespace IngameScript {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Batteries... nominal",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 Batteries = batteries;
             }
@@ -158,7 +161,8 @@ namespace IngameScript {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Fuel tanks... nominal",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 FuelTanks = fuelTanks;
             }
@@ -181,7 +185,8 @@ namespace IngameScript {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Warheads... nominal",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 Warheads = warheads;
             }
@@ -208,7 +213,8 @@ namespace IngameScript {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = $"Total fuel capacity: {capacity} L",
-                    Type = STULogType.OK
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
                 });
                 FuelCapacity = capacity;
             }
@@ -248,7 +254,8 @@ namespace IngameScript {
             public static void PingMissionControl() {
                 UpdateMeasurements();
                 Broadcaster.Log(new STULog {
-                    Sender = "LIGMA-I",
+                    Sender = MissileName,
+                    Message = "",
                     Type = STULogType.OK,
                     Metadata = GetTelemetryDictionary()
                 });
@@ -267,6 +274,12 @@ namespace IngameScript {
             }
 
             public static void SelfDestruct() {
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "It was fun while it lasted",
+                    Type = STULogType.WARNING,
+                    Metadata = GetTelemetryDictionary()
+                });
                 foreach (LIGMAWarhead warhead in Warheads) {
                     warhead.Arm();
                 }

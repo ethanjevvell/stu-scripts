@@ -122,16 +122,7 @@ namespace IngameScript {
                 }
             }
 
-            public string Message {
-                get {
-                    return message;
-                }
-                set {
-                    if (string.IsNullOrEmpty(value)) {
-                        message = "";
-                    }
-                }
-            }
+            public string Message { get; set; }
 
             public STULogType Type {
                 get {

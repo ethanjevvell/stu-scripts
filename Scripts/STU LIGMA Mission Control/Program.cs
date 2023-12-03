@@ -55,8 +55,13 @@ namespace IngameScript {
                 try {
                     newLog = STULog.Deserialize(message.Data.ToString());
                     publisher.UpdateDisplays(newLog);
-                } catch (System.ArgumentException) {
-                    Echo($"Received malformed log from sender {message.Source}");
+                } catch {
+                    newLog = new STULog {
+                        Sender = "LIGMA Missile",
+                        Message = $"Received invalid message: {message.Data.ToString()}",
+                        Type = STULogType.ERROR
+                    };
+                    publisher.UpdateDisplays(newLog);
                 }
             } else {
                 // TODO: Implement display logic for missile having "NO SIGNAL" etc.

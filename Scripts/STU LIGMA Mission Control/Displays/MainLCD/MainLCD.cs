@@ -75,9 +75,6 @@ namespace IngameScript {
             }
 
             public void UpdateDisplay(STULog latestLog) {
-                if (string.IsNullOrEmpty(latestLog.Message)) {
-                    FlightLogs.Dequeue();
-                }
                 StartFrame();
                 DrawTelemetryData(latestLog);
                 DrawLogs();
