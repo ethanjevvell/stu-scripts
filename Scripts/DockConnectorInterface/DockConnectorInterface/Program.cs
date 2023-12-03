@@ -60,6 +60,12 @@ namespace IngameScript
 
         // v0.1.7 adding verbosity
 
+        // v0.1.8 fucky-wucky for-loop works! figuring out DockActuatorGroups sorting methods
+
+        // v0.1.8.1 Clang might be involved here, but everything *should* be working, so far
+
+        // v1.0 it works! Added functionality to reset all docks by passing "reset,all"
+
 
         public STUMasterLogBroadcaster LogBroadcaster;
         public string LogSender = "ATC Computer";
@@ -104,7 +110,7 @@ namespace IngameScript
 
         public Program()
         {
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            // Runtime.UpdateFrequency = UpdateFrequency.Update100;
 
             // instantiate the LogBroadcaster
             Echo("instantiate the log broadcaster\n");
@@ -113,19 +119,56 @@ namespace IngameScript
             // instantiate a dock acuator parameter struct and add it to the ship registry
             // for all known ships
             Echo("instantiate a dock actuator parameter struct and add it to the ship registry for all known ships\n");
-                DockActuatorParameters CBT_parameters = new DockActuatorParameters();
+            DockActuatorParameters CBT_parameters = new DockActuatorParameters();
                 CBT_parameters.hinge1angle = 0;
                 CBT_parameters.pistonDistance = 10;
                 CBT_parameters.hinge2angle = -36;
                 CBT_parameters.shipDistance = 16;
                 ShipRegistry.Add("CBT", CBT_parameters);
 
-                DockActuatorParameters HBM_parameters = new DockActuatorParameters();
+            DockActuatorParameters HBM_parameters = new DockActuatorParameters();
                 HBM_parameters.hinge1angle = 45;
                 HBM_parameters.pistonDistance = 0;
                 HBM_parameters.hinge2angle = -45;
                 HBM_parameters.shipDistance = 0;
                 ShipRegistry.Add("HBM", HBM_parameters);
+
+            DockActuatorParameters B2R_parameters = new DockActuatorParameters();
+                B2R_parameters.hinge1angle = 0;
+                B2R_parameters.pistonDistance = (float)6.4;
+                B2R_parameters.hinge2angle = 18;
+                B2R_parameters.shipDistance = 17;
+                ShipRegistry.Add("B2R", B2R_parameters);
+
+            DockActuatorParameters grabItems_parameters = new DockActuatorParameters();
+                grabItems_parameters.hinge1angle = 90;
+                grabItems_parameters.pistonDistance = 0;
+                grabItems_parameters.hinge2angle = -90;
+                grabItems_parameters.shipDistance = 1;
+                ShipRegistry.Add("grabitems", grabItems_parameters);
+
+            DockActuatorParameters reset_parameters = new DockActuatorParameters();
+                reset_parameters.hinge1angle = -90;
+                reset_parameters.pistonDistance = 0;
+                reset_parameters.hinge2angle = -90;
+                reset_parameters.shipDistance = 1;
+                ShipRegistry.Add("reset", reset_parameters);
+
+            // cop-out code to get a list of dock names, sorted alphabetically
+            Echo("cop-out for loop for english names of stuff\n");
+            for (int i = 1; i <= numRunways - 1; i++)
+            {
+                if (i <= numRunways / 2)
+                {
+                    runwayNames.Add($"E{i}");
+                }
+                else
+                {
+                    runwayNames.Add($"W{i % (numRunways / 2)}");
+                }
+            }
+            runwayNames.Add("W8");
+            runwayNames.Sort();
 
             // get list of all dock hinge 1s, then get list of all dock hinge 1
             // english names (by referencing the gathered objects) and sort
@@ -133,9 +176,11 @@ namespace IngameScript
             GridTerminalSystem.SearchBlocksOfName("Dock Hinge 1", dockHinge1sRaw, hinge => hinge is IMyMotorStator);
             foreach (var hinge in dockHinge1sRaw)
             {
+                Echo($"adding {hinge.CustomName} to list");
                 dockHinge1s.Add(hinge.CustomName);
             }
             dockHinge1s.Sort();
+            dockHinge1sRaw = dockHinge1sRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock pistons
             Echo("do the same for all dock pistons\n");
@@ -145,6 +190,7 @@ namespace IngameScript
                 dockPistons.Add(piston.CustomName);
             }
             dockPistons.Sort();
+            dockPistonsRaw = dockPistonsRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock hinge 2s
             Echo("do the same for all dock hinge 2s\n");
@@ -154,6 +200,7 @@ namespace IngameScript
                 dockHinge2s.Add(hinge.CustomName);
             }
             dockHinge2s.Sort();
+            dockHinge2sRaw = dockHinge2sRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock connectors
             Echo("do the same for all dock connectors\n");
@@ -163,6 +210,7 @@ namespace IngameScript
                 dockConnectors.Add(connector.CustomName);
             }
             dockConnectors.Sort();
+            dockConnectorsRaw = dockConnectorsRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all runway distance lights
             Echo("do the same for all runway distance lights\n");
@@ -175,37 +223,57 @@ namespace IngameScript
             for (int i = 0; i < numRunways; i++)
             {
                 // create a new key and instantiate the list that will serve as each dictionary's value
-                Echo($"\nouter layer i = {i}");
+                //Echo($"\nouter layer i = {i}");
                 dockDistanceLightsDict_Names.Add(dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2), new List<string>());
-                Echo("wrote to Names dictionary");
+                //Echo("wrote to Names dictionary");
                 dockDistanceLightsDict_Objects.Add(i, new List<IMyInteriorLight>());
-                Echo("wrote to Object dictionary");
-                Echo($"{dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)}");
+                //Echo("wrote to Object dictionary");
+                //Echo($"{dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)}");
                 for (int j = 0; j < numDistanceLightsOfARunway; j++)
                 {
                     // take the name of the light from the Raw list and add it to the dictionary's list
-                    Echo($"inner layer j = {j}");
+                    //Echo($"inner layer j = {j}");
                     dockDistanceLightsDict_Names[dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)].Add(dockDistanceLightsRaw[j+i * numDistanceLightsOfARunway].CustomName);
                     dockDistanceLightsDict_Objects[i].Add(dockDistanceLightsRaw[j * i] as IMyInteriorLight);
                 }
             }
 
+            // sort the dockDistanceLightsDict_Names and dockDistanceLightsDict_Objects dictionaries
+            // by the conventional order (E1, E2, E3... W6, W7, W8)
+            // dockDistanceLightsDict_Names = dockDistanceLightsDict_Names.ToImmutableSortedDictionary(dockDistanceLightsDict_Names);
+
+            
+
             // create instances of DockActuatorGroup
             Echo("create instances of dock actuator group\n");
+            if (dockHinge1s.Count() != numRunways) { Echo($"dim mismatch between hinge1s list count: {dockHinge1s.Count()} and explicit numRunways: {numRunways}"); } ;
+            if (dockPistons.Count() != numRunways) { Echo($"dim mismatch between pistons list count: {dockPistons.Count()} and explicit numRunways: {numRunways}"); };
+            if (dockHinge2s.Count() != numRunways) { Echo($"dim mismatch between hinge2s list count: {dockHinge2s.Count()} and explicit numRunways: {numRunways}"); };
+            if (dockConnectors.Count() != numRunways) { Echo($"dim mismatch between connectors list count: {dockConnectors.Count()} and explicit numRunways: {numRunways}"); };
             for (int i = 0; i < numRunways; i++)
             {
                 Echo($"instance {i}");
+                Echo($"name: {runwayNames[i]}");
                 Echo($"hinge1: {dockHinge1s[i]}");
                 Echo($"piston: {dockPistons[i]}");
                 Echo($"hinge2: {dockHinge2s[i]}");
                 Echo($"connector: {dockConnectors[i]}");
+                Echo($"light group: {dockDistanceLightsRaw[i*numDistanceLightsOfARunway]}");
                 DockActuatorGroups.Add(new DockActuatorGroup(
+                    runwayNames[i],
                     dockHinge1sRaw[i] as IMyMotorStator,
                     dockPistonsRaw[i] as IMyPistonBase,
                     dockHinge2sRaw[i] as IMyMotorStator,
                     dockConnectorsRaw[i] as IMyShipConnector,
-                    dockDistanceLightsDict_Objects[i]));
-                Echo($"{DockActuatorGroups[i].Hinge1.CustomName}");
+                    dockDistanceLightsDict_Objects[i])) ;
+                Echo($"{DockActuatorGroups[i].Hinge1.CustomName}\n");
+            }
+
+            DockActuatorGroups.OrderBy(o => o.Name);
+            Echo($"sorted list of dock actuator groups:");
+            foreach (var title in DockActuatorGroups)
+            {
+                Echo($"{title.Name}");
             }
 
             // assign each DockActuatorGroup to a state machine
@@ -214,19 +282,7 @@ namespace IngameScript
             //     StateMachines.Add(new DockActuatorGroupFSM(item,Runtime));
             // }
 
-            // cop-out code to get a list of dock names, sorted alphabetically
-            Echo("cop-out for loop for english names of stuff\n");
-            for (int i = 1; i <= numRunways;  i++)
-            {
-                if (i <= numRunways/2)
-                {
-                    runwayNames.Add($"E{i}");
-                }
-                else
-                {
-                    runwayNames.Add($"W{i % (numRunways / 2)})");
-                }
-            }
+
 
         }
 
@@ -235,15 +291,28 @@ namespace IngameScript
             
         }
 
-        public void Main(string argument, UpdateType updateSource)
+        public void Main(string argument)
         {
             Echo("Main() called\n");
-            
+
+            Echo($"sorted list of dock actuator groups:");
+            foreach (var title in DockActuatorGroups)
+            {
+                Echo($"{title.Name}");
+            }
+
             argument = argument.Trim();
             // string validation, proper format should be "[SHIP],[DOCK]"
             if (System.Text.RegularExpressions.Regex.IsMatch(argument,"^.+,[WE][1-8]+$"))
             {
-                //continue
+                // continue
+            }
+            else if (argument.Contains("reset") && argument.Contains("all"))
+            {
+                foreach (var dock in DockActuatorGroups)
+                {
+                    dock.Move(-90, 0, -90);
+                }
             }
             else { Echo("invalid entry");  return; }
 
@@ -255,13 +324,14 @@ namespace IngameScript
             // logic to look up ship parameters and call Move() to dock actuator group
             if (ShipRegistry.ContainsKey(desiredShip))
             {
-                Echo ($"Attempting to send {desiredShip} parameters to Dock Actuator Group of terminal {desiredDock}");
+                Echo ($"Attempting to send {desiredShip} parameters to Dock Actuator Group of terminal {desiredDock}\n");
                 
                 DockActuatorGroups[runwayNames.IndexOf(desiredDock)].Move(
                     ShipRegistry[desiredShip].hinge1angle,
                     ShipRegistry[desiredShip].pistonDistance,
                     ShipRegistry[desiredShip].hinge2angle
                     );
+                Echo($"runwayNames.IndexOf(desiredDock) = {runwayNames.IndexOf(desiredDock)}");
                 DockActuatorGroups[runwayNames.IndexOf(desiredDock)].IlluminateLight(dockDistanceLightsDict_Objects[runwayNames.IndexOf(desiredDock)], ShipRegistry[desiredShip].shipDistance);
 
                 Echo ($"Sent {ShipRegistry[desiredShip].hinge1angle}, {ShipRegistry[desiredShip].pistonDistance}, {ShipRegistry[desiredShip].hinge2angle} to Dock Actuator Group {DockActuatorGroups[runwayNames.IndexOf(desiredDock)]}");

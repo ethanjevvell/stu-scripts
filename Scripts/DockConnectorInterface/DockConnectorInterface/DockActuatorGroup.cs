@@ -45,18 +45,19 @@ namespace IngameScript
             public float lastHinge2Target = 0;
             public List<float> lastTargetPosition = new List<float>();
 
-            public string name;
-
             Action<string> Echo;
 
-            public DockActuatorGroup(IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights)
+            public DockActuatorGroup(string name, IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights)
             {
+                Name = name;
                 Hinge1 = hinge1;
                 Piston = piston;
                 Hinge2 = hinge2;
                 Connector = connector;
                 DistanceLights = distanceLights;
             }
+
+            public string Name { get; set; }
 
             public bool IsStationary()
             {
@@ -76,6 +77,7 @@ namespace IngameScript
                 lastPistonTarget = pistonTargetPosition;
                 lastHinge2Target = hinge2TargetPosition;
 
+                Disconnect(Connector);
                 MovePiston(Piston, 0);
                 MoveHinge(Hinge1, hinge1TargetPosition);
                 MoveHinge(Hinge2, hinge2TargetPosition);
