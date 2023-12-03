@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GyroTest", "GyroTest\GyroTest.csproj", "{A9C3B3E4-087F-4DBC-BB7D-FC6D481F00CC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9C3B3E4-087F-4DBC-BB7D-FC6D481F00CC}.Debug|x64.ActiveCfg = Debug|x64
+		{A9C3B3E4-087F-4DBC-BB7D-FC6D481F00CC}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AF40EB86-1890-43B9-AEA6-508A98163796}
+	EndGlobalSection
+EndGlobal
