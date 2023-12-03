@@ -11,8 +11,17 @@ namespace IngameScript {
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
+            public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
-            public static LIGMAThruster[] Thrusters { get; set; }
+
+            public static LIGMAThruster[] AllThrusters { get; set; }
+            public static LIGMAThruster[] ForwardThrusters { get; set; }
+            public static LIGMAThruster[] ReverseThrusters { get; set; }
+            public static LIGMAThruster[] LeftThrusters { get; set; }
+            public static LIGMAThruster[] RightThrusters { get; set; }
+            public static LIGMAThruster[] UpThrusters { get; set; }
+            public static LIGMAThruster[] DownThrusters { get; set; }
+
             public static LIGMAGyro[] Gyros { get; set; }
             public static LIGMABattery[] Batteries { get; set; }
             public static LIGMAFuelTank[] FuelTanks { get; set; }
@@ -46,15 +55,14 @@ namespace IngameScript {
             /// Missile's total power capacity in kilowatt-hours
             /// </summary>
             public static double PowerCapacity { get; set; }
-            /// <summary>
-            /// Only used for telemetry; does NOT control any FSM's
-            /// </summary>
+            public static double Mass { get; set; }
 
             public Missile(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
 
+                LoadRemoteController(grid);
                 LoadThrusters(grid);
                 LoadGyros(grid);
                 LoadBatteries(grid);
@@ -70,11 +78,33 @@ namespace IngameScript {
                 CurrentPosition = Me.GetPosition();
                 PreviousPosition = CurrentPosition;
                 StartPosition = CurrentPosition;
+                Mass = RemoteControl.CalculateShipMass().TotalMass;
 
                 MeasureCurrentVelocity();
             }
 
+            private static void LoadRemoteController(IMyGridTerminalSystem grid) {
+                List<IMyTerminalBlock> remoteControlBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyRemoteControl>(remoteControlBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (remoteControlBlocks.Count == 0) {
+                    Broadcaster.Log(new STULog {
+                        Sender = MissileName,
+                        Message = "No remote control found on grid",
+                        Type = STULogType.ERROR
+                    });
+                    throw new Exception("No remote control found on grid.");
+                }
+                RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "Remote control... nominal",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+            }
+
             private static void LoadThrusters(IMyGridTerminalSystem grid) {
+
                 List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0) {
@@ -85,17 +115,166 @@ namespace IngameScript {
                     });
                     throw new Exception("No thrusters found on grid.");
                 }
-                LIGMAThruster[] thrusters = new LIGMAThruster[thrusterBlocks.Count];
+
+                LIGMAThruster[] allThrusters = new LIGMAThruster[thrusterBlocks.Count];
+
                 for (int i = 0; i < thrusterBlocks.Count; i++) {
-                    thrusters[i] = new LIGMAThruster(thrusterBlocks[i] as IMyThrust);
+                    allThrusters[i] = new LIGMAThruster(thrusterBlocks[i] as IMyThrust);
                 }
+
+                AssignThrustersByOrientation(allThrusters);
+
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
                     Message = "Thrusters... nominal",
                     Type = STULogType.OK,
                     Metadata = GetTelemetryDictionary()
                 });
-                Thrusters = thrusters;
+
+                AllThrusters = allThrusters;
+            }
+
+            private static void AssignThrustersByOrientation(LIGMAThruster[] allThrusters) {
+
+                int forwardCount = 0;
+                int reverseCount = 0;
+                int leftCount = 0;
+                int rightCount = 0;
+                int upCount = 0;
+                int downCount = 0;
+
+                foreach (LIGMAThruster thruster in allThrusters) {
+
+                    MyBlockOrientation thrusterDirection = thruster.Thruster.Orientation;
+
+                    Broadcaster.Log(new STULog {
+                        Sender = MissileName,
+                        Message = $"Thruster orientation: {thruster.Thruster.Orientation}",
+                        Type = STULogType.OK,
+                        Metadata = GetTelemetryDictionary()
+                    });
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
+                        forwardCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
+                        reverseCount++;
+                    }
+
+                    // in-game geometry is the reverse of what you'd expect for left-right
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
+                        leftCount++;
+                    }
+
+                    // in-game geometry is the reverse of what you'd expect for left-right
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
+                        rightCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
+                        upCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
+                        downCount++;
+                    }
+
+                }
+
+                ForwardThrusters = new LIGMAThruster[forwardCount];
+                ReverseThrusters = new LIGMAThruster[reverseCount];
+                LeftThrusters = new LIGMAThruster[leftCount];
+                RightThrusters = new LIGMAThruster[rightCount];
+                UpThrusters = new LIGMAThruster[upCount];
+                DownThrusters = new LIGMAThruster[downCount];
+
+                forwardCount = 0;
+                reverseCount = 0;
+                leftCount = 0;
+                rightCount = 0;
+                upCount = 0;
+                downCount = 0;
+
+                foreach (LIGMAThruster thruster in allThrusters) {
+
+                    MyBlockOrientation thrusterDirection = thruster.Thruster.Orientation;
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
+                        ForwardThrusters[forwardCount] = thruster;
+                        forwardCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
+                        ReverseThrusters[reverseCount] = thruster;
+                        reverseCount++;
+                    }
+
+                    // in-game geometry is the reverse of what you'd expect for left-right
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
+                        LeftThrusters[leftCount] = thruster;
+                        leftCount++;
+                    }
+
+                    // in-game geometry is the reverse of what you'd expect for left-right
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
+                        RightThrusters[rightCount] = thruster;
+                        rightCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
+                        UpThrusters[upCount] = thruster;
+                        upCount++;
+                    }
+
+                    if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
+                        DownThrusters[downCount] = thruster;
+                        downCount++;
+                    }
+
+                }
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Forward thrusters: {ForwardThrusters.Length}. Count: {forwardCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Reverse thrusters: {ReverseThrusters.Length}. Count {reverseCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Left thrusters: {LeftThrusters.Length}. Count {leftCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Right thrusters: {RightThrusters.Length}. Count {rightCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Up thrusters: {UpThrusters.Length}. Count {upCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"Down thrusters: {DownThrusters.Length}. Count {downCount}",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
             }
 
             private static void LoadGyros(IMyGridTerminalSystem grid) {
@@ -264,10 +443,62 @@ namespace IngameScript {
                 });
             }
 
-            public static void ToggleThrusters(bool onOrOff) {
-                foreach (LIGMAThruster thruster in Thrusters) {
-                    thruster.Thruster.Enabled = onOrOff;
+            /// <summary>
+            /// Toggles all thrusters on or off in the provided direction.
+            /// If you pass in Vector3I.Zero, all thrusters will be toggled on or off.
+            /// </summary>
+            /// <param name="direction"></param>
+            /// <param name="onOrOff"></param>
+            public static void ToggleThrusters(Vector3I direction, bool onOrOff) {
+                if (direction == Vector3I.Zero) {
+                    foreach (LIGMAThruster thruster in AllThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
                 }
+
+                if (direction == Vector3I.Forward) {
+                    foreach (LIGMAThruster thruster in ForwardThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
+                if (direction == Vector3I.Backward) {
+                    foreach (LIGMAThruster thruster in ReverseThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
+                if (direction == Vector3I.Left) {
+                    foreach (LIGMAThruster thruster in LeftThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
+                if (direction == Vector3I.Right) {
+                    foreach (LIGMAThruster thruster in RightThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
+                if (direction == Vector3I.Up) {
+                    foreach (LIGMAThruster thruster in UpThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
+                if (direction == Vector3I.Down) {
+                    foreach (LIGMAThruster thruster in DownThrusters) {
+                        thruster.Thruster.Enabled = onOrOff;
+                    }
+                    return;
+                }
+
             }
 
             public static void ToggleGyros(bool onOrOff) {

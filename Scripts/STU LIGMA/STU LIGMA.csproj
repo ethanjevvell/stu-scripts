@@ -39,6 +39,7 @@
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
     <Compile Include="Components\LIGMAWarhead.cs" />
+    <Compile Include="Components\PID.cs" />
     <Compile Include="MissileReadout.cs" />
     <Compile Include="Components\LIGMABattery.cs" />
     <Compile Include="Components\LIGMAFuelTank.cs" />
