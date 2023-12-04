@@ -27,6 +27,10 @@ namespace IngameScript
         
         public IMyGyro Gyro;
 
+        public Vector3D UP = new Vector3D(111754.91, 132105.46, 5841669.28);
+        public Vector3D RIGHT = new Vector3D(111766.69, 132116.41, 5841675.86);
+        public Vector3D BACK = new Vector3D(111760.83, 132105.97, 5841682.11);
+
         public Program()
         {
 
@@ -44,27 +48,28 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             
             Vector3D gyroPosition = Gyro.GetPosition();
-            Vector3D targetPosition = new Vector3D(111766.69, 132116.41, 5841673.86);
-            Vector3D directionVector = Vector3D.Normalize(targetPosition - gyroPosition);
+            Vector3D targetPosition = RIGHT;
+            Vector3D directionVectorAbsolute = targetPosition - gyroPosition;
+            Vector3D directionVectorNormalized = Vector3D.Normalize(targetPosition - gyroPosition);
 
             Echo($"gyroPosition: {gyroPosition}\n" +
                 $"targetPosition: {targetPosition}\n" +
-                $"directionVector: {directionVector}");
+                $"directionVectorAbs: {directionVectorAbsolute}\n" +
+                $"directionVectorNorm: {directionVectorNormalized}");
 
             // get gyro's forward, up, and right vectors
-            Vector3D gyroForward = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Forward));
-            Vector3D gyroUp = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Up));
-            Vector3D gyroRight = CalculateRightVector();
+            Vector3D gyroForwardVec = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Forward));
+            Vector3D gyroUpVec = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Up));
+            Vector3D gyroRightVec = CalculateRightVector();
 
-            double yawAngle = CalculateYawAngle(gyroForward, gyroUp, directionVector);
-            double pitchAngle = CalculatePitchAngle(gyroForward, gyroRight, directionVector);
-            double rollAngle = CalculateRollAngle(gyroUp, gyroForward, directionVector);
+            double yawAngle = CalculateYawAngle(gyroForwardVec, gyroUpVec, directionVectorNormalized);
+            double pitchAngle = CalculatePitchAngle(gyroForwardVec, gyroRightVec, directionVectorNormalized);
+            double rollAngle = CalculateRollAngle(gyroUpVec, gyroForwardVec, directionVectorNormalized);
             Echo($"yawAngle = {yawAngle}\n" +
                 $"pitchAngle = {pitchAngle}\n" +
                 $"rollAngle = {rollAngle}");
 
-            Yaw(Gyro, (float)0.1);
-            if (Math.Abs(yawAngle) < 0.001) { halt = true; }
+            halt = true;
 
             if (argument.Contains("reset"))
             {
