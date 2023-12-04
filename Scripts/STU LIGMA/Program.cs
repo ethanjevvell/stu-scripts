@@ -36,6 +36,7 @@ namespace IngameScript {
 
         public void Main(string argument) {
 
+
             if (listener.HasPendingMessage) {
                 var message = listener.AcceptMessage();
                 if (message.Data.ToString() == "DETONATE") {
@@ -45,6 +46,7 @@ namespace IngameScript {
                 }
             }
 
+            Missile.UpdateMeasurements();
             Missile.PingMissionControl();
 
             switch (phase) {

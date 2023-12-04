@@ -15,6 +15,7 @@ namespace IngameScript {
             public static Vector3D CurrentPosition { get; set; }
 
             private Action<MySpriteDrawFrame, Vector2, float> Drawer;
+            private MyMovingAverage VelocityMovingAverage;
 
             private static STUDisplayDrawMapper MainLCDMapper = new STUDisplayDrawMapper {
                 DisplayDrawMapper = {
@@ -27,6 +28,7 @@ namespace IngameScript {
                 CurrentFuel = 0;
                 CurrentPower = 0;
                 Drawer = MainLCDMapper.GetDrawFunction(block, displayIndex);
+                VelocityMovingAverage = new MyMovingAverage(10);
             }
 
             private void ParseTelemetryData(STULog log) {
@@ -36,12 +38,16 @@ namespace IngameScript {
                     CurrentPower = double.Parse(log.Metadata["CurrentPower"]);
                     FuelCapacity = double.Parse(log.Metadata["FuelCapacity"]);
                     PowerCapacity = double.Parse(log.Metadata["PowerCapacity"]);
+
+                    // Display velocity as a moving average for smoother display experience
+                    VelocityMovingAverage.Enqueue((float)Velocity);
+                    Velocity = VelocityMovingAverage.Avg;
                 } catch {
                     Velocity = 69;
-                    CurrentFuel = 1;
-                    CurrentPower = 1;
-                    FuelCapacity = 1;
-                    PowerCapacity = 1;
+                    CurrentFuel = 69;
+                    CurrentPower = 100;
+                    FuelCapacity = 100;
+                    PowerCapacity = 100;
                 }
             }
 

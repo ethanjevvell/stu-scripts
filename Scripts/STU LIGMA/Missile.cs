@@ -147,13 +147,6 @@ namespace IngameScript {
 
                     MyBlockOrientation thrusterDirection = thruster.Thruster.Orientation;
 
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = $"Thruster orientation: {thruster.Thruster.Orientation}",
-                        Type = STULogType.OK,
-                        Metadata = GetTelemetryDictionary()
-                    });
-
                     if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
                         forwardCount++;
                     }
@@ -234,47 +227,6 @@ namespace IngameScript {
 
                 }
 
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Forward thrusters: {ForwardThrusters.Length}. Count: {forwardCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
-
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Reverse thrusters: {ReverseThrusters.Length}. Count {reverseCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
-
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Left thrusters: {LeftThrusters.Length}. Count {leftCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
-
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Right thrusters: {RightThrusters.Length}. Count {rightCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
-
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Up thrusters: {UpThrusters.Length}. Count {upCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
-
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Down thrusters: {DownThrusters.Length}. Count {downCount}",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
-                });
             }
 
             private static void LoadGyros(IMyGridTerminalSystem grid) {
@@ -418,8 +370,6 @@ namespace IngameScript {
             }
 
             private static void MeasureCurrentVelocity() {
-                PreviousPosition = CurrentPosition;
-                MeasureCurrentPosition();
                 Velocity = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
             }
 
@@ -427,14 +377,17 @@ namespace IngameScript {
                 CurrentPosition = Me.GetPosition();
             }
 
-            private static void UpdateMeasurements() {
+            public static void UpdateMeasurements() {
+                MeasureCurrentPosition();
                 MeasureCurrentVelocity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
+
+                // Ensure current position is saved as the "previous position" of the next time Main() runs
+                PreviousPosition = CurrentPosition;
             }
 
             public static void PingMissionControl() {
-                UpdateMeasurements();
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "",
