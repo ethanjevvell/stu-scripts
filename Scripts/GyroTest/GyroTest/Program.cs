@@ -30,6 +30,15 @@ namespace IngameScript
         public Vector3D UP = new Vector3D(111754.91, 132105.46, 5841669.28);
         public Vector3D RIGHT = new Vector3D(111766.69, 132116.41, 5841675.86);
         public Vector3D BACK = new Vector3D(111760.83, 132105.97, 5841682.11);
+        public Vector3D BIG_TEST = new Vector3D(110880.11, 133085.78, 5841330.01);
+
+        Vector3D gyroForwardVec = new Vector3D();
+        Vector3D gyroUpVec = new Vector3D();
+        Vector3D gyroRightVec = new Vector3D();
+
+        Vector3D gyroForwardVecAbs = new Vector3D();
+        Vector3D gyroUpVecAbs = new Vector3D();
+        Vector3D gyroRightVecAbs = new Vector3D();
 
         public Program()
         {
@@ -48,28 +57,52 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             
             Vector3D gyroPosition = Gyro.GetPosition();
-            Vector3D targetPosition = RIGHT;
+            Vector3D targetPosition = BIG_TEST;
             Vector3D directionVectorAbsolute = targetPosition - gyroPosition;
             Vector3D directionVectorNormalized = Vector3D.Normalize(targetPosition - gyroPosition);
 
             Echo($"gyroPosition: {gyroPosition}\n" +
                 $"targetPosition: {targetPosition}\n" +
                 $"directionVectorAbs: {directionVectorAbsolute}\n" +
-                $"directionVectorNorm: {directionVectorNormalized}");
+                $"directionVectorNorm: {directionVectorNormalized}\n");
 
             // get gyro's forward, up, and right vectors
-            Vector3D gyroForwardVec = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Forward));
-            Vector3D gyroUpVec = new Vector3D(Base6DirectionToVector3(Gyro.Orientation.Up));
-            Vector3D gyroRightVec = CalculateRightVector();
+            gyroForwardVec = Base6DirectionToVector3(Gyro.Orientation.Forward);
+            gyroUpVec = Base6DirectionToVector3(Gyro.Orientation.Up);
+            gyroRightVec = CalculateRightVector();
+            Echo($"gyroForwardVec: {gyroForwardVec}\n" +
+                $"gyroUpVec: {gyroUpVec}\n" +
+                $"gyroRightVec: {gyroRightVec}\n");
+            // basically just a lookup table. see Base6DirectionToVector3. values do not update on code iterations.
 
-            double yawAngle = CalculateYawAngle(gyroForwardVec, gyroUpVec, directionVectorNormalized);
-            double pitchAngle = CalculatePitchAngle(gyroForwardVec, gyroRightVec, directionVectorNormalized);
-            double rollAngle = CalculateRollAngle(gyroUpVec, gyroForwardVec, directionVectorNormalized);
+            // get the absolute orientation of each vector. here "absolute" means w.r.t. the world origin.
+            gyroForwardVecAbs = Vector3D.TransformNormal(gyroForwardVec, Gyro.WorldMatrix);
+            gyroUpVecAbs = Vector3D.TransformNormal(gyroUpVec, Gyro.WorldMatrix);
+            gyroRightVecAbs = Vector3D.TransformNormal(gyroRightVec, Gyro.WorldMatrix);
+
+            // messing around with the Base6Directions class
+            Base6Directions.Direction gyroForwardDir = Base6Directions.GetDirection(gyroForwardVec);
+            Base6Directions.Direction gyroUpDir = Base6Directions.GetDirection(gyroUpVec);
+            Base6Directions.Direction gyroRightDir = Base6Directions.GetDirection(gyroRightVec);
+
+            Echo($"gyroForwardDir: {gyroForwardDir}\n" +
+                $"gyroUpDir: {gyroUpDir}\n" +
+                $"gyroRightDir: {gyroRightDir}\n");
+
+            double yawAngle = CalculateYawAngle(gyroForwardVecAbs, gyroUpVec, directionVectorNormalized);
+            double pitchAngle = CalculatePitchAngle(gyroForwardVecAbs, gyroRightVec, directionVectorNormalized);
+            double rollAngle = CalculateRollAngle(gyroUpVecAbs, gyroForwardVec, directionVectorNormalized);
             Echo($"yawAngle = {yawAngle}\n" +
                 $"pitchAngle = {pitchAngle}\n" +
-                $"rollAngle = {rollAngle}");
+                $"rollAngle = {rollAngle}\n");
 
-            halt = true;
+            // Roll(Gyro, 0.1 * Math.Sign(rollAngle));
+            Pitch(Gyro, 0.1 * Math.Sign(pitchAngle));
+            Yaw(Gyro, 0.1 * Math.Sign(yawAngle));
+            // if (Math.Abs(rollAngle) < 0.01) { Roll(Gyro, 0); }
+            if (Math.Abs(pitchAngle) < 0.01) {  Pitch(Gyro, 0); }
+            if (Math.Abs(yawAngle) < 0.01) {  Yaw(Gyro, 0); }
+
 
             if (argument.Contains("reset"))
             {
@@ -168,22 +201,22 @@ namespace IngameScript
             halt = true;
         }
 
-        public void Pitch(IMyGyro gyro, float pitchSpeed)
+        public void Pitch(IMyGyro gyro, double pitchSpeed)
         {
             Echo($"pitching at a speed of {pitchSpeed}");
-            gyro.Pitch = pitchSpeed;
+            gyro.Pitch = (float)pitchSpeed;
         }
 
-        public void Roll(IMyGyro gyro, float rollSpeed)
+        public void Roll(IMyGyro gyro, double rollSpeed)
         {
             Echo($"rolling at a speed of {rollSpeed}");
-            gyro.Roll = rollSpeed;
+            gyro.Roll = (float)rollSpeed;
         }
 
-        public void Yaw(IMyGyro gyro, float yawSpeed)
+        public void Yaw(IMyGyro gyro, double yawSpeed)
         {
             Echo($"yawing at a speed of {yawSpeed}");
-            gyro.Yaw = yawSpeed;
+            gyro.Yaw = (float)yawSpeed;
         }
 
         public Vector3 Base6DirectionToVector3(Base6Directions.Direction direction)
@@ -191,7 +224,7 @@ namespace IngameScript
             switch (direction)
             {
                 case Base6Directions.Direction.Forward:
-                    return new Vector3(0, 0, 1); // look into Vector3I.Forward if this causes trouble later
+                    return new Vector3(0, 0, -1);
                 case Base6Directions.Direction.Backward:
                     return new Vector3(0, 0, 1);
                 case Base6Directions.Direction.Left:
