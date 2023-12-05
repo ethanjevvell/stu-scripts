@@ -12,9 +12,9 @@ namespace IngameScript {
                 Thruster = thruster;
             }
 
-            public void SetThrust(float overrideValue) {
+            public void SetThrust(double overrideValue) {
                 // Thrust override is capped at the max effective thrust
-                Thruster.ThrustOverride = Math.Min(Thruster.MaxEffectiveThrust, overrideValue);
+                Thruster.ThrustOverride = Math.Min(Thruster.MaxEffectiveThrust, (float)overrideValue);
             }
 
         }

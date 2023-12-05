@@ -13,7 +13,6 @@ namespace IngameScript {
                     Idle,
                     InitialBurn,
                     SlowBurn,
-
                     Terminal
                 }
 
@@ -30,7 +29,7 @@ namespace IngameScript {
 
                         case LaunchPhase.InitialBurn:
 
-                            Maneuvers.SetForwardVelocity(70);
+                            Maneuvers.Velocity.ControlForward(70);
                             var distance = Vector3D.Distance(StartPosition, CurrentPosition);
                             if (distance > SELF_DESTRUCT_THRESHOLD) {
                                 phase = LaunchPhase.Terminal;
