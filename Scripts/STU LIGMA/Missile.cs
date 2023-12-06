@@ -39,10 +39,20 @@ namespace IngameScript {
             /// Position of the missile at the current time in world coordinates
             /// </summary>
             public static Vector3D CurrentPosition { get; set; }
+            public static MatrixD CurrentOrientation { get; set; }
             /// <summary>
             /// Position of the missile the last time it was measured in world coordinates
             /// </summary>
             public static Vector3D PreviousPosition { get; set; }
+            public static MatrixD PreviousOrientation { get; set; }
+            /// <summary>
+            /// Missile's current velocity in meters per second, broken down into its components
+            /// </summary>
+            public static Vector3D VelocityComponents { get; set; }
+            /// <summary>
+            /// Missile's current velocity in meters per second
+            /// </summary>
+            public static double VelocityMagnitude { get; set; }
             /// <summary>
             /// Missile's current fuel level in liters
             /// </summary>
@@ -51,10 +61,6 @@ namespace IngameScript {
             /// Missile's current power level in kilowatt-hours
             /// </summary>
             public static double CurrentPower { get; set; }
-            /// <summary>
-            /// Missile's current velocity in meters per second
-            /// </summary>
-            public static double Velocity { get; set; }
             /// <summary>
             /// Missile's total fuel capacity in liters
             /// </summary>
@@ -90,8 +96,12 @@ namespace IngameScript {
                 MeasureCurrentPower();
                 MeasureCurrentPosition();
 
-                CurrentPosition = Me.GetPosition();
+                CurrentPosition = RemoteControl.GetPosition();
+                CurrentOrientation = RemoteControl.WorldMatrix;
+
                 PreviousPosition = CurrentPosition;
+                PreviousOrientation = RemoteControl.WorldMatrix;
+
                 StartPosition = CurrentPosition;
                 TotalMissileMass = RemoteControl.CalculateShipMass().TotalMass;
 
@@ -399,7 +409,12 @@ namespace IngameScript {
             }
 
             private static void MeasureCurrentVelocity() {
-                Velocity = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
+                Vector3D worldVelocity = (CurrentPosition - PreviousPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
+                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousOrientation));
+                // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
+                // We reverse that by convention because it's easier to think about
+                VelocityComponents = localVelocity * new Vector3D(1, 1, -1);
+                VelocityMagnitude = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
             }
 
             private static void MeasureCurrentPosition() {
@@ -413,6 +428,7 @@ namespace IngameScript {
                 MeasureCurrentPower();
 
                 // Ensure current position is saved as the "previous position" of the next time Main() runs
+                PreviousOrientation = CurrentOrientation;
                 PreviousPosition = CurrentPosition;
             }
 
@@ -448,7 +464,8 @@ namespace IngameScript {
 
             public static Dictionary<string, string> GetTelemetryDictionary() {
                 return new Dictionary<string, string> {
-                    { "Velocity", Velocity.ToString() },
+                    { "VelocityMagnitude", VelocityMagnitude.ToString() },
+                    { "VelocityComponents", VelocityComponents.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
                     { "CurrentPower", CurrentPower.ToString() },
                     { "FuelCapacity", FuelCapacity.ToString() },

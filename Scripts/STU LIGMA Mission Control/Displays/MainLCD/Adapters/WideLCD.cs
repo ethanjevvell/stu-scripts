@@ -9,7 +9,7 @@ namespace IngameScript {
 
                     double fuelFilledRatio = CurrentFuel / FuelCapacity;
                     double powerStoredRatio = CurrentPower / PowerCapacity;
-                    string velocityFuelPowerString = $"Velocity: {(int)Velocity} m/s\nFuel: {(int)(fuelFilledRatio * 100)}%\nPower: {(int)(CurrentPower / PowerCapacity) * 100}%";
+                    string velocityFuelPowerString = $"Velocity abs: {VelocityMagnitude}\nVelocity components: \n{VelocityComponents.X.ToString("F2")}, \n{VelocityComponents.Y.ToString("F2")},\n {VelocityComponents.Z.ToString("F2")}\nFuel: {(int)(fuelFilledRatio * 100)}%\nPower: {(int)(CurrentPower / PowerCapacity) * 100}%";
 
                     frame.Add(new MySprite() {
                         Type = SpriteType.TEXT,

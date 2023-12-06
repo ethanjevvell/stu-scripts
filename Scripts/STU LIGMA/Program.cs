@@ -58,7 +58,7 @@ namespace IngameScript {
                     break;
 
                 case Phase.Launch:
-                    Missile.Launch.Run();
+                    Missile.TestSuite.Run();
                     break;
 
                 case Phase.Flight:

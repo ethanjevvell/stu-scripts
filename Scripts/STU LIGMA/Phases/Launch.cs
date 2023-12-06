@@ -1,6 +1,4 @@
-﻿using VRageMath;
-
-namespace IngameScript {
+﻿namespace IngameScript {
     partial class Program {
         public partial class Missile {
 
@@ -11,8 +9,8 @@ namespace IngameScript {
 
                 public enum LaunchPhase {
                     Idle,
-                    InitialBurn,
-                    SlowBurn,
+                    RightBurn,
+                    LeftBurn,
                     Terminal
                 }
 
@@ -24,14 +22,23 @@ namespace IngameScript {
 
                         case LaunchPhase.Idle:
 
-                            phase = LaunchPhase.InitialBurn;
+                            phase = LaunchPhase.RightBurn;
                             break;
 
-                        case LaunchPhase.InitialBurn:
+                        case LaunchPhase.RightBurn:
 
-                            Maneuvers.Velocity.ControlForward(70);
-                            var distance = Vector3D.Distance(StartPosition, CurrentPosition);
-                            if (distance > SELF_DESTRUCT_THRESHOLD) {
+                            var forwardReached = Maneuvers.Velocity.ControlForward(80);
+                            var rightReached = Maneuvers.Velocity.ControlRight(10);
+                            if (forwardReached && rightReached) {
+                                phase = LaunchPhase.LeftBurn;
+                            }
+                            break;
+
+                        case LaunchPhase.LeftBurn:
+
+                            var forwardReached2 = Maneuvers.Velocity.ControlForward(-20);
+                            var rightReached2 = Maneuvers.Velocity.ControlRight(-10);
+                            if (forwardReached2 && rightReached2) {
                                 phase = LaunchPhase.Terminal;
                             }
                             break;

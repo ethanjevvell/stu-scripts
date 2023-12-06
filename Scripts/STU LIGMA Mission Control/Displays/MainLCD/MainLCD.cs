@@ -7,7 +7,8 @@ namespace IngameScript {
     partial class Program {
         public partial class MainLCD : STUDisplay {
 
-            public static double Velocity { get; set; }
+            public static double VelocityMagnitude { get; set; }
+            public static Vector3D VelocityComponents { get; set; }
             public static double CurrentFuel { get; set; }
             public static double CurrentPower { get; set; }
             public static double FuelCapacity { get; set; }
@@ -24,7 +25,7 @@ namespace IngameScript {
             };
 
             public MainLCD(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize) {
-                Velocity = 0;
+                VelocityComponents = Vector3D.Zero;
                 CurrentFuel = 0;
                 CurrentPower = 0;
                 Drawer = MainLCDMapper.GetDrawFunction(block, displayIndex);
@@ -33,17 +34,24 @@ namespace IngameScript {
 
             private void ParseTelemetryData(STULog log) {
                 try {
-                    Velocity = double.Parse(log.Metadata["Velocity"]);
+                    Vector3D parsedVelocity;
+                    Vector3D.TryParse(log.Metadata["VelocityComponents"], out parsedVelocity);
+                    if (parsedVelocity != null) {
+                        VelocityComponents = parsedVelocity;
+                    } else {
+                        VelocityComponents = Vector3D.Zero;
+                    }
+                    VelocityMagnitude = double.Parse(log.Metadata["VelocityMagnitude"]);
                     CurrentFuel = double.Parse(log.Metadata["CurrentFuel"]);
                     CurrentPower = double.Parse(log.Metadata["CurrentPower"]);
                     FuelCapacity = double.Parse(log.Metadata["FuelCapacity"]);
                     PowerCapacity = double.Parse(log.Metadata["PowerCapacity"]);
 
                     // Display velocity as a moving average for smoother display experience
-                    VelocityMovingAverage.Enqueue((float)Velocity);
-                    Velocity = VelocityMovingAverage.Avg;
+                    //VelocityMovingAverage.Enqueue((float)Velocity);
+                    //Velocity = VelocityMovingAverage.Avg;
                 } catch {
-                    Velocity = 69;
+                    VelocityComponents = Vector3D.Zero;
                     CurrentFuel = 69;
                     CurrentPower = 100;
                     FuelCapacity = 100;

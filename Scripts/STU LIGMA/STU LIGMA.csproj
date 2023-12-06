@@ -54,6 +54,7 @@
     </AdditionalFiles>
     <Compile Include="Missile.cs" />
     <Compile Include="Phases\Launch.cs" />
+    <Compile Include="Phases\TestSuite.cs" />
     <Compile Include="Program.cs" />
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
