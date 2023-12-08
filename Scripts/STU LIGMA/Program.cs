@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -8,7 +9,7 @@ namespace IngameScript {
 
         private string command = "";
 
-        Missile missile;
+        LIGMA missile;
         MissileReadout display;
         STUMasterLogBroadcaster broadcaster;
         IMyBroadcastListener listener;
@@ -25,7 +26,7 @@ namespace IngameScript {
         public Program() {
             broadcaster = new STUMasterLogBroadcaster(LIGMA_VEHICLE_BROADCASTER_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             listener = IGC.RegisterBroadcastListener(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL);
-            missile = new Missile(broadcaster, GridTerminalSystem, Me, Runtime);
+            missile = new LIGMA(broadcaster, GridTerminalSystem, Me, Runtime);
             display = new MissileReadout(Me, 0, missile);
             phase = Phase.Idle;
 
@@ -36,18 +37,27 @@ namespace IngameScript {
 
         public void Main(string argument) {
 
+            if (!string.IsNullOrEmpty(argument)) {
+                if (argument == "DETONATE") {
+                    LIGMA.SelfDestruct();
+                } else if (argument == "LAUNCH") {
+                    phase = Phase.Launch;
+                } else {
+                    throw new Exception("Invalid command");
+                }
+            }
 
             if (listener.HasPendingMessage) {
                 var message = listener.AcceptMessage();
                 if (message.Data.ToString() == "DETONATE") {
-                    Missile.SelfDestruct();
+                    LIGMA.SelfDestruct();
                 } else {
                     command = message.Data.ToString();
                 }
             }
 
-            Missile.UpdateMeasurements();
-            Missile.PingMissionControl();
+            LIGMA.UpdateMeasurements();
+            LIGMA.PingMissionControl();
 
             switch (phase) {
 
@@ -58,7 +68,7 @@ namespace IngameScript {
                     break;
 
                 case Phase.Launch:
-                    Missile.Launch.Run();
+                    LIGMA.Launch.Run();
                     break;
 
                 case Phase.Flight:

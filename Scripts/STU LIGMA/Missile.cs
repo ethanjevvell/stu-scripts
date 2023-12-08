@@ -1,58 +1,27 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using VRageMath;
 
 namespace IngameScript {
     partial class Program {
-        public partial class Missile {
+        public partial class LIGMA {
 
             private const string MissileName = "LIGMA-I";
-            public const double TimeStep = 1.0 / 6.0;
+            public const float TimeStep = 1.0f / 6.0f;
+
+            public static STUFlightController FlightController { get; set; }
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
-            public static LIGMAThruster[] AllThrusters { get; set; }
-            public static LIGMAThruster[] ForwardThrusters { get; set; }
-            public static LIGMAThruster[] ReverseThrusters { get; set; }
-            public static LIGMAThruster[] LeftThrusters { get; set; }
-            public static LIGMAThruster[] RightThrusters { get; set; }
-            public static LIGMAThruster[] UpThrusters { get; set; }
-            public static LIGMAThruster[] DownThrusters { get; set; }
+            public static IMyThrust[] Thrusters { get; set; }
+            public static IMyGyro[] Gyros { get; set; }
+            public static IMyBatteryBlock[] Batteries { get; set; }
+            public static IMyGasTank[] GasTanks { get; set; }
+            public static IMyWarhead[] Warheads { get; set; }
 
-            public static double MaximumForwardThrust { get; set; }
-            public static double MaximumReverseThrust { get; set; }
-            public static double MaximumLeftThrust { get; set; }
-            public static double MaximumRightThrust { get; set; }
-            public static double MaximumUpThrust { get; set; }
-            public static double MaximumDownThrust { get; set; }
-
-            public static LIGMAGyro[] Gyros { get; set; }
-            public static LIGMABattery[] Batteries { get; set; }
-            public static LIGMAFuelTank[] FuelTanks { get; set; }
-            public static LIGMAWarhead[] Warheads { get; set; }
-            public static Vector3D StartPosition { get; set; }
-            /// <summary>
-            /// Position of the missile at the current time in world coordinates
-            /// </summary>
-            public static Vector3D CurrentPosition { get; set; }
-            public static MatrixD CurrentOrientation { get; set; }
-            /// <summary>
-            /// Position of the missile the last time it was measured in world coordinates
-            /// </summary>
-            public static Vector3D PreviousPosition { get; set; }
-            public static MatrixD PreviousOrientation { get; set; }
-            /// <summary>
-            /// Missile's current velocity in meters per second, broken down into its components
-            /// </summary>
-            public static Vector3D VelocityComponents { get; set; }
-            /// <summary>
-            /// Missile's current velocity in meters per second
-            /// </summary>
-            public static double VelocityMagnitude { get; set; }
             /// <summary>
             /// Missile's current fuel level in liters
             /// </summary>
@@ -69,19 +38,11 @@ namespace IngameScript {
             /// Missile's total power capacity in kilowatt-hours
             /// </summary>
             public static double PowerCapacity { get; set; }
-            public static double TotalMissileMass { get; set; }
 
-            public Missile(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
+            public LIGMA(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
-
-                MaximumForwardThrust = 0;
-                MaximumReverseThrust = 0;
-                MaximumLeftThrust = 0;
-                MaximumRightThrust = 0;
-                MaximumUpThrust = 0;
-                MaximumDownThrust = 0;
 
                 LoadRemoteController(grid);
                 LoadThrusters(grid);
@@ -94,18 +55,14 @@ namespace IngameScript {
                 MeasureTotalFuelCapacity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
-                MeasureCurrentPositionAndOrientation();
 
-                CurrentPosition = RemoteControl.GetPosition();
-                CurrentOrientation = RemoteControl.WorldMatrix;
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "ALL SYSTEMS NOMINAL",
+                    Type = STULogType.OK,
+                });
 
-                PreviousPosition = CurrentPosition;
-                PreviousOrientation = RemoteControl.WorldMatrix;
-
-                StartPosition = CurrentPosition;
-                TotalMissileMass = RemoteControl.CalculateShipMass().TotalMass;
-
-                MeasureCurrentVelocity();
+                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {
@@ -124,7 +81,6 @@ namespace IngameScript {
                     Sender = MissileName,
                     Message = "Remote control... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
             }
 
@@ -141,131 +97,19 @@ namespace IngameScript {
                     throw new Exception("No thrusters found on grid.");
                 }
 
-                LIGMAThruster[] allThrusters = new LIGMAThruster[thrusterBlocks.Count];
+                IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
 
                 for (int i = 0; i < thrusterBlocks.Count; i++) {
-                    allThrusters[i] = new LIGMAThruster(thrusterBlocks[i] as IMyThrust);
+                    allThrusters[i] = thrusterBlocks[i] as IMyThrust;
                 }
-
-                AssignThrustersByOrientation(allThrusters);
 
                 Broadcaster.Log(new STULog {
                     Sender = "LIGMA-I",
                     Message = "Thrusters... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
 
-                AllThrusters = allThrusters;
-            }
-
-            private static void AssignThrustersByOrientation(LIGMAThruster[] allThrusters) {
-
-                int forwardCount = 0;
-                int reverseCount = 0;
-                int leftCount = 0;
-                int rightCount = 0;
-                int upCount = 0;
-                int downCount = 0;
-
-                foreach (LIGMAThruster thruster in allThrusters) {
-
-                    MyBlockOrientation thrusterDirection = thruster.Thruster.Orientation;
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
-                        forwardCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
-                        reverseCount++;
-                    }
-
-                    // in-game geometry is the reverse of what you'd expect for left-right
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
-                        leftCount++;
-                    }
-
-                    // in-game geometry is the reverse of what you'd expect for left-right
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
-                        rightCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
-                        upCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
-                        downCount++;
-                    }
-
-                }
-
-                ForwardThrusters = new LIGMAThruster[forwardCount];
-                ReverseThrusters = new LIGMAThruster[reverseCount];
-                LeftThrusters = new LIGMAThruster[leftCount];
-                RightThrusters = new LIGMAThruster[rightCount];
-                UpThrusters = new LIGMAThruster[upCount];
-                DownThrusters = new LIGMAThruster[downCount];
-
-                forwardCount = 0;
-                reverseCount = 0;
-                leftCount = 0;
-                rightCount = 0;
-                upCount = 0;
-                downCount = 0;
-
-                foreach (LIGMAThruster thruster in allThrusters) {
-
-                    MyBlockOrientation thrusterDirection = thruster.Thruster.Orientation;
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
-                        ForwardThrusters[forwardCount] = thruster;
-                        MaximumForwardThrust += ForwardThrusters[forwardCount].Thruster.MaxThrust;
-                        forwardCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
-                        ReverseThrusters[reverseCount] = thruster;
-                        MaximumReverseThrust += ReverseThrusters[reverseCount].Thruster.MaxThrust;
-                        reverseCount++;
-                    }
-
-                    // in-game geometry is the reverse of what you'd expect for left-right
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
-                        LeftThrusters[leftCount] = thruster;
-                        MaximumLeftThrust += LeftThrusters[leftCount].Thruster.MaxThrust;
-                        leftCount++;
-                    }
-
-                    // in-game geometry is the reverse of what you'd expect for left-right
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
-                        RightThrusters[rightCount] = thruster;
-                        MaximumRightThrust += RightThrusters[rightCount].Thruster.MaxThrust;
-                        rightCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
-                        UpThrusters[upCount] = thruster;
-                        MaximumUpThrust += UpThrusters[upCount].Thruster.MaxThrust;
-                        upCount++;
-                    }
-
-                    if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
-                        DownThrusters[downCount] = thruster;
-                        MaximumDownThrust += DownThrusters[downCount].Thruster.MaxThrust;
-                        downCount++;
-                    }
-
-                }
-
-            }
-
-            private static void SetThrusterOverrides(LIGMAThruster[] thrusters, double overrideValue) {
-                Array.ForEach(thrusters, thruster => thruster.SetThrust(overrideValue));
-            }
-
-            private static void ToggleThrusters(LIGMAThruster[] thrusters, bool onOrOff) {
-                Array.ForEach(thrusters, thruster => thruster.Thruster.Enabled = onOrOff);
+                Thrusters = allThrusters;
             }
 
             private static void LoadGyros(IMyGridTerminalSystem grid) {
@@ -279,15 +123,14 @@ namespace IngameScript {
                     });
                     throw new Exception("No thrusters found on grid.");
                 }
-                LIGMAGyro[] gyros = new LIGMAGyro[gyroBlocks.Count];
+                IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
                 for (int i = 0; i < gyroBlocks.Count; i++) {
-                    gyros[i] = new LIGMAGyro(gyroBlocks[i] as IMyGyro);
+                    gyros[i] = gyroBlocks[i] as IMyGyro;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Gyros... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 Gyros = gyros;
             }
@@ -303,23 +146,22 @@ namespace IngameScript {
                     });
                     throw new Exception("No batteries found on grid.");
                 }
-                LIGMABattery[] batteries = new LIGMABattery[batteryBlocks.Count];
+                IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
                 for (int i = 0; i < batteryBlocks.Count; i++) {
-                    batteries[i] = new LIGMABattery(batteryBlocks[i] as IMyBatteryBlock);
+                    batteries[i] = batteryBlocks[i] as IMyBatteryBlock;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Batteries... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 Batteries = batteries;
             }
 
             private static void LoadFuelTanks(IMyGridTerminalSystem grid) {
-                List<IMyTerminalBlock> fuelTankBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyGasTank>(fuelTankBlocks, block => block.CubeGrid == Me.CubeGrid);
-                if (fuelTankBlocks.Count == 0) {
+                List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (gasTankBlocks.Count == 0) {
                     Broadcaster.Log(new STULog {
                         Sender = MissileName,
                         Message = "No fuel tanks found on grid",
@@ -327,17 +169,16 @@ namespace IngameScript {
                     });
                     throw new Exception("No fuel tanks found on grid.");
                 }
-                LIGMAFuelTank[] fuelTanks = new LIGMAFuelTank[fuelTankBlocks.Count];
-                for (int i = 0; i < fuelTankBlocks.Count; i++) {
-                    fuelTanks[i] = new LIGMAFuelTank(fuelTankBlocks[i] as IMyGasTank);
+                IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
+                for (int i = 0; i < gasTankBlocks.Count; i++) {
+                    fuelTanks[i] = gasTankBlocks[i] as IMyGasTank;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Fuel tanks... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
-                FuelTanks = fuelTanks;
+                GasTanks = fuelTanks;
             }
 
             private static void LoadWarheads(IMyGridTerminalSystem grid) {
@@ -351,86 +192,64 @@ namespace IngameScript {
                     });
                     throw new Exception("No warheads found on grid");
                 }
-                LIGMAWarhead[] warheads = new LIGMAWarhead[warheadBlocks.Count];
+                IMyWarhead[] warheads = new IMyWarhead[warheadBlocks.Count];
                 for (int i = 0; i < warheadBlocks.Count; i++) {
-                    warheads[i] = new LIGMAWarhead(warheadBlocks[i] as IMyWarhead);
+                    warheads[i] = warheadBlocks[i] as IMyWarhead;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "Warheads... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 Warheads = warheads;
             }
 
             private static void MeasureTotalPowerCapacity() {
                 double capacity = 0;
-                foreach (LIGMABattery battery in Batteries) {
-                    capacity += battery.Battery.MaxStoredPower * 1000;
+                foreach (IMyBatteryBlock battery in Batteries) {
+                    capacity += battery.MaxStoredPower * 1000;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = $"Total power capacity: {capacity} kWh",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 PowerCapacity = capacity;
             }
 
             private static void MeasureTotalFuelCapacity() {
                 double capacity = 0;
-                foreach (LIGMAFuelTank tank in FuelTanks) {
-                    capacity += tank.Tank.Capacity;
+                foreach (IMyGasTank tank in GasTanks) {
+                    capacity += tank.Capacity;
                 }
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = $"Total fuel capacity: {capacity} L",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 FuelCapacity = capacity;
             }
 
             private static void MeasureCurrentFuel() {
                 double currentFuel = 0;
-                foreach (LIGMAFuelTank tank in FuelTanks) {
-                    currentFuel += tank.Tank.FilledRatio * tank.Tank.Capacity;
+                foreach (IMyGasTank tank in GasTanks) {
+                    currentFuel += tank.FilledRatio * tank.Capacity;
                 }
                 CurrentFuel = currentFuel;
             }
 
             private static void MeasureCurrentPower() {
                 double currentPower = 0;
-                foreach (LIGMABattery battery in Batteries) {
-                    currentPower += battery.Battery.CurrentStoredPower * 1000;
+                foreach (IMyBatteryBlock battery in Batteries) {
+                    currentPower += battery.CurrentStoredPower * 1000;
                 }
                 CurrentPower = currentPower;
             }
 
-            private static void MeasureCurrentVelocity() {
-                Vector3D worldVelocity = (CurrentPosition - PreviousPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
-                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousOrientation));
-                // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
-                // We reverse that by convention because it's easier to think about
-                VelocityComponents = localVelocity *= new Vector3D(1, 1, -1);
-                VelocityMagnitude = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
-            }
-
-            private static void MeasureCurrentPositionAndOrientation() {
-                CurrentOrientation = RemoteControl.WorldMatrix;
-                CurrentPosition = Me.GetPosition();
-            }
-
             public static void UpdateMeasurements() {
-                MeasureCurrentPositionAndOrientation();
-                MeasureCurrentVelocity();
+                FlightController.Update();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
-
-                // Ensure current position is saved as the "previous position" of the next time Main() runs
-                PreviousOrientation = CurrentOrientation;
-                PreviousPosition = CurrentPosition;
             }
 
             public static void PingMissionControl() {
@@ -442,10 +261,16 @@ namespace IngameScript {
                 });
             }
 
-            public static void ToggleGyros(bool onOrOff) {
-                foreach (LIGMAGyro gyro in Gyros) {
-                    gyro.Gyro.Enabled = onOrOff;
-                }
+            public static void ArmWarheads() {
+                Array.ForEach(Warheads, warhead => {
+                    warhead.IsArmed = true;
+                });
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "WARHEADS ARMED",
+                    Type = STULogType.ERROR,
+                    Metadata = GetTelemetryDictionary()
+                });
             }
 
             public static void SelfDestruct() {
@@ -455,18 +280,18 @@ namespace IngameScript {
                     Type = STULogType.WARNING,
                     Metadata = GetTelemetryDictionary()
                 });
-                foreach (LIGMAWarhead warhead in Warheads) {
-                    warhead.Arm();
+                foreach (IMyWarhead warhead in Warheads) {
+                    warhead.IsArmed = true;
                 }
-                foreach (LIGMAWarhead warhead in Warheads) {
+                foreach (IMyWarhead warhead in Warheads) {
                     warhead.Detonate();
                 }
             }
 
             public static Dictionary<string, string> GetTelemetryDictionary() {
                 return new Dictionary<string, string> {
-                    { "VelocityMagnitude", VelocityMagnitude.ToString() },
-                    { "VelocityComponents", VelocityComponents.ToString() },
+                    { "VelocityMagnitude", FlightController.VelocityMagnitude.ToString() },
+                    { "VelocityComponents", FlightController.VelocityComponents.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
                     { "CurrentPower", CurrentPower.ToString() },
                     { "FuelCapacity", FuelCapacity.ToString() },

@@ -2,7 +2,7 @@
 
 namespace IngameScript {
     partial class Program {
-        public partial class Missile {
+        public partial class LIGMA {
 
             public class TestSuite {
 
@@ -388,13 +388,13 @@ namespace IngameScript {
                         bool actionCompleted = false;
                         switch (action.Direction) {
                             case Direction.Forward:
-                                actionCompleted = Maneuvers.Velocity.ControlForward(action.Magnitude);
+                                actionCompleted = FlightController.ControlForward(action.Magnitude);
                                 break;
                             case Direction.Right:
-                                actionCompleted = Maneuvers.Velocity.ControlRight(action.Magnitude);
+                                actionCompleted = FlightController.ControlRight(action.Magnitude);
                                 break;
                             case Direction.Up:
-                                actionCompleted = Maneuvers.Velocity.ControlUp(action.Magnitude);
+                                actionCompleted = FlightController.ControlUp(action.Magnitude);
                                 break;
                         }
                         allActionsCompleted &= actionCompleted;

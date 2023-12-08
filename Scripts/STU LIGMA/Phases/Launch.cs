@@ -2,12 +2,9 @@
 
 namespace IngameScript {
     partial class Program {
-        public partial class Missile {
+        public partial class LIGMA {
 
             public class Launch {
-
-                // Temporary; for ensuring missile is far enough from test site before self destruct
-                private const double SELF_DESTRUCT_THRESHOLD = 3000;
 
                 private static Vector3D TestTarget = new Vector3D(484.92, 3816.29, -1834.40);
 
@@ -44,9 +41,9 @@ namespace IngameScript {
 
                         case LaunchPhase.InitialBurn:
 
-                            VzSet = Maneuvers.Velocity.ControlForward(100);
-                            VxSet = Maneuvers.Velocity.ControlRight(0);
-                            VySet = Maneuvers.Velocity.ControlUp(0);
+                            VzSet = FlightController.ControlForward(70);
+                            VxSet = FlightController.ControlRight(0);
+                            VySet = FlightController.ControlUp(0);
 
                             if (VzSet && VxSet && VySet) {
                                 Broadcaster.Log(new STULog {
@@ -61,10 +58,11 @@ namespace IngameScript {
                             break;
 
                         case LaunchPhase.TurnBurn:
-                            orientationSet = Maneuvers.Orientation.AlignGyro(TestTarget);
-                            VzSet = Maneuvers.Velocity.ControlForward(60);
-                            VxSet = Maneuvers.Velocity.ControlRight(0);
-                            VySet = Maneuvers.Velocity.ControlUp(0);
+
+                            orientationSet = FlightController.OrientShip(TestTarget);
+                            VzSet = FlightController.ControlForward(70);
+                            VxSet = FlightController.ControlRight(0);
+                            VySet = FlightController.ControlUp(0);
 
                             if (orientationSet && VzSet && VxSet && VySet) {
                                 Broadcaster.Log(new STULog {
@@ -74,18 +72,20 @@ namespace IngameScript {
                                     Metadata = GetTelemetryDictionary()
                                 });
                                 phase = LaunchPhase.Flight;
+                                ArmWarheads();
+
                             }
                             break;
 
 
                         case LaunchPhase.Flight:
 
-                            Maneuvers.Orientation.AlignGyro(TestTarget);
-                            Maneuvers.Velocity.ControlForward(500);
-                            Maneuvers.Velocity.ControlRight(0);
-                            Maneuvers.Velocity.ControlUp(0);
+                            FlightController.OrientShip(TestTarget);
+                            FlightController.ControlForward(500);
+                            FlightController.ControlRight(0);
+                            FlightController.ControlUp(0);
 
-                            if (Vector3D.Distance(CurrentPosition, TestTarget) < 15) {
+                            if (Vector3D.Distance(FlightController.CurrentPosition, TestTarget) < 15) {
                                 phase = LaunchPhase.Terminal;
                             }
 
