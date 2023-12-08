@@ -30,7 +30,7 @@ namespace IngameScript
         public Vector3D UP = new Vector3D(111754.91, 132105.46, 5841669.28);
         public Vector3D RIGHT = new Vector3D(111766.69, 132116.41, 5841675.86);
         public Vector3D BACK = new Vector3D(111760.83, 132105.97, 5841682.11);
-        public Vector3D BIG_TEST = new Vector3D(110880.11, 133085.78, 5841330.01);
+        public Vector3D BIG_TEST = new Vector3D(110880, 133085, 5841330.01);
 
         Vector3D gyroForwardVec = new Vector3D();
         Vector3D gyroUpVec = new Vector3D();
@@ -39,6 +39,8 @@ namespace IngameScript
         Vector3D gyroForwardVecAbs = new Vector3D();
         Vector3D gyroUpVecAbs = new Vector3D();
         Vector3D gyroRightVecAbs = new Vector3D();
+
+        double smoothingFactor = 0.75;
 
         public Program()
         {
@@ -56,6 +58,7 @@ namespace IngameScript
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             
+            // gather measurements about the world and the gyro
             Vector3D gyroPosition = Gyro.GetPosition();
             Vector3D targetPosition = BIG_TEST;
             Vector3D directionVectorAbsolute = targetPosition - gyroPosition;
@@ -66,7 +69,7 @@ namespace IngameScript
                 $"directionVectorAbs: {directionVectorAbsolute}\n" +
                 $"directionVectorNorm: {directionVectorNormalized}\n");
 
-            // get gyro's forward, up, and right vectors
+            // get gyro's forward, up, and right vectors w.r.t the gyro itself
             gyroForwardVec = Base6DirectionToVector3(Gyro.Orientation.Forward);
             gyroUpVec = Base6DirectionToVector3(Gyro.Orientation.Up);
             gyroRightVec = CalculateRightVector();
@@ -91,18 +94,23 @@ namespace IngameScript
 
             double yawAngle = CalculateYawAngle(gyroForwardVecAbs, gyroUpVec, directionVectorNormalized);
             double pitchAngle = CalculatePitchAngle(gyroForwardVecAbs, gyroRightVec, directionVectorNormalized);
-            double rollAngle = CalculateRollAngle(gyroUpVecAbs, gyroForwardVec, directionVectorNormalized);
+            double rollAngle = CalculateRollAngle(gyroUpVecAbs, gyroForwardVec, new Vector3D(1,1,1));
             Echo($"yawAngle = {yawAngle}\n" +
                 $"pitchAngle = {pitchAngle}\n" +
                 $"rollAngle = {rollAngle}\n");
 
-            // Roll(Gyro, 0.1 * Math.Sign(rollAngle));
-            Pitch(Gyro, 0.1 * Math.Sign(pitchAngle));
-            Yaw(Gyro, 0.1 * Math.Sign(yawAngle));
-            // if (Math.Abs(rollAngle) < 0.01) { Roll(Gyro, 0); }
-            if (Math.Abs(pitchAngle) < 0.01) {  Pitch(Gyro, 0); }
-            if (Math.Abs(yawAngle) < 0.01) {  Yaw(Gyro, 0); }
+            //Roll(Gyro, rollAngle * smoothingFactor);
+            Pitch(Gyro, pitchAngle * smoothingFactor);
+            Yaw(Gyro, yawAngle * smoothingFactor);
 
+            //if (Math.Abs(rollAngle) < 0.01) { Roll(Gyro, 0); }
+            if (Math.Abs(pitchAngle) < 0.01) { Pitch(Gyro, 0); }
+            if (Math.Abs(yawAngle) < 0.01) { Yaw(Gyro, 0); }
+
+            //Orient(rollAngle, pitchAngle, yawAngle);
+
+            //Roll(Gyro, rollAngle * smoothingFactor * 0.5);
+            //if (Math.Abs(rollAngle) < 0.01) { Roll(Gyro, 0); }
 
             if (argument.Contains("reset"))
             {
@@ -123,6 +131,12 @@ namespace IngameScript
                 Runtime.UpdateFrequency = UpdateFrequency.None;
                 Reset(Gyro);
             }
+        }
+
+        public void Orient(double roll, double pitch, double yaw)
+        {
+            Pitch(Gyro, pitch * smoothingFactor);
+            Yaw(Gyro, yaw*smoothingFactor);
         }
 
         public double CalculateYawAngle(Vector3D gyroForward, Vector3D gyroUp, Vector3D directionVector)
@@ -256,24 +270,6 @@ namespace IngameScript
             Vector3 rightVector = Vector3.Cross(forwardVector, upVector);
             return rightVector;
         }
-        //public Vector3D GetCurrentOrientation(IMyGyro gyro)
-        //{
-
-        //}
-
-        //public Vector2D ParseTargetOrientation(Vector3D vecTarget)
-        //{
-
-        //}
-
-        //public double CalculateOrientationDeltaX(Vector3D vecCurrent, Vector3D vecTarget)
-        //{
-
-        //}
-
-        //public double CalculateOrientationDeltaZ(Vector3D vecCurrent, Vector3D vecTarget)
-        //{
-
-        //}
+        
     }
 }
