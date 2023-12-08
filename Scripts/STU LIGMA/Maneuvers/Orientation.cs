@@ -9,7 +9,7 @@ namespace IngameScript {
 
                     public static bool AlignGyro(Vector3D target) {
 
-                        Vector3D targetVectorNormalized = Vector3D.Normalize(target - CurrentPosition);
+                        Vector3D targetVectorNormalized = -Vector3D.Normalize(target - CurrentPosition);
                         Vector3D forwardVector = RemoteControl.WorldMatrix.Forward;
 
                         Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVectorNormalized);

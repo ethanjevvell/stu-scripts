@@ -40,7 +40,7 @@
   <ItemGroup>
     <Compile Include="Components\LIGMAWarhead.cs" />
     <Compile Include="Components\PID.cs" />
-    <Compile Include="Maneuvers\Orient.cs" />
+    <Compile Include="Maneuvers\Orientation.cs" />
     <Compile Include="Maneuvers\Velocity.cs" />
     <Compile Include="MissileReadout.cs" />
     <Compile Include="Components\LIGMABattery.cs" />

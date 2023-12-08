@@ -94,7 +94,7 @@ namespace IngameScript {
                 MeasureTotalFuelCapacity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
-                MeasureCurrentPosition();
+                MeasureCurrentPositionAndOrientation();
 
                 CurrentPosition = RemoteControl.GetPosition();
                 CurrentOrientation = RemoteControl.WorldMatrix;
@@ -413,16 +413,17 @@ namespace IngameScript {
                 Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousOrientation));
                 // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
                 // We reverse that by convention because it's easier to think about
-                VelocityComponents = localVelocity * new Vector3D(1, 1, -1);
+                VelocityComponents = localVelocity *= new Vector3D(1, 1, -1);
                 VelocityMagnitude = Vector3D.Distance(PreviousPosition, CurrentPosition) / Runtime.TimeSinceLastRun.TotalSeconds;
             }
 
-            private static void MeasureCurrentPosition() {
+            private static void MeasureCurrentPositionAndOrientation() {
+                CurrentOrientation = RemoteControl.WorldMatrix;
                 CurrentPosition = Me.GetPosition();
             }
 
             public static void UpdateMeasurements() {
-                MeasureCurrentPosition();
+                MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();

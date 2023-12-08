@@ -9,14 +9,20 @@ namespace IngameScript {
                 // Temporary; for ensuring missile is far enough from test site before self destruct
                 private const double SELF_DESTRUCT_THRESHOLD = 3000;
 
-                private static Vector3D TestTarget = new Vector3D(581.42, -344.59, -897.14);
+                private static Vector3D TestTarget = new Vector3D(484.92, 3816.29, -1834.40);
 
                 public enum LaunchPhase {
                     Idle,
                     InitialBurn,
+                    TurnBurn,
                     Flight,
                     Terminal
                 }
+
+                private static bool VzSet = false;
+                private static bool VxSet = false;
+                private static bool VySet = false;
+                private static bool orientationSet = false;
 
                 public static LaunchPhase phase = LaunchPhase.Idle;
 
@@ -30,7 +36,7 @@ namespace IngameScript {
                             Broadcaster.Log(new STULog {
                                 Sender = MissileName,
                                 Message = "Starting initial burn",
-                                Type = STULogType.OK,
+                                Type = STULogType.WARNING,
                                 Metadata = GetTelemetryDictionary()
                             });
 
@@ -38,23 +44,44 @@ namespace IngameScript {
 
                         case LaunchPhase.InitialBurn:
 
-                            var alignmentComplete = Maneuvers.Orientation.AlignGyro(TestTarget);
+                            VzSet = Maneuvers.Velocity.ControlForward(100);
+                            VxSet = Maneuvers.Velocity.ControlRight(0);
+                            VySet = Maneuvers.Velocity.ControlUp(0);
 
-                            if (alignmentComplete) {
+                            if (VzSet && VxSet && VySet) {
                                 Broadcaster.Log(new STULog {
                                     Sender = MissileName,
-                                    Message = "Entering flight phase",
-                                    Type = STULogType.OK,
+                                    Message = "Entering turn phase",
+                                    Type = STULogType.WARNING,
                                     Metadata = GetTelemetryDictionary()
                                 });
-                                phase = LaunchPhase.Flight;
+                                phase = LaunchPhase.TurnBurn;
                             }
 
                             break;
 
+                        case LaunchPhase.TurnBurn:
+                            orientationSet = Maneuvers.Orientation.AlignGyro(TestTarget);
+                            VzSet = Maneuvers.Velocity.ControlForward(60);
+                            VxSet = Maneuvers.Velocity.ControlRight(0);
+                            VySet = Maneuvers.Velocity.ControlUp(0);
+
+                            if (orientationSet && VzSet && VxSet && VySet) {
+                                Broadcaster.Log(new STULog {
+                                    Sender = MissileName,
+                                    Message = "Entering flight phase",
+                                    Type = STULogType.WARNING,
+                                    Metadata = GetTelemetryDictionary()
+                                });
+                                phase = LaunchPhase.Flight;
+                            }
+                            break;
+
+
                         case LaunchPhase.Flight:
 
-                            Maneuvers.Velocity.ControlForward(70);
+                            Maneuvers.Orientation.AlignGyro(TestTarget);
+                            Maneuvers.Velocity.ControlForward(500);
                             Maneuvers.Velocity.ControlRight(0);
                             Maneuvers.Velocity.ControlUp(0);
 
