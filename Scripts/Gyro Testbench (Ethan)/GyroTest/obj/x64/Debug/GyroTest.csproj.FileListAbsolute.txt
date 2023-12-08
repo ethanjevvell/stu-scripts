@@ -1,0 +1,31 @@
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\MDK\MDK.options.props
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\MDK\MDK.paths.props
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\GyroTest.exe.config
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\GyroTest.exe
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\GyroTest.pdb
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\MDKUtilities.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\VRage.Network.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\HavokWrapper.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\ProtoBuf.Net.Core.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\System.Memory.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\VRage.NativeWrapper.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\System.Buffers.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\System.Runtime.CompilerServices.Unsafe.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\SixLabors.ImageSharp.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\SixLabors.Core.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\System.Numerics.Vectors.dll
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\SixLabors.ImageSharp.xml
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\bin\SixLabors.Core.xml
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.csproj.AssemblyReference.cache
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.csproj.SuggestedBindingRedirects.cache
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.exe.config
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.csproj.CoreCompileInputs.cache
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.csproj.CopyComplete
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.exe
+D:\vs-repositories\stu-scripts\Scripts\GyroTest\GyroTest\obj\x64\Debug\GyroTest.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\Gyro Testbench (Ethan)\GyroTest\obj\x64\Debug\GyroTest.pdb

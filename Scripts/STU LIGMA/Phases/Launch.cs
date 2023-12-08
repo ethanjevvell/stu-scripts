@@ -1,4 +1,6 @@
-﻿namespace IngameScript {
+﻿using VRageMath;
+
+namespace IngameScript {
     partial class Program {
         public partial class Missile {
 
@@ -7,10 +9,12 @@
                 // Temporary; for ensuring missile is far enough from test site before self destruct
                 private const double SELF_DESTRUCT_THRESHOLD = 3000;
 
+                private static Vector3D TestTarget = new Vector3D(581.42, -344.59, -897.14);
+
                 public enum LaunchPhase {
                     Idle,
-                    RightBurn,
-                    LeftBurn,
+                    InitialBurn,
+                    Flight,
                     Terminal
                 }
 
@@ -22,25 +26,42 @@
 
                         case LaunchPhase.Idle:
 
-                            phase = LaunchPhase.RightBurn;
+                            phase = LaunchPhase.InitialBurn;
+                            Broadcaster.Log(new STULog {
+                                Sender = MissileName,
+                                Message = "Starting initial burn",
+                                Type = STULogType.OK,
+                                Metadata = GetTelemetryDictionary()
+                            });
+
                             break;
 
-                        case LaunchPhase.RightBurn:
+                        case LaunchPhase.InitialBurn:
 
-                            var forwardReached = Maneuvers.Velocity.ControlForward(80);
-                            var rightReached = Maneuvers.Velocity.ControlRight(10);
-                            if (forwardReached && rightReached) {
-                                phase = LaunchPhase.LeftBurn;
+                            var alignmentComplete = Maneuvers.Orientation.AlignGyro(TestTarget);
+
+                            if (alignmentComplete) {
+                                Broadcaster.Log(new STULog {
+                                    Sender = MissileName,
+                                    Message = "Entering flight phase",
+                                    Type = STULogType.OK,
+                                    Metadata = GetTelemetryDictionary()
+                                });
+                                phase = LaunchPhase.Flight;
                             }
+
                             break;
 
-                        case LaunchPhase.LeftBurn:
+                        case LaunchPhase.Flight:
 
-                            var forwardReached2 = Maneuvers.Velocity.ControlForward(-20);
-                            var rightReached2 = Maneuvers.Velocity.ControlRight(-10);
-                            if (forwardReached2 && rightReached2) {
+                            Maneuvers.Velocity.ControlForward(70);
+                            Maneuvers.Velocity.ControlRight(0);
+                            Maneuvers.Velocity.ControlUp(0);
+
+                            if (Vector3D.Distance(CurrentPosition, TestTarget) < 15) {
                                 phase = LaunchPhase.Terminal;
                             }
+
                             break;
 
                         case LaunchPhase.Terminal:
