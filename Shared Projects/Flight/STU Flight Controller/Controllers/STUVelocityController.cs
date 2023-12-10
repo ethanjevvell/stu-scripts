@@ -71,11 +71,11 @@ namespace IngameScript {
 
                 private NTable NTable { get; set; }
 
-                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, float shipMass, NTable Ntable = null) {
+                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
 
                     RemoteControl = remoteControl;
 
-                    ShipMass = shipMass;
+                    ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
                     dt = timeStep;
                     NTable = Ntable == null ? new NTable() : Ntable;
 
@@ -94,6 +94,11 @@ namespace IngameScript {
                 /// </summary>
                 private class VelocityController {
 
+                    IMyRemoteControl RemoteControl;
+
+                    private const double VELOCITY_ERROR_TOLERANCE = 0.02;
+                    private const double GRAVITY_ERROR_TOLERANCE = 0.02;
+
                     private double v_buffer;
                     private double N;
                     private double decelerationInterval;
@@ -102,9 +107,6 @@ namespace IngameScript {
                     private IMyThrust[] B_Thrusters;
                     private double MaximumAThrust;
                     private double MaximumBThrust;
-
-                    public bool Cruising = false;
-                    public bool AtMaxAcceleration = false;
 
                     public VelocityController(double buffer, double n, IMyThrust[] aThrusters, double maxAThrust, IMyThrust[] bThrusters, double maxBThrust) {
                         v_buffer = buffer;
@@ -116,46 +118,28 @@ namespace IngameScript {
                         MaximumBThrust = maxBThrust;
                     }
 
-                    public void SetVelocity(double v, double desiredVelocity) {
-                        double velocityDiff = desiredVelocity - v;
+                    public bool SetVelocity(double currentVelocity, double desiredVelocity, double gravityVectorComponent) {
 
-                        if (!Cruising) {
-                            ToggleThrusters(A_Thrusters, true);
-                            ToggleThrusters(B_Thrusters, true);
-                        }
+                        double remainingVelocityToGain = desiredVelocity - currentVelocity;
 
-                        if (velocityDiff > v_buffer) {
-                            if (!AtMaxAcceleration) {
-                                SetThrusterOverrides(A_Thrusters, MaximumAThrust);
-                                AtMaxAcceleration = true;
-                                Cruising = false;
+                        if (Math.Abs(remainingVelocityToGain) < VELOCITY_ERROR_TOLERANCE) {
+                            // If we're operating on an axis that's fighting gravity, then we need to counteract gravity with acceleration of our own
+                            if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE) {
+                                double counterForce = -gravityVectorComponent * ShipMass;
+                                ApplyThrust(counterForce);
                             }
-                            return;
+                            // If we're really close to the velocity and we're not fighting gravity, then we're done, as our velocity won't change without another force acting on the ship
+                            return true;
                         }
 
-                        AtMaxAcceleration = false;
-                        Accelerate(v, desiredVelocity);
+                        return Accelerate(remainingVelocityToGain, gravityVectorComponent);
                     }
 
-                    public void Accelerate(double v, double desiredVelocity) {
-                        double velocityRemaining = desiredVelocity - v;
-                        bool isVelocityClose = Math.Abs(velocityRemaining) < 0.01;
-
-                        if (isVelocityClose && Cruising) {
-                            return;
-                        }
-
-                        if (isVelocityClose) {
-                            Cruising = true;
-                            ToggleThrusters(A_Thrusters, false);
-                            ToggleThrusters(B_Thrusters, false);
-                            return;
-                        }
-
-                        Cruising = false;
-                        double newAcceleration = velocityRemaining / (decelerationInterval);
+                    public bool Accelerate(double remainingVelocityToGain, double gravityVectorComponent) {
+                        double newAcceleration = (remainingVelocityToGain / decelerationInterval) + -gravityVectorComponent;
                         double force = ShipMass * newAcceleration;
                         ApplyThrust(force);
+                        return false;
                     }
 
                     private void ApplyThrust(double force) {
@@ -165,36 +149,33 @@ namespace IngameScript {
                         if (force < 0) {
                             SetThrusterOverrides(A_Thrusters, 0.0f);
                             SetThrusterOverrides(B_Thrusters, thrust);
-                        } else {
+                        } else if (force > 0) {
                             SetThrusterOverrides(B_Thrusters, 0.0f);
                             SetThrusterOverrides(A_Thrusters, thrust);
+                        } else {
+                            SetThrusterOverrides(A_Thrusters, 0.0f);
+                            SetThrusterOverrides(B_Thrusters, 0.0f);
                         }
                     }
                 }
 
-                public bool ControlForward(double currentVelocity, double desiredVelocity) {
-                    ForwardController.SetVelocity(currentVelocity, desiredVelocity);
-                    return ForwardController.Cruising;
+                public bool ControlVx(double currentVelocity, double desiredVelocity) {
+                    var gravityVector = RemoteControl.GetNaturalGravity();
+                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).X, 2);
+                    return RightController.SetVelocity(currentVelocity, desiredVelocity, localGravityVector);
                 }
 
-                public bool ControlRight(double currentVelocity, double desiredVelocity) {
-                    RightController.SetVelocity(currentVelocity, desiredVelocity);
-                    return RightController.Cruising;
+                public bool ControlVy(double currentVelocity, double desiredVelocity) {
+                    var gravityVector = RemoteControl.GetNaturalGravity();
+                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).Y, 2);
+                    return UpController.SetVelocity(currentVelocity, desiredVelocity, localGravityVector);
                 }
 
-                public bool ControlUp(double currentVelocity, double desiredVelocity) {
-                    UpController.SetVelocity(currentVelocity, desiredVelocity);
-                    return UpController.Cruising;
-                }
-
-                /// <summary>
-                /// Resets the internal state of all velocity controllers.
-                /// Use this after finishing using controllers if you're getting unexpected behaviour.
-                /// </summary>
-                public void ResetControllers() {
-                    ForwardController.Cruising = false;
-                    RightController.Cruising = false;
-                    UpController.Cruising = false;
+                public bool ControlVz(double currentVelocity, double desiredVelocity) {
+                    var gravityVector = RemoteControl.GetNaturalGravity();
+                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).Z, 2);
+                    // Flip Gz to account for flipped forward-back orientation of Remote Control
+                    return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -localGravityVector);
                 }
 
                 private void AssignThrustersByOrientation(IMyThrust[] allThrusters) {
@@ -317,8 +298,8 @@ namespace IngameScript {
                 }
 
                 private static void SetThrusterOverrides(IMyThrust[] thrusters, double overrideValue) {
-                    // Thrust override is capped at the max effective thrust
-                    Array.ForEach(thrusters, thruster => thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)overrideValue));
+                    // Thrust override is capped at the max thrust
+                    Array.ForEach(thrusters, thruster => thruster.ThrustOverride = Math.Min(thruster.MaxThrust, (float)overrideValue));
                 }
 
                 private static void ToggleThrusters(IMyThrust[] thrusters, bool enabled) {

@@ -18,7 +18,7 @@ namespace IngameScript {
                     });
                 }
 
-                public bool AlignShip(Vector3D target, Vector3D currentPosition) {
+                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition) {
 
                     Vector3D targetVectorNormalized = -Vector3D.Normalize(target - currentPosition);
                     Vector3D forwardVector = RemoteControl.WorldMatrix.Forward;

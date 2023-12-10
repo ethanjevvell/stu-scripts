@@ -31,8 +31,10 @@ namespace IngameScript {
             };
 
             public static Vector3D WorldGravityVector = new Vector3D();
+            public static Vector3D LocalGravityVector = new Vector3D();
             public static Vector3D ObserverWorldPosition = new Vector3D();
-            public static double WorldGravityMagniutde = 0;
+            public static double WorldGravityMagnitude = 0;
+            public static double LocalGravityMagnitude = 0;
             public Action<string> Echo;
 
             public MainDisplay(IMyTerminalBlock block, int displayIndex, Action<string> echo) : base(block, displayIndex) {
@@ -42,8 +44,10 @@ namespace IngameScript {
 
             public void CalculateMagnitude() {
                 // Distance formula in 3D
-                WorldGravityMagniutde = Math.Sqrt((WorldGravityVector.X * WorldGravityVector.X) + (WorldGravityVector.Y * WorldGravityVector.Y) + (WorldGravityVector.Z * WorldGravityVector.Z));
+                WorldGravityMagnitude = WorldGravityVector.Length();
+                LocalGravityMagnitude = LocalGravityVector.Length();
                 Echo($"G_w_v: \n{WorldGravityVector}");
+                Echo($"G_l_v: \n{LocalGravityVector}");
                 Echo($"W_p: \n {ObserverWorldPosition}");
             }
 
@@ -56,6 +60,7 @@ namespace IngameScript {
             public void Update(IMyShipController observer) {
                 // IMPORTANT: .GetNaturalGravity() returns a Vector3D in terms of the world's coordinate system, not the observer's.
                 WorldGravityVector = observer.GetNaturalGravity();
+                LocalGravityVector = Vector3D.TransformNormal(observer.GetNaturalGravity(), observer.Orientation);
                 ObserverWorldPosition = observer.GetPosition();
                 CalculateMagnitude();
                 Draw();

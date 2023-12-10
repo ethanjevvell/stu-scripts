@@ -388,13 +388,13 @@ namespace IngameScript {
                         bool actionCompleted = false;
                         switch (action.Direction) {
                             case Direction.Forward:
-                                actionCompleted = FlightController.ControlForward(action.Magnitude);
+                                actionCompleted = FlightController.SetVz(action.Magnitude);
                                 break;
                             case Direction.Right:
-                                actionCompleted = FlightController.ControlRight(action.Magnitude);
+                                actionCompleted = FlightController.SetVx(action.Magnitude);
                                 break;
                             case Direction.Up:
-                                actionCompleted = FlightController.ControlUp(action.Magnitude);
+                                actionCompleted = FlightController.SetVy(action.Magnitude);
                                 break;
                         }
                         allActionsCompleted &= actionCompleted;

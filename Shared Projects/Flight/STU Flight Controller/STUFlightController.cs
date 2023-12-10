@@ -34,14 +34,13 @@ namespace IngameScript {
             /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
             public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, NTable Ntable = null) {
-
                 TimeStep = timeStep;
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
                 VelocityNTable = Ntable;
 
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, RemoteControl.CalculateShipMass().TotalMass, VelocityNTable);
+                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
 
                 Update();
@@ -68,20 +67,47 @@ namespace IngameScript {
                 PreviousPosition = CurrentPosition;
             }
 
-            public bool ControlForward(double desiredVelocity) {
-                return VelocityController.ControlForward(VelocityComponents.Z, desiredVelocity);
+            /// <summary>
+            /// Sets the ship's velocity in the forward direction. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public bool SetVx(double desiredVelocity) {
+                return VelocityController.ControlVx(VelocityComponents.X, desiredVelocity);
             }
 
-            public bool ControlUp(double desiredVelocity) {
-                return VelocityController.ControlUp(VelocityComponents.Y, desiredVelocity);
+            /// <summary>
+            /// Sets the ship's rightward velocity. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public bool SetVy(double desiredVelocity) {
+                return VelocityController.ControlVy(VelocityComponents.Y, desiredVelocity);
             }
 
-            public bool ControlRight(double desiredVelocity) {
-                return VelocityController.ControlRight(VelocityComponents.X, desiredVelocity);
+            /// <summary>
+            /// Sets the ship's upward velocity. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public bool SetVz(double desiredVelocity) {
+                return VelocityController.ControlVz(VelocityComponents.Z, desiredVelocity);
+            }
+
+            /// <summary>
+            /// Sets the ship into a steady forward flight while controlling lateral thrusters. Good for turning while maintaining a forward velocity.
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public bool SetStableForwardVelocity(double desiredVelocity) {
+                bool forwardStable = SetVz(desiredVelocity);
+                bool rightStable = SetVx(0);
+                bool upStable = SetVy(0);
+                return forwardStable && rightStable && upStable;
             }
 
             public bool OrientShip(Vector3D target) {
-                return OrientationController.AlignShip(target, CurrentPosition);
+                return OrientationController.AlignShipToTarget(target, CurrentPosition);
             }
 
         }

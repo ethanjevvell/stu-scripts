@@ -1,35 +1,27 @@
-﻿using VRageMath;
-
-namespace IngameScript {
+﻿namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
             public class Launch {
 
-                private static Vector3D TestTarget = new Vector3D(484.92, 3816.29, -1834.40);
-
                 public enum LaunchPhase {
                     Idle,
-                    InitialBurn,
-                    TurnBurn,
-                    Flight,
-                    Terminal
+                    FastBurn,
+                    SlowBurn,
+                    End
                 }
 
-                private static bool VzSet = false;
-                private static bool VxSet = false;
-                private static bool VySet = false;
-                private static bool orientationSet = false;
+                private static bool velocityStable = false;
 
                 public static LaunchPhase phase = LaunchPhase.Idle;
 
-                public static void Run() {
+                public static bool Run() {
 
                     switch (phase) {
 
                         case LaunchPhase.Idle:
 
-                            phase = LaunchPhase.InitialBurn;
+                            phase = LaunchPhase.FastBurn;
                             Broadcaster.Log(new STULog {
                                 Sender = MissileName,
                                 Message = "Starting initial burn",
@@ -39,64 +31,35 @@ namespace IngameScript {
 
                             break;
 
-                        case LaunchPhase.InitialBurn:
+                        case LaunchPhase.FastBurn:
 
-                            VzSet = FlightController.ControlForward(70);
-                            VxSet = FlightController.ControlRight(0);
-                            VySet = FlightController.ControlUp(0);
+                            velocityStable = FlightController.SetStableForwardVelocity(100);
 
-                            if (VzSet && VxSet && VySet) {
-                                Broadcaster.Log(new STULog {
-                                    Sender = MissileName,
-                                    Message = "Entering turn phase",
-                                    Type = STULogType.WARNING,
-                                    Metadata = GetTelemetryDictionary()
-                                });
-                                phase = LaunchPhase.TurnBurn;
+                            if (velocityStable) {
+                                phase = LaunchPhase.SlowBurn;
+                                break;
                             }
 
                             break;
 
-                        case LaunchPhase.TurnBurn:
 
-                            orientationSet = FlightController.OrientShip(TestTarget);
-                            VzSet = FlightController.ControlForward(70);
-                            VxSet = FlightController.ControlRight(0);
-                            VySet = FlightController.ControlUp(0);
+                        case LaunchPhase.SlowBurn:
 
-                            if (orientationSet && VzSet && VxSet && VySet) {
-                                Broadcaster.Log(new STULog {
-                                    Sender = MissileName,
-                                    Message = "Entering flight phase",
-                                    Type = STULogType.WARNING,
-                                    Metadata = GetTelemetryDictionary()
-                                });
-                                phase = LaunchPhase.Flight;
-                                ArmWarheads();
+                            velocityStable = FlightController.SetStableForwardVelocity(20);
 
-                            }
-                            break;
-
-
-                        case LaunchPhase.Flight:
-
-                            FlightController.OrientShip(TestTarget);
-                            FlightController.ControlForward(500);
-                            FlightController.ControlRight(0);
-                            FlightController.ControlUp(0);
-
-                            if (Vector3D.Distance(FlightController.CurrentPosition, TestTarget) < 15) {
-                                phase = LaunchPhase.Terminal;
+                            if (velocityStable) {
+                                phase = LaunchPhase.End;
                             }
 
                             break;
 
-                        case LaunchPhase.Terminal:
+                        case LaunchPhase.End:
 
-                            SelfDestruct();
-                            break;
+                            return true;
 
                     }
+
+                    return false;
 
                 }
 

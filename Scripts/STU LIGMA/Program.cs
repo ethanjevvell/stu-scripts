@@ -56,6 +56,7 @@ namespace IngameScript {
                 }
             }
 
+
             LIGMA.UpdateMeasurements();
             LIGMA.PingMissionControl();
 
@@ -68,15 +69,24 @@ namespace IngameScript {
                     break;
 
                 case Phase.Launch:
-                    LIGMA.Launch.Run();
+                    var finishedLaunch = LIGMA.Launch.Run();
+                    if (finishedLaunch) {
+                        phase = Phase.Flight;
+                    };
                     break;
 
                 case Phase.Flight:
-                    // TODO
+                    var finishedFlight = LIGMA.Flight.Run();
+                    if (finishedFlight) {
+                        phase = Phase.Terminal;
+                    };
                     break;
 
                 case Phase.Terminal:
-                    // TODO
+                    var stopped = LIGMA.FlightController.SetStableForwardVelocity(0);
+                    if (stopped) {
+                        LIGMA.SelfDestruct();
+                    }
                     break;
 
                 case Phase.Impact:

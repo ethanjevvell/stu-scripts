@@ -6,7 +6,7 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            private const string MissileName = "LIGMA-I";
+            public static string MissileName = "LIGMA-I";
             public const float TimeStep = 1.0f / 6.0f;
 
             public static STUFlightController FlightController { get; set; }

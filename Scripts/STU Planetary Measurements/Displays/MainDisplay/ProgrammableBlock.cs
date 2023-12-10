@@ -31,7 +31,7 @@ namespace IngameScript {
                         Type = SpriteType.TEXT,
                         Alignment = TextAlignment.LEFT,
                         Data = $"G_w Vector: ({WorldGravityVector.X.ToString("F2")}, {WorldGravityVector.Y.ToString("F2")}, {WorldGravityVector.Z.ToString("F2")})\n" +
-                               $"M_w: {WorldGravityMagniutde.ToString("F2")}\nM_b: {BodyGravityMagnitude.ToString("F2")}",
+                               $"M_w: {WorldGravityMagnitude.ToString("F2")}\nM_b: {LocalGravityMagnitude.ToString("F2")}",
                         Position = new Vector2(-218f, -30f) * scale + centerPos,
                         Color = new Color(255, 255, 255, 255),
                         FontId = "Debug",
