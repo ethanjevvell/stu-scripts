@@ -103,19 +103,19 @@ namespace IngameScript {
                     private double N;
                     private double decelerationInterval;
 
-                    private IMyThrust[] A_Thrusters;
-                    private IMyThrust[] B_Thrusters;
-                    private double MaximumAThrust;
-                    private double MaximumBThrust;
+                    private IMyThrust[] PosDirThrusters;
+                    private IMyThrust[] NegDirThrusters;
+                    private double MaxPosThrust;
+                    private double MaxNegThrust;
 
-                    public VelocityController(double buffer, double n, IMyThrust[] aThrusters, double maxAThrust, IMyThrust[] bThrusters, double maxBThrust) {
+                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust) {
                         v_buffer = buffer;
                         N = n;
                         decelerationInterval = dt * N;
-                        A_Thrusters = aThrusters;
-                        MaximumAThrust = maxAThrust;
-                        B_Thrusters = bThrusters;
-                        MaximumBThrust = maxBThrust;
+                        PosDirThrusters = posDirThrusters;
+                        MaxPosThrust = maxPosThrust;
+                        NegDirThrusters = negDirThrusters;
+                        MaxNegThrust = maxNegThrust;
                     }
 
                     public bool SetVelocity(double currentVelocity, double desiredVelocity, double gravityVectorComponent) {
@@ -123,38 +123,41 @@ namespace IngameScript {
                         double remainingVelocityToGain = desiredVelocity - currentVelocity;
 
                         if (Math.Abs(remainingVelocityToGain) < VELOCITY_ERROR_TOLERANCE) {
-                            // If we're operating on an axis that's fighting gravity, then we need to counteract gravity with acceleration of our own
-                            if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE) {
-                                double counterForce = -gravityVectorComponent * ShipMass;
-                                ApplyThrust(counterForce);
-                            }
-                            // If we're really close to the velocity and we're not fighting gravity, then we're done, as our velocity won't change without another force acting on the ship
+                            CounteractGravity(gravityVectorComponent);
                             return true;
                         }
 
                         return Accelerate(remainingVelocityToGain, gravityVectorComponent);
                     }
 
+                    private void CounteractGravity(double gravityVectorComponent) {
+                        // If we're operating on an axis that's fighting gravity, then we need to counteract gravity with acceleration of our own
+                        if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE) {
+                            double counterForce = -gravityVectorComponent * ShipMass;
+                            ApplyThrust(counterForce);
+                        }
+                        // Otherwise, no need to apply forces to the ship
+                    }
+
+                    // https://www.desmos.com/calculator/rsdijct8fq
                     public bool Accelerate(double remainingVelocityToGain, double gravityVectorComponent) {
-                        double newAcceleration = (remainingVelocityToGain / decelerationInterval) + -gravityVectorComponent;
+                        double newAcceleration = (remainingVelocityToGain / decelerationInterval) - gravityVectorComponent;
                         double force = ShipMass * newAcceleration;
                         ApplyThrust(force);
                         return false;
                     }
 
                     private void ApplyThrust(double force) {
-                        int thrustersLength = force < 0 ? B_Thrusters.Length : A_Thrusters.Length;
+                        SetThrusterOverrides(PosDirThrusters, 0.0f);
+                        SetThrusterOverrides(NegDirThrusters, 0.0f);
+
+                        int thrustersLength = force < 0 ? NegDirThrusters.Length : PosDirThrusters.Length;
                         float thrust = (float)Math.Abs(force / thrustersLength);
 
                         if (force < 0) {
-                            SetThrusterOverrides(A_Thrusters, 0.0f);
-                            SetThrusterOverrides(B_Thrusters, thrust);
+                            SetThrusterOverrides(NegDirThrusters, thrust);
                         } else if (force > 0) {
-                            SetThrusterOverrides(B_Thrusters, 0.0f);
-                            SetThrusterOverrides(A_Thrusters, thrust);
-                        } else {
-                            SetThrusterOverrides(A_Thrusters, 0.0f);
-                            SetThrusterOverrides(B_Thrusters, 0.0f);
+                            SetThrusterOverrides(PosDirThrusters, thrust);
                         }
                     }
                 }

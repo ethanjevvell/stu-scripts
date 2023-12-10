@@ -6,6 +6,9 @@ namespace IngameScript {
 
             public static class Flight {
 
+                // space world "Test Target"
+                //private static Vector3D TargetPositionOne = new Vector3D(484.92, 3816.29, -1834.40);
+
                 private static Vector3D TargetPositionOne = new Vector3D(-60467.15, -6726.73, 4133.09);
 
                 enum FlightPhase {
