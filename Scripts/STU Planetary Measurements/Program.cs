@@ -60,7 +60,7 @@ namespace IngameScript {
             public void Update(IMyShipController observer) {
                 // IMPORTANT: .GetNaturalGravity() returns a Vector3D in terms of the world's coordinate system, not the observer's.
                 WorldGravityVector = observer.GetNaturalGravity();
-                LocalGravityVector = Vector3D.TransformNormal(observer.GetNaturalGravity(), observer.Orientation);
+                LocalGravityVector = Vector3D.TransformNormal(WorldGravityVector, observer.Orientation);
                 ObserverWorldPosition = observer.GetPosition();
                 CalculateMagnitude();
                 Draw();

@@ -69,6 +69,8 @@ namespace IngameScript {
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
+                STUMasterLogBroadcaster Broadcaster;
+
                 private NTable NTable { get; set; }
 
                 public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
@@ -99,6 +101,8 @@ namespace IngameScript {
                     private const double VELOCITY_ERROR_TOLERANCE = 0.02;
                     private const double GRAVITY_ERROR_TOLERANCE = 0.02;
 
+                    private bool ALREADY_COUNTERING_GRAVITY = false;
+
                     private double v_buffer;
                     private double N;
                     private double decelerationInterval;
@@ -127,16 +131,17 @@ namespace IngameScript {
                             return true;
                         }
 
+                        ALREADY_COUNTERING_GRAVITY = false;
                         return Accelerate(remainingVelocityToGain, gravityVectorComponent);
                     }
 
                     private void CounteractGravity(double gravityVectorComponent) {
                         // If we're operating on an axis that's fighting gravity, then we need to counteract gravity with acceleration of our own
-                        if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE) {
+                        if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE && !ALREADY_COUNTERING_GRAVITY) {
                             double counterForce = -gravityVectorComponent * ShipMass;
+                            ALREADY_COUNTERING_GRAVITY = true;
                             ApplyThrust(counterForce);
                         }
-                        // Otherwise, no need to apply forces to the ship
                     }
 
                     // https://www.desmos.com/calculator/rsdijct8fq
@@ -192,31 +197,31 @@ namespace IngameScript {
 
                     foreach (IMyThrust thruster in allThrusters) {
 
-                        MyBlockOrientation thrusterDirection = thruster.Orientation;
+                        Base6Directions.Direction thrusterDirection = RemoteControl.Orientation.TransformDirectionInverse(thruster.Orientation.Forward);
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
+                        // All thrusters have the opposite direction of what you'd expect
+                        // I.e., a thruster facing forward will have a direction of backward, because a backward-facing thruster will push the ship forward
+                        if (thrusterDirection == Base6Directions.Direction.Backward) {
                             forwardCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
+                        if (thrusterDirection == Base6Directions.Direction.Forward) {
                             reverseCount++;
                         }
 
-                        // in-game geometry is the reverse of what you'd expect for left-right
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
+                        if (thrusterDirection == Base6Directions.Direction.Right) {
                             leftCount++;
                         }
 
-                        // in-game geometry is the reverse of what you'd expect for left-right
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
+                        if (thrusterDirection == Base6Directions.Direction.Left) {
                             rightCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
+                        if (thrusterDirection == Base6Directions.Direction.Down) {
                             upCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
+                        if (thrusterDirection == Base6Directions.Direction.Up) {
                             downCount++;
                         }
 
@@ -238,41 +243,39 @@ namespace IngameScript {
 
                     foreach (IMyThrust thruster in allThrusters) {
 
-                        MyBlockOrientation thrusterDirection = thruster.Orientation;
+                        Base6Directions.Direction thrusterDirection = RemoteControl.Orientation.TransformDirectionInverse(thruster.Orientation.Forward);
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Forward) {
+                        if (thrusterDirection == Base6Directions.Direction.Backward) {
                             ForwardThrusters[forwardCount] = thruster;
                             MaximumForwardThrust += ForwardThrusters[forwardCount].MaxThrust;
                             forwardCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Backward) {
+                        if (thrusterDirection == Base6Directions.Direction.Forward) {
                             ReverseThrusters[reverseCount] = thruster;
                             MaximumReverseThrust += ReverseThrusters[reverseCount].MaxThrust;
                             reverseCount++;
                         }
 
-                        // in-game geometry is the reverse of what you'd expect for left-right
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Right) {
+                        if (thrusterDirection == Base6Directions.Direction.Right) {
                             LeftThrusters[leftCount] = thruster;
                             MaximumLeftThrust += LeftThrusters[leftCount].MaxThrust;
                             leftCount++;
                         }
 
-                        // in-game geometry is the reverse of what you'd expect for left-right
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Left) {
+                        if (thrusterDirection == Base6Directions.Direction.Left) {
                             RightThrusters[rightCount] = thruster;
                             MaximumRightThrust += RightThrusters[rightCount].MaxThrust;
                             rightCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Up) {
+                        if (thrusterDirection == Base6Directions.Direction.Down) {
                             UpThrusters[upCount] = thruster;
                             MaximumUpThrust += UpThrusters[upCount].MaxThrust;
                             upCount++;
                         }
 
-                        if (thrusterDirection.Forward == Base6Directions.Direction.Down) {
+                        if (thrusterDirection == Base6Directions.Direction.Up) {
                             DownThrusters[downCount] = thruster;
                             MaximumDownThrust += DownThrusters[downCount].MaxThrust;
                             downCount++;
