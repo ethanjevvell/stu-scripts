@@ -25,8 +25,7 @@ namespace IngameScript {
                     Vector3D targetVector = target - currentPosition;
                     if (targetVector.LengthSquared() > DOT_PRODUCT_TOLERANCE) {
 
-                        // Vector3D targetVectorNormalized = -Vector3D.Normalize(targetVector);
-                        Vector3D targetVectorNormalized = Vector3D.Normalize(targetVector);
+                        Vector3D targetVectorNormalized = -Vector3D.Normalize(targetVector);
                         Vector3D forwardVector = RemoteControl.WorldMatrix.Forward;
 
                         Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVectorNormalized);
