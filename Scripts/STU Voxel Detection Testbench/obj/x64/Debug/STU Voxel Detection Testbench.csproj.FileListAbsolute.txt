@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\STU Voxel Detection Testbench.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\STU Voxel Detection Testbench.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\STU Voxel Detection Testbench.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Voxel Detection Testbench\obj\x64\Debug\STU Voxel Detection Testbench.pdb
