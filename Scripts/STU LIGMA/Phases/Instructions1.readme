@@ -1,0 +1,18 @@
+﻿
+Orbit Pathfinder Algorithm Proposal
+----------------------------------
+
+1. We find the plane that intersects the launch point, target point and planet center. This plane must contain the optimal orbit path.
+2. We can then generate a set of points on the plane a set distance from the planet center. These points are on the orbit path.
+3. The first point the rocket traverses is directly above the launch site. This point is always the first point on the orbit path.
+4. There are then two directions we could go; one is optimal, the other is the long way around.
+5. To determine the optimal path, we first find which orbit point is closest to the target point.
+6. We then traverse the set of orbit points in each direction, starting from the first point, until we reach the point closest to the target point.
+	NOTE: This can probably be done as follows:
+	EX: Points = [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]
+		i. Create a second list of points where the first point is the same, but the rest of the points are in reverse order.
+			EX: Points2 = [A, O, N, M, L, K, J, I, H, G, F, E, D, C, B]
+		ii. Traverse each until one of them reaches the target point.
+		iii. The path that reaches the target point first is the optimal path, so we can return a slice 
+			 of that path from 0 to the index of the target point.
+7. All LIGMA has to do then is traverse each point in order, followed by a terminal phase.
