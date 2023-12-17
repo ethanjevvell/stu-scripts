@@ -11,6 +11,8 @@ namespace IngameScript {
                 // How many orbital waypoints will be constructed around the planet
                 private const int numWaypoints = 12;
                 // How far the orbital waypoints will be from the planet's center
+                // MINIMUM of 1.4; if you set to 1.0, the "orbit" will be a circle directly on the
+                // surface of the planet, which is not what we want
                 private const double radiusCoefficient = 1.4;
 
                 private int nextWaypoint = 0;
@@ -34,11 +36,10 @@ namespace IngameScript {
                     }
                 }
 
-                // -120826, -15790, 7759
-
                 public Planet TestEarth = new Planet {
                     Name = "TestEarth",
                     Radius = 61050.39,
+                    // Center of the planet in the solar system world, which is convenient
                     Center = new Vector3D(0, 0, 0)
                 };
 
@@ -130,7 +131,7 @@ namespace IngameScript {
                     pathB.Reverse();   // Reverse the rest of the list
                     pathB.Insert(0, orbitalWaypoints[0]); // Re-insert the first element at the beginning
 
-                    // Edge case: target point is almost directly below an orbital point, meaning the second and third closest points are equidistant from the target point
+                    // Edge case: target point is almost directly below an orbital point, the second and third closest points are equidistant from the target point
                     if (Math.Abs(secondClosestPointDistance - thirdClosestPointDistance) < 1e-6) {
                         return FindShortestPath(pathA, pathB, secondClosestPointToTarget, thirdClosestPointToTarget);
                     }
