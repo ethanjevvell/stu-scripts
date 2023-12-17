@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -14,6 +15,7 @@ namespace IngameScript {
         STUMasterLogBroadcaster broadcaster;
         IMyBroadcastListener listener;
         Phase phase;
+        LIGMA.FlightPhase flightPhase;
 
         enum Phase {
             Idle,
@@ -23,12 +25,16 @@ namespace IngameScript {
             Impact
         }
 
+        Vector3D target = new Vector3D(-715.43, 23248.70, 56530.42);
+
         public Program() {
             broadcaster = new STUMasterLogBroadcaster(LIGMA_VEHICLE_BROADCASTER_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             listener = IGC.RegisterBroadcastListener(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL);
             missile = new LIGMA(broadcaster, GridTerminalSystem, Me, Runtime);
             display = new MissileReadout(Me, 0, missile);
             phase = Phase.Idle;
+
+            flightPhase = new LIGMA.FlightPhase(LIGMA.FlightController.CurrentPosition, target, Echo);
 
             // Script updates every 100 ticks (roughly 1.67 seconds)
             // IMPORTANT: This must match Mission Control update frequency
@@ -72,19 +78,32 @@ namespace IngameScript {
                     var finishedLaunch = LIGMA.Launch.Run();
                     if (finishedLaunch) {
                         phase = Phase.Flight;
+                        broadcaster.Log(new STULog {
+                            Sender = LIGMA.MissileName,
+                            Message = "Entering flight phase",
+                            Type = STULogType.WARNING,
+                            Metadata = LIGMA.GetTelemetryDictionary()
+                        });
                     };
                     break;
 
                 case Phase.Flight:
-                    var finishedFlight = LIGMA.Flight.Run();
+                    var finishedFlight = flightPhase.Run();
                     if (finishedFlight) {
                         phase = Phase.Terminal;
+                        broadcaster.Log(new STULog {
+                            Sender = LIGMA.MissileName,
+                            Message = "Entering terminal phase",
+                            Type = STULogType.WARNING,
+                            Metadata = LIGMA.GetTelemetryDictionary()
+                        });
                     };
                     break;
 
                 case Phase.Terminal:
-                    var stopped = LIGMA.FlightController.SetStableForwardVelocity(0);
-                    if (stopped) {
+                    LIGMA.FlightController.SetStableForwardVelocity(300);
+                    LIGMA.FlightController.OrientShip(target);
+                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, target) < 50) {
                         LIGMA.SelfDestruct();
                     }
                     break;

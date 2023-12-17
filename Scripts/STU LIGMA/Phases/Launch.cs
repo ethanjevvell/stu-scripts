@@ -33,22 +33,11 @@
 
                         case LaunchPhase.FastBurn:
 
-                            velocityStable = FlightController.SetStableForwardVelocity(0);
-
-                            //if (velocityStable) {
-                            //    phase = LaunchPhase.SlowBurn;
-                            //    break;
-                            //}
-
-                            break;
-
-
-                        case LaunchPhase.SlowBurn:
-
-                            velocityStable = FlightController.SetStableForwardVelocity(20);
+                            velocityStable = FlightController.SetStableForwardVelocity(200);
 
                             if (velocityStable) {
                                 phase = LaunchPhase.End;
+                                break;
                             }
 
                             break;
