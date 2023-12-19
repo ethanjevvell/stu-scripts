@@ -1,10 +1,25 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
+
+            public struct Planet {
+                public double Radius;
+                public Vector3D Center;
+            }
+
+            public static Dictionary<string, Planet> CelestialBodies = new Dictionary<string, Planet> {
+                {
+                    "TestEarth", new Planet {
+                        Radius = 61050.39,
+                        Center = new Vector3D(0, 0, 0)
+                    }
+                }
+            };
 
             public static string MissileName = "LIGMA-I";
             public const float TimeStep = 1.0f / 6.0f;
@@ -62,7 +77,7 @@ namespace IngameScript {
                     Type = STULogType.OK,
                 });
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
+                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros, Broadcaster);
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {
@@ -297,6 +312,16 @@ namespace IngameScript {
                     { "FuelCapacity", FuelCapacity.ToString() },
                     { "PowerCapacity", PowerCapacity.ToString() },
                 };
+            }
+
+            public static void CreateErrorBroadcast(string message) {
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = $"FATAL - {message}",
+                    Type = STULogType.ERROR,
+                    Metadata = GetTelemetryDictionary()
+                });
+                throw new Exception(message);
             }
 
         }

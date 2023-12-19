@@ -61,14 +61,11 @@ namespace IngameScript {
 
             if (argument == "DETONATE") {
                 IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "DETONATE", TransmissionDistance.AntennaRelay);
+            } else {
+                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, argument, TransmissionDistance.AntennaRelay);
             }
 
-            if (argument == "LAUNCH") {
-                Echo("Launching...");
-                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "LAUNCH", TransmissionDistance.AntennaRelay);
-            }
-
-            if (listener.HasPendingMessage) {
+            while (listener.HasPendingMessage) {
                 message = listener.AcceptMessage();
                 try {
                     tempLog = STULog.Deserialize(message.Data.ToString());
@@ -81,10 +78,7 @@ namespace IngameScript {
                     };
                     mainPublisher.UpdateDisplays(tempLog);
                 }
-            } else {
-                // TODO: Implement display logic for missile having "NO SIGNAL" etc.
             }
-
         }
 
         public void PublishData() {

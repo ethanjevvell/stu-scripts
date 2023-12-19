@@ -33,14 +33,14 @@ namespace IngameScript {
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
-            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, NTable Ntable = null) {
+            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, STUMasterLogBroadcaster broadcaster, NTable Ntable = null) {
                 TimeStep = timeStep;
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
                 VelocityNTable = Ntable;
 
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
+                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, broadcaster, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
 
                 Update();
@@ -104,6 +104,12 @@ namespace IngameScript {
                 bool rightStable = SetVx(0);
                 bool upStable = SetVy(0);
                 return forwardStable && rightStable && upStable;
+            }
+
+            public bool StableFreeFall() {
+                bool rightStable = SetVx(0);
+                bool upStable = SetVy(0);
+                return rightStable && upStable;
             }
 
             public bool OrientShip(Vector3D target) {

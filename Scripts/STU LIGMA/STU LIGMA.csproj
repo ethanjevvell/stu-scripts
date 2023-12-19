@@ -47,7 +47,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
     <Compile Include="Missile.cs" />
-    <Compile Include="Phases\Flight.cs" />
+    <Compile Include="Phases\Flight Plan Implementations\SpaceToSpaceFlightPlan.cs" />
+    <Compile Include="Phases\FlightPlan.cs" />
+    <Compile Include="Phases\Flight Plan Implementations\IntraplanetaryFlightPlan.cs" />
     <Compile Include="Phases\Launch.cs" />
     <Compile Include="Phases\TestSuite.cs" />
     <Compile Include="Program.cs" />

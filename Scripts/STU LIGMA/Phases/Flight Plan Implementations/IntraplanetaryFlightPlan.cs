@@ -6,24 +6,16 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public class FlightPhase {
+            public class IntraplanetaryFlightPlan : FlightPlan {
 
                 // How many orbital waypoints will be constructed around the planet
                 private const int numWaypoints = 12;
-                // How far the orbital waypoints will be from the planet's center
-                // MINIMUM of 1.4; if you set to 1.0, the "orbit" will be a circle directly on the
-                // surface of the planet, which is not what we want
-                private const double radiusCoefficient = 1.4;
+                // Will be mulitplied by the max orbit altitude to get the altitude of the first waypoint
+                private const double FIRST_ORBIT_WP_COEFFICIENT = 0.6;
 
                 private int nextWaypoint = 0;
 
                 List<Vector3D> FlightWaypoints;
-
-                public struct Planet {
-                    public string Name;
-                    public double Radius;
-                    public Vector3D Center;
-                }
 
                 public class OrbitalWaypoint {
 
@@ -36,19 +28,13 @@ namespace IngameScript {
                     }
                 }
 
-                public Planet TestEarth = new Planet {
-                    Name = "TestEarth",
-                    Radius = 61050.39,
-                    // Center of the planet in the solar system world, which is convenient
-                    Center = new Vector3D(0, 0, 0)
-                };
-
-                public FlightPhase(Vector3D launch, Vector3D target, Action<string> echo) {
-                    var orbitalWaypoints = GenerateAllOrbitalWaypoints(TestEarth.Center, TestEarth.Radius, launch, target);
-                    FlightWaypoints = GetOptimalOrbitalPath(target, orbitalWaypoints);
-                    foreach (var point in FlightWaypoints) {
-                        echo(point.ToString());
+                public IntraplanetaryFlightPlan(Vector3D launch, Vector3D target) {
+                    if (!VerifyOnSamePlanet(launch, target)) {
+                        CreateErrorBroadcast("Launch and target points are not on the same planet");
                     }
+                    var launchPlanet = GetPlanetOfPoint(launch);
+                    var orbitalWaypoints = GenerateAllOrbitalWaypoints(launchPlanet.Center, launchPlanet.Radius, launch, target);
+                    FlightWaypoints = GetOptimalOrbitalPath(target, orbitalWaypoints);
                 }
 
                 public bool Run() {
@@ -74,7 +60,7 @@ namespace IngameScript {
 
                 }
 
-                private List<Vector3D> GenerateAllOrbitalWaypoints(Vector3D center, double radius, Vector3D pointA, Vector3D pointB) {
+                private List<Vector3D> GenerateAllOrbitalWaypoints(Vector3D center, double planetRadius, Vector3D pointA, Vector3D pointB) {
                     // Calculate vectors CA and CB
                     Vector3D CA = pointA - center;
                     Vector3D CB = pointB - center;
@@ -90,17 +76,19 @@ namespace IngameScript {
                     Vector3D v = Vector3D.Cross(normal, u);
                     v = Vector3D.Normalize(v);
 
-                    // Circle's radius
-                    double circleRadius = radiusCoefficient * radius;
+                    double maxOrbitAltitude = planetRadius;
+                    double orbitRadius = planetRadius + maxOrbitAltitude;
 
                     // Generate points on the circle
                     var points = new List<Vector3D>();
                     for (int i = 0; i < numWaypoints; i++) {
                         double theta = 2 * Math.PI * i / numWaypoints;
-                        Vector3D point = center + circleRadius * (Math.Cos(theta) * u + Math.Sin(theta) * v);
-                        points.Add(new Vector3D(Math.Round(point.X, 2), Math.Round(point.Y, 2), Math.Round(point.Z, 2)));
+                        Vector3D point = center + orbitRadius * (Math.Cos(theta) * u + Math.Sin(theta) * v);
+                        points.Add(point);
                     }
 
+                    // The first point is scaled down to be closer to the planet
+                    points[0] = center + (planetRadius + FIRST_ORBIT_WP_COEFFICIENT * maxOrbitAltitude) * (Math.Cos(0) * u + Math.Sin(0) * v);
                     return points;
                 }
 
@@ -155,8 +143,27 @@ namespace IngameScript {
                 private static bool PointIsEqualToEither(Vector3D point, Vector3D targetOne, Vector3D targetTwo) {
                     return point == targetOne || point == targetTwo;
                 }
-            }
 
+                private bool VerifyOnSamePlanet(Vector3D pointA, Vector3D pointB) {
+                    Planet pointAPlanet = GetPlanetOfPoint(pointA);
+                    Planet pointBPlanet = GetPlanetOfPoint(pointB);
+                    return pointAPlanet.Equals(pointBPlanet);
+                }
+
+                private Planet GetPlanetOfPoint(Vector3D point) {
+                    var detectionBuffer = 1000;
+                    foreach (var body in CelestialBodies.Keys) {
+                        Planet planet = CelestialBodies[body];
+                        BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
+                        // if the point is inside the planet's detection sphere or intersects it, it is on the planet
+                        if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
+                            return planet;
+                        }
+                    }
+                    CreateErrorBroadcast("Could not find planet of point " + point);
+                    throw new Exception("Could not find planet of point " + point);
+                }
+            }
 
         }
     }
