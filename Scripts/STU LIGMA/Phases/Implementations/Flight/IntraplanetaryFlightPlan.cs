@@ -6,7 +6,7 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public class IntraplanetaryFlightPlan : FlightPlan {
+            public class IntraplanetaryFlightPlan : IFlightPlan {
 
                 // How many orbital waypoints will be constructed around the planet
                 private const int numWaypoints = 12;
@@ -18,10 +18,8 @@ namespace IngameScript {
                 List<Vector3D> FlightWaypoints;
 
                 public class OrbitalWaypoint {
-
                     public Vector3D Position;
                     public double Distance;
-
                     public OrbitalWaypoint(Vector3D point, double distance) {
                         Position = point;
                         Distance = distance;
@@ -29,21 +27,17 @@ namespace IngameScript {
                 }
 
                 public IntraplanetaryFlightPlan(Vector3D launch, Vector3D target) {
-                    if (!VerifyOnSamePlanet(launch, target)) {
-                        CreateErrorBroadcast("Launch and target points are not on the same planet");
-                    }
-                    var launchPlanet = GetPlanetOfPoint(launch);
-                    var orbitalWaypoints = GenerateAllOrbitalWaypoints(launchPlanet.Center, launchPlanet.Radius, launch, target);
+                    var orbitalWaypoints = GenerateAllOrbitalWaypoints((Vector3D)LaunchPlanet?.Center, (double)LaunchPlanet?.Radius, launch, target);
                     FlightWaypoints = GetOptimalOrbitalPath(target, orbitalWaypoints);
                 }
 
-                public bool Run() {
+                public override bool Run() {
 
                     while (nextWaypoint < FlightWaypoints.Count) {
-                        FlightController.SetStableForwardVelocity(500);
+                        FlightController.SetStableForwardVelocity(200);
                         FlightController.OrientShip(FlightWaypoints[nextWaypoint]);
 
-                        if (Vector3D.Distance(FlightWaypoints[nextWaypoint], FlightController.CurrentPosition) < 1000) {
+                        if (Vector3D.Distance(FlightWaypoints[nextWaypoint], FlightController.CurrentPosition) < 500) {
                             nextWaypoint++;
                             Broadcaster.Log(new STULog {
                                 Sender = MissileName,
@@ -144,25 +138,6 @@ namespace IngameScript {
                     return point == targetOne || point == targetTwo;
                 }
 
-                private bool VerifyOnSamePlanet(Vector3D pointA, Vector3D pointB) {
-                    Planet pointAPlanet = GetPlanetOfPoint(pointA);
-                    Planet pointBPlanet = GetPlanetOfPoint(pointB);
-                    return pointAPlanet.Equals(pointBPlanet);
-                }
-
-                private Planet GetPlanetOfPoint(Vector3D point) {
-                    var detectionBuffer = 1000;
-                    foreach (var body in CelestialBodies.Keys) {
-                        Planet planet = CelestialBodies[body];
-                        BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
-                        // if the point is inside the planet's detection sphere or intersects it, it is on the planet
-                        if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
-                            return planet;
-                        }
-                    }
-                    CreateErrorBroadcast("Could not find planet of point " + point);
-                    throw new Exception("Could not find planet of point " + point);
-                }
             }
 
         }

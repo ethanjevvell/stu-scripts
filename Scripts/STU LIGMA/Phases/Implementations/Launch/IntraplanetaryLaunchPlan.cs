@@ -1,39 +1,38 @@
 ﻿namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
+            public class IntraplanetaryLaunchPlan : ILaunchPlan {
 
-            public class Launch {
-
-                public enum LaunchPhase {
+                private enum LaunchPhase {
                     Idle,
-                    FastBurn,
-                    SlowBurn,
+                    Start,
                     End
-                }
+                };
 
-                private static bool velocityStable = false;
+                private bool velocityStable = false;
+                private static LaunchPhase phase = LaunchPhase.Idle;
+                private double LAUNCH_VELOCITY = 150;
 
-                public static LaunchPhase phase = LaunchPhase.Idle;
-
-                public static bool Run() {
+                public override bool Run() {
 
                     switch (phase) {
 
                         case LaunchPhase.Idle:
 
-                            phase = LaunchPhase.FastBurn;
+                            phase = LaunchPhase.Start;
                             Broadcaster.Log(new STULog {
                                 Sender = MissileName,
-                                Message = "Starting initial burn",
+                                Message = "Starting launch burn",
                                 Type = STULogType.WARNING,
                                 Metadata = GetTelemetryDictionary()
                             });
 
                             break;
 
-                        case LaunchPhase.FastBurn:
+                        case LaunchPhase.Start:
 
-                            velocityStable = FlightController.SetStableForwardVelocity(100);
+                            FirstRunTasks();
+                            velocityStable = FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
 
                             if (velocityStable) {
                                 phase = LaunchPhase.End;
@@ -51,7 +50,6 @@
                     return false;
 
                 }
-
 
             }
         }

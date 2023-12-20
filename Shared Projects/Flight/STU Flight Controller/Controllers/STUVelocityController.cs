@@ -69,44 +69,23 @@ namespace IngameScript {
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
-                public static STUMasterLogBroadcaster Broadcaster;
-
                 private NTable NTable { get; set; }
 
-                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, STUMasterLogBroadcaster broadcaster, NTable Ntable = null) {
+                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
 
-                    Broadcaster = broadcaster;
                     RemoteControl = remoteControl;
 
                     ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
                     dt = timeStep;
                     NTable = Ntable == null ? new NTable() : Ntable;
 
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = $"Physical mass: {ShipMass}",
-                        Type = STULogType.WARNING,
-                    });
-
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = $"Total mass: {RemoteControl.CalculateShipMass().TotalMass}",
-                        Type = STULogType.WARNING,
-                    });
-
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = $"Base mass: {RemoteControl.CalculateShipMass().BaseMass}",
-                        Type = STULogType.WARNING,
-                    });
-
                     AssignThrustersByOrientation(allThrusters);
                     CalculateMaximumAccelerations();
                     CalculateBufferVelocities();
 
-                    ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust, Broadcaster);
-                    RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust, Broadcaster);
-                    UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust, Broadcaster);
+                    ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust);
+                    RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust);
+                    UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust);
 
                 }
 
@@ -114,9 +93,6 @@ namespace IngameScript {
                 /// Velocity controller utility. Handles acceleration and deceleration automatically based on desired velocity; deceleration occurs with a roughly natural decay.
                 /// </summary>
                 private class VelocityController {
-
-                    IMyRemoteControl RemoteControl;
-                    STUMasterLogBroadcaster Broadcaster;
 
                     private const double VELOCITY_ERROR_TOLERANCE = 0.02;
                     private const double GRAVITY_ERROR_TOLERANCE = 0.02;
@@ -132,7 +108,7 @@ namespace IngameScript {
                     private double MaxPosThrust;
                     private double MaxNegThrust;
 
-                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust, STUMasterLogBroadcaster broadcaster) {
+                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust) {
                         v_buffer = buffer;
                         N = n;
                         decelerationInterval = dt * N;
@@ -140,7 +116,6 @@ namespace IngameScript {
                         MaxPosThrust = maxPosThrust;
                         NegDirThrusters = negDirThrusters;
                         MaxNegThrust = maxNegThrust;
-                        Broadcaster = broadcaster;
                     }
 
                     public bool SetVelocity(double currentVelocity, double desiredVelocity, double gravityVectorComponent) {
@@ -161,11 +136,6 @@ namespace IngameScript {
                         if (Math.Abs(gravityVectorComponent) > GRAVITY_ERROR_TOLERANCE && !ALREADY_COUNTERING_GRAVITY) {
                             double counterForce = -gravityVectorComponent * ShipMass;
                             ALREADY_COUNTERING_GRAVITY = true;
-                            Broadcaster.Log(new STULog {
-                                Sender = LIGMA.MissileName,
-                                Message = $"Counteracting gravity with force {counterForce}",
-                                Type = STULogType.WARNING,
-                            });
                             ApplyThrust(counterForce);
                         }
                     }
@@ -173,28 +143,21 @@ namespace IngameScript {
                     // https://www.desmos.com/calculator/rsdijct8fq
                     public bool Accelerate(double remainingVelocityToGain, double gravityVectorComponent) {
                         double newAcceleration = (remainingVelocityToGain / decelerationInterval) - gravityVectorComponent;
-                        Broadcaster.Log(new STULog {
-                            Sender = LIGMA.MissileName,
-                            Message = $"New acceleration: {newAcceleration}",
-                            Type = STULogType.WARNING,
-                        });
                         double force = ShipMass * newAcceleration;
                         ApplyThrust(force);
                         return false;
                     }
 
                     private void ApplyThrust(double force) {
-                        ToggleThrusters(NegDirThrusters, false);
-                        ToggleThrusters(PosDirThrusters, false);
+                        SetThrusterOverrides(PosDirThrusters, 0.0f);
+                        SetThrusterOverrides(NegDirThrusters, 0.0f);
 
                         int thrustersLength = force < 0 ? NegDirThrusters.Length : PosDirThrusters.Length;
                         float thrust = (float)Math.Abs(force / thrustersLength);
 
                         if (force < 0) {
-                            ToggleThrusters(NegDirThrusters, true);
                             SetThrusterOverrides(NegDirThrusters, thrust);
                         } else if (force > 0) {
-                            ToggleThrusters(PosDirThrusters, true);
                             SetThrusterOverrides(PosDirThrusters, thrust);
                         }
                     }
@@ -340,11 +303,6 @@ namespace IngameScript {
                     foreach (IMyThrust thruster in thrusters) {
                         thruster.ThrustOverride = Math.Min(thruster.MaxThrust, (float)overrideValue);
                     }
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = $"Thruster override: {overrideValue}",
-                        Type = STULogType.WARNING,
-                    });
                 }
 
                 private static void ToggleThrusters(IMyThrust[] thrusters, bool enabled) {

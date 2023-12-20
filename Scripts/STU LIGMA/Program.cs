@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
@@ -10,14 +11,38 @@ namespace IngameScript {
         private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
         public bool ALREADY_RAN_FIRST_COMMAND = false;
 
+        public struct Planet {
+            public double Radius;
+            public Vector3D Center;
+        }
+
+        public static Dictionary<string, Planet> CelestialBodies = new Dictionary<string, Planet> {
+            {
+                "TestEarth", new Planet {
+                    Radius = 61050.39,
+                    Center = new Vector3D(0, 0, 0)
+                }
+            },
+            {
+                "Luna", new Planet {
+                    Radius = 9453.8439,
+                    Center = new Vector3D(16400.0530046 ,  136405.82841528, -113627.17741361)
+                }
+            }
+        };
+
         MyCommandLine commandLine = new MyCommandLine();
 
         LIGMA Missile;
         MissileReadout Display;
         STUMasterLogBroadcaster Broadcaster;
         IMyBroadcastListener Listener;
+
         Phase MainPhase;
-        FlightPlan MainFlightPlan;
+        MissileMode Mode;
+
+        LIGMA.IFlightPlan MainFlightPlan;
+        LIGMA.ILaunchPlan MainLaunchPlan;
 
         enum Phase {
             Idle,
@@ -27,15 +52,13 @@ namespace IngameScript {
             Impact
         }
 
-        enum Mode {
+        enum MissileMode {
             Intraplanetary,
             PlanetToSpace,
             SpaceToPlanet,
             SpaceToSpace,
             Interplanetary
         }
-
-        Vector3D Target;
 
         public Program() {
             Broadcaster = new STUMasterLogBroadcaster(LIGMA_VEHICLE_BROADCASTER_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
@@ -49,7 +72,7 @@ namespace IngameScript {
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
-        public void Main(string argument) {
+        void Main(string argument) {
 
             if (Listener.HasPendingMessage) {
                 var message = Listener.AcceptMessage();
@@ -76,7 +99,7 @@ namespace IngameScript {
                     break;
 
                 case Phase.Launch:
-                    var finishedLaunch = LIGMA.Launch.Run();
+                    var finishedLaunch = MainLaunchPlan.Run();
                     if (finishedLaunch) {
                         MainPhase = Phase.Flight;
                         Broadcaster.Log(new STULog {
@@ -102,9 +125,10 @@ namespace IngameScript {
                     break;
 
                 case Phase.Terminal:
-                    LIGMA.FlightController.SetStableForwardVelocity(400);
-                    LIGMA.FlightController.OrientShip(Target);
-                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, Target) < 50) {
+                    LIGMA.ArmWarheads();
+                    LIGMA.FlightController.SetStableForwardVelocity(150);
+                    LIGMA.FlightController.OrientShip(LIGMA.TargetCoordinates);
+                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates) < 30) {
                         LIGMA.SelfDestruct();
                     }
                     break;
@@ -117,64 +141,142 @@ namespace IngameScript {
 
         }
 
-        private void FirstRunTasks(string argument) {
-            Mode flightMode = ParseFlightMode(argument);
-            Vector3D target = ParseTargetCoordinates(argument);
-            switch (flightMode) {
-                case Mode.Intraplanetary:
-                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan(LIGMA.FlightController.CurrentPosition, target);
-                    Target = target;
+        public void FirstRunTasks(string argument) {
+
+            ParseTargetCoordinates(argument);
+            DeduceFlightMode(argument);
+
+            switch (Mode) {
+
+                case MissileMode.Intraplanetary:
+                    MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
+                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates);
                     break;
-                case Mode.PlanetToSpace:
-                    throw new Exception("Planet to space flight not yet implemented");
-                case Mode.SpaceToPlanet:
-                    throw new Exception("Space to planet flight not yet implemented");
-                case Mode.SpaceToSpace:
-                    throw new Exception("Space to space flight not yet implemented");
-                case Mode.Interplanetary:
-                    throw new Exception("Interplanetary flight not yet implemented");
+
+                case MissileMode.PlanetToSpace:
+                    LIGMA.CreateFatalErrorBroadcast("Planet to space flight not yet implemented");
+                    break;
+
+                case MissileMode.SpaceToPlanet:
+                    LIGMA.CreateFatalErrorBroadcast("Space to planet flight not yet implemented");
+                    break;
+
+                case MissileMode.SpaceToSpace:
+                    MainLaunchPlan = new LIGMA.SpaceToSpaceLaunchPlan();
+                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates);
+                    break;
+
+                case MissileMode.Interplanetary:
+                    LIGMA.CreateFatalErrorBroadcast("Interplanetary flight not yet implemented");
+                    break;
+
+                default:
+                    LIGMA.CreateFatalErrorBroadcast("Invalid flight mode in FirstRunTasks");
+                    break;
+
             }
+
+            Broadcaster.Log(new STULog {
+                Sender = LIGMA.MissileName,
+                Message = $"Initiating {GetModeString()}",
+                Type = STULogType.WARNING,
+                Metadata = LIGMA.GetTelemetryDictionary()
+            });
+
         }
 
-        private Mode ParseFlightMode(string argument) {
-            MyCommandLine.SwitchCollection switches = commandLine.Switches;
-            if (switches.Count > 1) {
-                LIGMA.CreateErrorBroadcast("Can only specify one flight mode");
-            }
+        public void DeduceFlightMode(string argument) {
 
-            if (commandLine.Switch("intraplanetary")) {
-                return Mode.Intraplanetary;
-            } else if (commandLine.Switch("pts")) {
-                return Mode.PlanetToSpace;
-            } else if (commandLine.Switch("stp")) {
-                return Mode.SpaceToPlanet;
-            } else if (commandLine.Switch("sts")) {
-                return Mode.SpaceToSpace;
-            } else if (commandLine.Switch("interplanetary")) {
-                return Mode.Interplanetary;
+            Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
+            Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetCoordinates);
+
+            if (OnSamePlanet(launchPos, targetPos)) {
+                Mode = MissileMode.Intraplanetary;
+            } else if (!InSpace(launchPos) && InSpace(targetPos)) {
+                Mode = MissileMode.PlanetToSpace;
+            } else if (InSpace(launchPos) && !InSpace(targetPos)) {
+                Mode = MissileMode.SpaceToPlanet;
+            } else if (InSpace(launchPos) && InSpace(targetPos)) {
+                Mode = MissileMode.SpaceToSpace;
+            } else if (OnDifferentPlanets(launchPos, targetPos)) {
+                Mode = MissileMode.Interplanetary;
             } else {
-                LIGMA.CreateErrorBroadcast("Invalid flight mode");
-                throw new Exception("Invalid flight mode");
+                LIGMA.CreateFatalErrorBroadcast("Invalid flight mode in DeduceFlightMode");
             }
+
+            LIGMA.LaunchPlanet = launchPos;
+            LIGMA.TargetPlanet = targetPos;
+
         }
 
-        private Vector3D ParseTargetCoordinates(string argument) {
-            if (commandLine.ArgumentCount != 1) {
-                LIGMA.CreateErrorBroadcast("Only accepts on argument, which is \"X Y Z\" with no commas");
+        public bool OnSamePlanet(Planet? launchPlanet, Planet? targetPlanet) {
+            if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
+                return false;
             }
+            return launchPlanet.Equals(targetPlanet);
+        }
+
+        public bool OnDifferentPlanets(Planet? launchPlanet, Planet? targetPlanet) {
+            if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
+                return false;
+            }
+            return !launchPlanet.Equals(targetPlanet);
+        }
+
+        public bool InSpace(Planet? planet) {
+            return planet == null;
+        }
+
+        public Planet? GetPlanetOfPoint(Vector3D point) {
+            var detectionBuffer = 1000;
+            foreach (var body in CelestialBodies.Keys) {
+                Planet planet = CelestialBodies[body];
+                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
+                // if the point is inside the planet's detection sphere or intersects it, it is on the planet
+                if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
+                    return planet;
+                }
+            }
+            return null;
+        }
+
+        public void ParseTargetCoordinates(string argument) {
+
+            if (commandLine.ArgumentCount != 1) {
+                LIGMA.CreateFatalErrorBroadcast("Only accepts on argument, which is \"X Y Z\" with no commas");
+            }
+
             var coordStrings = commandLine.Argument(0).Split(' ');
             double x = ParseCoordinate(coordStrings[0]);
             double y = ParseCoordinate(coordStrings[1]);
             double z = ParseCoordinate(coordStrings[2]);
-            return new Vector3D(x, y, z);
+
+            LIGMA.TargetCoordinates = new Vector3D(x, y, z);
         }
 
-        private double ParseCoordinate(string doubleString) {
+        public double ParseCoordinate(string doubleString) {
             try {
                 return double.Parse(doubleString);
             } catch {
-                LIGMA.CreateErrorBroadcast($"Invalid coordinate: {doubleString}");
+                LIGMA.CreateFatalErrorBroadcast($"Invalid coordinate: {doubleString}");
                 throw new Exception($"Invalid coordinate: {doubleString}");
+            }
+        }
+
+        public string GetModeString() {
+            switch (Mode) {
+                case MissileMode.Intraplanetary:
+                    return "intraplanetary flight";
+                case MissileMode.PlanetToSpace:
+                    return "planet-to-space flight";
+                case MissileMode.SpaceToPlanet:
+                    return "space-to-planet flight";
+                case MissileMode.SpaceToSpace:
+                    return "space-to-space flight";
+                case MissileMode.Interplanetary:
+                    return "interplanetary flight";
+                default:
+                    return "invalid flight mode";
             }
         }
     }

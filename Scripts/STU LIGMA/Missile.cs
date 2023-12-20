@@ -7,19 +7,11 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public struct Planet {
-                public double Radius;
-                public Vector3D Center;
-            }
+            public static Vector3D TargetCoordinates;
+            public static Vector3D LaunchCoordinates;
 
-            public static Dictionary<string, Planet> CelestialBodies = new Dictionary<string, Planet> {
-                {
-                    "TestEarth", new Planet {
-                        Radius = 61050.39,
-                        Center = new Vector3D(0, 0, 0)
-                    }
-                }
-            };
+            public static Planet? TargetPlanet;
+            public static Planet? LaunchPlanet;
 
             public static string MissileName = "LIGMA-I";
             public const float TimeStep = 1.0f / 6.0f;
@@ -28,6 +20,7 @@ namespace IngameScript {
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
+            public static IMyShipConnector Connector { get; set; }
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
@@ -65,6 +58,7 @@ namespace IngameScript {
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadWarheads(grid);
+                LoadConnector(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -77,19 +71,15 @@ namespace IngameScript {
                     Type = STULogType.OK,
                 });
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros, Broadcaster);
+                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
+                LaunchCoordinates = FlightController.CurrentPosition;
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> remoteControlBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyRemoteControl>(remoteControlBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (remoteControlBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No remote control found on grid",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No remote control found on grid.");
+                    CreateFatalErrorBroadcast("No remote control blocks found on grid");
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
                 Broadcaster.Log(new STULog {
@@ -104,12 +94,7 @@ namespace IngameScript {
                 List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No thrusters found on grid",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No thrusters found on grid.");
+                    CreateFatalErrorBroadcast("No thrusters found on grid");
                 }
 
                 IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
@@ -131,12 +116,7 @@ namespace IngameScript {
                 List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gyroBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No gyros found on grid",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No thrusters found on grid.");
+                    CreateFatalErrorBroadcast("No gyros found on grid");
                 }
                 IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
                 for (int i = 0; i < gyroBlocks.Count; i++) {
@@ -154,12 +134,7 @@ namespace IngameScript {
                 List<IMyTerminalBlock> batteryBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyBatteryBlock>(batteryBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (batteryBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No batteries found on grid",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No batteries found on grid.");
+                    CreateFatalErrorBroadcast("No batteries found on grid");
                 }
                 IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
                 for (int i = 0; i < batteryBlocks.Count; i++) {
@@ -177,12 +152,7 @@ namespace IngameScript {
                 List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gasTankBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No fuel tanks found on grid",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No fuel tanks found on grid.");
+                    CreateFatalErrorBroadcast("No fuel tanks found on grid");
                 }
                 IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
                 for (int i = 0; i < gasTankBlocks.Count; i++) {
@@ -200,12 +170,7 @@ namespace IngameScript {
                 List<IMyTerminalBlock> warheadBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyWarhead>(warheadBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (warheadBlocks.Count == 0) {
-                    Broadcaster.Log(new STULog {
-                        Sender = MissileName,
-                        Message = "No warheads found on grid.",
-                        Type = STULogType.ERROR
-                    });
-                    throw new Exception("No warheads found on grid");
+                    CreateFatalErrorBroadcast("No warheads found on grid");
                 }
                 IMyWarhead[] warheads = new IMyWarhead[warheadBlocks.Count];
                 for (int i = 0; i < warheadBlocks.Count; i++) {
@@ -217,6 +182,20 @@ namespace IngameScript {
                     Type = STULogType.OK,
                 });
                 Warheads = warheads;
+            }
+
+            private static void LoadConnector(IMyGridTerminalSystem grid) {
+                var connector = grid.GetBlockWithName("LIGMA Connector");
+                if (connector == null) {
+                    CreateFatalErrorBroadcast("Either no connectors found, or too many connectors found. Only one allowed.");
+                }
+                Broadcaster.Log(new STULog {
+                    Sender = MissileName,
+                    Message = "Connector... nominal",
+                    Type = STULogType.OK,
+                    Metadata = GetTelemetryDictionary()
+                });
+                Connector = connector as IMyShipConnector;
             }
 
             private static void MeasureTotalPowerCapacity() {
@@ -314,7 +293,7 @@ namespace IngameScript {
                 };
             }
 
-            public static void CreateErrorBroadcast(string message) {
+            public static void CreateFatalErrorBroadcast(string message) {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = $"FATAL - {message}",
@@ -323,6 +302,7 @@ namespace IngameScript {
                 });
                 throw new Exception(message);
             }
+
 
         }
     }
