@@ -57,7 +57,8 @@ namespace IngameScript {
             PlanetToSpace,
             SpaceToPlanet,
             SpaceToSpace,
-            Interplanetary
+            Interplanetary,
+            Testing
         }
 
         public Program() {
@@ -75,23 +76,23 @@ namespace IngameScript {
         void Main(string argument) {
 
             if (Listener.HasPendingMessage) {
+
                 var message = Listener.AcceptMessage();
                 var command = message.Data.ToString();
+
                 if (command == "DETONATE") {
                     LIGMA.SelfDestruct();
                 }
-                // "-65809 -87368 -60314"
 
                 if (!ALREADY_RAN_FIRST_COMMAND) {
                     if (commandLine.TryParse(command)) {
-                        FirstRunTasks(command);
-
                         Broadcaster.Log(new STULog {
                             Sender = LIGMA.MissileName,
-                            Message = $"Parsing command: {command}",
+                            Message = $"Received command: {command}",
                             Type = STULogType.WARNING,
                             Metadata = LIGMA.GetTelemetryDictionary()
                         });
+                        FirstRunTasks(command);
                         MainPhase = Phase.Launch;
                         ALREADY_RAN_FIRST_COMMAND = true;
                     }
@@ -151,8 +152,14 @@ namespace IngameScript {
 
         public void FirstRunTasks(string argument) {
 
-            ParseTargetCoordinates(argument);
-            DeduceFlightMode(argument);
+            var testing = argument == "-test";
+            // If using test switch, bypass all first run tasks
+            if (!testing) {
+                ParseTargetCoordinates(argument);
+                DeduceFlightMode(argument);
+            } else {
+                Mode = MissileMode.Testing;
+            }
 
             switch (Mode) {
 
@@ -176,6 +183,16 @@ namespace IngameScript {
 
                 case MissileMode.Interplanetary:
                     LIGMA.CreateFatalErrorBroadcast("Interplanetary flight not yet implemented");
+                    break;
+
+                case MissileMode.Testing:
+                    Broadcaster.Log(new STULog {
+                        Sender = LIGMA.MissileName,
+                        Message = "Entering testing mode",
+                        Type = STULogType.WARNING,
+                        Metadata = LIGMA.GetTelemetryDictionary()
+                    });
+                    MainLaunchPlan = new LIGMA.TestSuite();
                     break;
 
                 default:

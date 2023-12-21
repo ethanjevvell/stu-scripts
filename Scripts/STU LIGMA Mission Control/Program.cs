@@ -61,8 +61,9 @@ namespace IngameScript {
 
             if (argument == "DETONATE") {
                 IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "DETONATE", TransmissionDistance.AntennaRelay);
-            } else {
+            } else if (!string.IsNullOrEmpty(argument)) {
                 IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, argument, TransmissionDistance.AntennaRelay);
+                Echo($"Sending message: {argument}");
             }
 
             while (listener.HasPendingMessage) {

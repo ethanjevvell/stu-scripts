@@ -15,7 +15,9 @@ namespace IngameScript {
                 }
 
                 public override bool Run() {
-                    var velocityStable = FlightController.SetStableForwardVelocity(50);
+                    // REMOVE ZERO VECTOR WHEN DONE TESTING
+                    FlightController.AdjustShipRoll(TargetPos, Vector3D.Zero);
+                    var velocityStable = FlightController.SetStableForwardVelocity(150);
                     var orientationStable = FlightController.OrientShip(TargetPos);
                     if (velocityStable && orientationStable) {
                         Broadcaster.Log(new STULog {

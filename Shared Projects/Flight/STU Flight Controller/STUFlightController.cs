@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using VRageMath;
 
 namespace IngameScript {
@@ -27,13 +28,15 @@ namespace IngameScript {
             STUVelocityController VelocityController { get; set; }
             STUOrientationController OrientationController { get; set; }
 
+            STUMasterLogBroadcaster Broadcaster { get; set; }
+
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
             /// Be sure to orient the Remote Control block so that its forward direction is the direction you want to be considered the "forward" direction of your ship.
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
-            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, NTable Ntable = null) {
+            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, STUMasterLogBroadcaster broadcaster, NTable Ntable = null) {
                 TimeStep = timeStep;
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
@@ -46,6 +49,8 @@ namespace IngameScript {
                 RemoteControl.DampenersOverride = true;
 
                 Update();
+
+                Broadcaster = broadcaster;
             }
 
             public void MeasureCurrentVelocity() {
@@ -114,8 +119,67 @@ namespace IngameScript {
                 return rightStable && upStable;
             }
 
-            public bool OrientShip(Vector3D target) {
-                return OrientationController.AlignShipToTarget(target, CurrentPosition);
+            public bool OrientShip(Vector3D targetPos) {
+                return OrientationController.AlignShipToTarget(targetPos, CurrentPosition);
+            }
+
+            private Vector3D GetInertiaHeadingNormal(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
+                // ship inertia vector
+                Vector3D SI = MOCK_INERTIA_VECTOR;
+                SI = Vector3D.TransformNormal(SI, RemoteControl.WorldMatrix);
+                // ship-to-target vector
+                Vector3D ST = targetPos - CurrentPosition;
+                // normal vector of plane containing SI and ST
+                return Vector3D.Normalize(Vector3D.Cross(SI, ST));
+            }
+
+            private double CalculateRollAngle(Vector3D normalVector, Vector3D lateralFaceNormal) {
+                var dotProduct = Vector3D.Dot(normalVector, lateralFaceNormal);
+                var angle = Math.Acos(dotProduct);
+                return angle;
+            }
+
+            public void AdjustShipRoll(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
+                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, MOCK_INERTIA_VECTOR);
+
+                // Get the current orientation of the ship
+                MatrixD currentOrientation = RemoteControl.WorldMatrix.GetOrientation();
+
+                // Define the normals for two perpendicular lateral faces in the ship's local space
+                //Vector3D[] lateralFaceNormals = {
+                //    new Vector3D(0, 1, 0),  // Up
+                //    new Vector3D(1, 0, 0)   // Right
+                //};
+
+                //// Find the lateral face normal with the smallest needed roll adjustment
+                //foreach (var lateralNormal in lateralFaceNormals) {
+                //    Vector3D worldNormal = Vector3D.TransformNormal(lateralNormal, currentOrientation);
+                //}
+
+                Vector3D lateralFaceNormal = new Vector3D(0, 1, 0); // LIGMA's "Up" lateral side
+
+                Vector3D worldNormal = Vector3D.TransformNormal(lateralFaceNormal, currentOrientation);
+                double angle = CalculateRollAngle(inertiaHeadingNormal, worldNormal);
+                double rollAdjustment = angle > 0 ? angle - Math.PI / 4 : angle + Math.PI / 4;
+
+                Broadcaster.Log(new STULog {
+                    Sender = "Roll Adjustment",
+                    Message = $"Roll adjustment: {rollAdjustment * (180 / Math.PI)} degrees",
+                    Type = STULogType.WARNING,
+                    Metadata = LIGMA.GetTelemetryDictionary(),
+                });
+                // Apply the roll adjustment
+                if (!(Math.Abs(rollAdjustment) < 0.01)) {
+                    OrientationController.SetRoll(rollAdjustment);
+                } else {
+                    Broadcaster.Log(new STULog {
+                        Sender = LIGMA.MissileName,
+                        Message = $"Roll complete",
+                        Type = STULogType.OK,
+                        Metadata = LIGMA.GetTelemetryDictionary(),
+                    });
+                    OrientationController.SetRoll(0);
+                }
             }
 
         }

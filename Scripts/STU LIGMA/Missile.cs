@@ -71,7 +71,7 @@ namespace IngameScript {
                     Type = STULogType.OK,
                 });
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
+                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros, Broadcaster);
                 LaunchCoordinates = FlightController.CurrentPosition;
             }
 

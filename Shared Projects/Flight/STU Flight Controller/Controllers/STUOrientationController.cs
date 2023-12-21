@@ -51,9 +51,9 @@ namespace IngameScript {
                     return false;
                 }
 
-                public void SetRoll(float rollSpeed) {
+                public void SetRoll(double rollSpeed) {
                     foreach (var gyro in Gyros) {
-                        gyro.Roll = rollSpeed;
+                        gyro.Roll = (float)rollSpeed;
                     }
                 }
 

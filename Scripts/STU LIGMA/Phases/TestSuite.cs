@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public class TestSuite {
+            public class TestSuite : ILaunchPlan {
 
                 public enum LaunchPhase {
                     Idle,
@@ -358,27 +359,47 @@ namespace IngameScript {
 #endregion
                 };
 
-                public static void Run() {
+                public override bool Run() {
+
                     switch (phase) {
+
                         case LaunchPhase.Idle:
                             phase = LaunchPhase.PerformingManeuver;
+
+                            Broadcaster.Log(new STULog {
+                                Sender = MissileName,
+                                Message = "Starting test sequence",
+                                Type = STULogType.WARNING,
+                                Metadata = GetTelemetryDictionary()
+                            });
                             break;
 
                         case LaunchPhase.PerformingManeuver:
-                            if (currentManeuverIndex < testSequence.Count) {
-                                Maneuver currentManeuver = testSequence[currentManeuverIndex];
-                                bool maneuverCompleted = PerformManeuver(currentManeuver);
-                                if (maneuverCompleted) {
-                                    currentManeuverIndex++;
-                                }
-                            } else {
-                                phase = LaunchPhase.Terminal;
-                            }
+                            // PerformManeuvers(testSequence); <-- this is the original code; used for sequences of maneuvers
+                            var mockTargetPos = new Vector3D(-62291.35, -88137.14, -55521.79);
+                            // transform mockTargetPos to be relative to ship's RemoteControl
+                            var mockInertiaVector = new Vector3D(0, 0, 1);
+                            FlightController.AdjustShipRoll(mockTargetPos, mockInertiaVector);
                             break;
 
                         case LaunchPhase.Terminal:
                             SelfDestruct();
                             break;
+
+                    }
+
+                    return false;
+                }
+
+                private void PerformManeuvers(List<Maneuver> maneuvers) {
+                    if (currentManeuverIndex < testSequence.Count) {
+                        Maneuver currentManeuver = testSequence[currentManeuverIndex];
+                        bool maneuverCompleted = PerformManeuver(currentManeuver);
+                        if (maneuverCompleted) {
+                            currentManeuverIndex++;
+                        }
+                    } else {
+                        phase = LaunchPhase.Terminal;
                     }
                 }
 
