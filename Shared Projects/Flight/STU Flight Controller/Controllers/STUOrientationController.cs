@@ -50,6 +50,21 @@ namespace IngameScript {
 
                     return false;
                 }
+
+                public void SetRoll(float rollSpeed) {
+                    foreach (var gyro in Gyros) {
+                        gyro.Roll = rollSpeed;
+                    }
+                }
+
+                public void RollClockwise() {
+                    SetRoll(-1);
+                }
+
+                public void RollCounterClockwise() {
+                    SetRoll(1);
+                }
+
             }
         }
     }

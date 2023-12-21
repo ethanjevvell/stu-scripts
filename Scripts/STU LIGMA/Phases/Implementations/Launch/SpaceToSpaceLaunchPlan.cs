@@ -11,7 +11,7 @@
 
                 private bool velocityStable = false;
                 private static LaunchPhase phase = LaunchPhase.Idle;
-                private double LAUNCH_VELOCITY = 15;
+                private double LAUNCH_VELOCITY = 250;
 
                 public override bool Run() {
 

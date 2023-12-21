@@ -80,10 +80,18 @@ namespace IngameScript {
                 if (command == "DETONATE") {
                     LIGMA.SelfDestruct();
                 }
+                // "-65809 -87368 -60314"
 
                 if (!ALREADY_RAN_FIRST_COMMAND) {
                     if (commandLine.TryParse(command)) {
                         FirstRunTasks(command);
+
+                        Broadcaster.Log(new STULog {
+                            Sender = LIGMA.MissileName,
+                            Message = $"Parsing command: {command}",
+                            Type = STULogType.WARNING,
+                            Metadata = LIGMA.GetTelemetryDictionary()
+                        });
                         MainPhase = Phase.Launch;
                         ALREADY_RAN_FIRST_COMMAND = true;
                     }
@@ -121,11 +129,11 @@ namespace IngameScript {
                             Type = STULogType.WARNING,
                             Metadata = LIGMA.GetTelemetryDictionary()
                         });
+                        LIGMA.ArmWarheads();
                     };
                     break;
 
                 case Phase.Terminal:
-                    LIGMA.ArmWarheads();
                     LIGMA.FlightController.SetStableForwardVelocity(150);
                     LIGMA.FlightController.OrientShip(LIGMA.TargetCoordinates);
                     if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates) < 30) {
@@ -175,13 +183,6 @@ namespace IngameScript {
                     break;
 
             }
-
-            Broadcaster.Log(new STULog {
-                Sender = LIGMA.MissileName,
-                Message = $"Initiating {GetModeString()}",
-                Type = STULogType.WARNING,
-                Metadata = LIGMA.GetTelemetryDictionary()
-            });
 
         }
 

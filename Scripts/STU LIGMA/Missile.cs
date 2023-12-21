@@ -193,7 +193,6 @@ namespace IngameScript {
                     Sender = MissileName,
                     Message = "Connector... nominal",
                     Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
                 });
                 Connector = connector as IMyShipConnector;
             }
@@ -298,11 +297,9 @@ namespace IngameScript {
                     Sender = MissileName,
                     Message = $"FATAL - {message}",
                     Type = STULogType.ERROR,
-                    Metadata = GetTelemetryDictionary()
                 });
                 throw new Exception(message);
             }
-
 
         }
     }

@@ -15,7 +15,18 @@ namespace IngameScript {
                 }
 
                 public override bool Run() {
-                    return FlightController.OrientShip(TargetPos);
+                    var velocityStable = FlightController.SetStableForwardVelocity(50);
+                    var orientationStable = FlightController.OrientShip(TargetPos);
+                    if (velocityStable && orientationStable) {
+                        Broadcaster.Log(new STULog {
+                            Sender = MissileName,
+                            Message = $"Runs for roll version",
+                            Type = STULogType.WARNING,
+                            Metadata = GetTelemetryDictionary()
+                        });
+                        return true;
+                    }
+                    return false;
                 }
 
             }
