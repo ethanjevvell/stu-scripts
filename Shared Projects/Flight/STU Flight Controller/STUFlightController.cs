@@ -43,7 +43,7 @@ namespace IngameScript {
                 AllThrusters = allThrusters;
                 VelocityNTable = Ntable;
 
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
+                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, broadcaster, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
                 // Force dampeners on for the time being; will get turned off on launch
                 RemoteControl.DampenersOverride = true;
@@ -126,52 +126,60 @@ namespace IngameScript {
             private Vector3D GetInertiaHeadingNormal(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
                 // ship inertia vector
                 Vector3D SI = MOCK_INERTIA_VECTOR;
-                SI = Vector3D.TransformNormal(SI, RemoteControl.WorldMatrix);
+                SI = Vector3D.Normalize(Vector3D.TransformNormal(SI, RemoteControl.WorldMatrix));
                 // ship-to-target vector
-                Vector3D ST = targetPos - CurrentPosition;
+                Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
                 // normal vector of plane containing SI and ST
-                return Vector3D.Normalize(Vector3D.Cross(SI, ST));
+                Vector3D crossProduct = Vector3D.Cross(SI, ST);
+
+                if (Math.Abs(crossProduct.Length()) < 0.01) {
+                    Broadcaster.Log(new STULog {
+                        Sender = LIGMA.MissileName,
+                        Message = "Cross product SI X ST = 0",
+                        Type = STULogType.WARNING,
+                        Metadata = LIGMA.GetTelemetryDictionary()
+                    });
+                    return Vector3D.Zero;
+                }
+
+                return Vector3D.Normalize(crossProduct);
             }
 
             private double CalculateRollAngle(Vector3D normalVector, Vector3D lateralFaceNormal) {
                 var dotProduct = Vector3D.Dot(normalVector, lateralFaceNormal);
                 var angle = Math.Acos(dotProduct);
-                return angle;
+                return angle - Math.PI / 4;
             }
 
             public void AdjustShipRoll(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
-                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, MOCK_INERTIA_VECTOR);
+                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, VelocityComponents);
+                if (inertiaHeadingNormal == Vector3D.Zero) { return; }
 
                 // Get the current orientation of the ship
                 MatrixD currentOrientation = RemoteControl.WorldMatrix.GetOrientation();
 
                 // Define the normals for two perpendicular lateral faces in the ship's local space
-                //Vector3D[] lateralFaceNormals = {
-                //    new Vector3D(0, 1, 0),  // Up
-                //    new Vector3D(1, 0, 0)   // Right
-                //};
+                Vector3D[] lateralFaceNormals = {
+                    new Vector3D(0, 1, 0),  // Up
+                    new Vector3D(1, 0, 0)   // Right
+                };
 
-                //// Find the lateral face normal with the smallest needed roll adjustment
-                //foreach (var lateralNormal in lateralFaceNormals) {
-                //    Vector3D worldNormal = Vector3D.TransformNormal(lateralNormal, currentOrientation);
-                //}
+                double smallestAngle = double.PositiveInfinity;
+                double rollAdjustment = 0;
 
-                Vector3D lateralFaceNormal = new Vector3D(0, 1, 0); // LIGMA's "Up" lateral side
+                // Find the lateral face normal with the smallest needed roll adjustment
+                foreach (var lateralNormal in lateralFaceNormals) {
+                    Vector3D worldNormal = Vector3D.TransformNormal(lateralNormal, currentOrientation);
+                    double angle = CalculateRollAngle(inertiaHeadingNormal, worldNormal);
 
-                Vector3D worldNormal = Vector3D.TransformNormal(lateralFaceNormal, currentOrientation);
-                double angle = CalculateRollAngle(inertiaHeadingNormal, worldNormal);
-                double rollAdjustment = angle > 0 ? angle - Math.PI / 4 : angle + Math.PI / 4;
+                    if (Math.Abs(angle) < Math.Abs(smallestAngle)) {
+                        smallestAngle = angle;
+                        rollAdjustment = smallestAngle;
+                    }
+                }
 
-                Broadcaster.Log(new STULog {
-                    Sender = "Roll Adjustment",
-                    Message = $"Roll adjustment: {rollAdjustment * (180 / Math.PI)} degrees",
-                    Type = STULogType.WARNING,
-                    Metadata = LIGMA.GetTelemetryDictionary(),
-                });
-                // Apply the roll adjustment
-                if (!(Math.Abs(rollAdjustment) < 0.01)) {
-                    OrientationController.SetRoll(rollAdjustment);
-                } else {
+                // If close enough, stop the roll
+                if (Math.Abs(rollAdjustment) < 0.003) {
                     Broadcaster.Log(new STULog {
                         Sender = LIGMA.MissileName,
                         Message = $"Roll complete",
@@ -179,7 +187,21 @@ namespace IngameScript {
                         Metadata = LIGMA.GetTelemetryDictionary(),
                     });
                     OrientationController.SetRoll(0);
+
+                    // Otherwise, apply roll
+                } else {
+                    Broadcaster.Log(new STULog {
+                        Sender = "Roll Adjustment",
+                        Message = $"Roll adjustment: {rollAdjustment} radians",
+                        Type = STULogType.WARNING,
+                        Metadata = LIGMA.GetTelemetryDictionary(),
+                    });
+                    OrientationController.SetRoll(rollAdjustment);
                 }
+            }
+
+            public void SetRoll(double roll) {
+                OrientationController.SetRoll(roll);
             }
 
         }

@@ -10,7 +10,7 @@ namespace IngameScript {
                 IMyRemoteControl RemoteControl { get; set; }
                 IMyGyro[] Gyros { get; set; }
 
-                private const double ANGLE_ERROR_TOLERANCE = 1e-2;
+                private const double ANGLE_ERROR_TOLERANCE = 1e-3;
                 private const double DOT_PRODUCT_TOLERANCE = 1e-6;
 
                 public STUOrientationController(IMyRemoteControl remoteControl, IMyGyro[] gyros) {
