@@ -24,9 +24,9 @@ namespace IngameScript
     {
         public class Rangefinder
         {
-            IMyCameraBlock Camera {  get; set; }
+            
 
-            MyDetectedEntityInfo ScanResult = Camera.Raycast();
+            
         }
     }
 }
