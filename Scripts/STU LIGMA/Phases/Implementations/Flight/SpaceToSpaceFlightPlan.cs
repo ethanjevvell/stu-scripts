@@ -17,7 +17,7 @@ namespace IngameScript {
 
                 public override bool Run() {
                     // REMOVE ZERO VECTOR WHEN DONE TESTING
-                    FlightController.OptimizeShipRoll(TargetPos, Vector3D.Zero);
+                    FlightController.OptimizeShipRoll(TargetPos);
                     FlightController.AlignShipToTarget(TargetPos);
                     var velocityStable = FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
                     if (velocityStable) {

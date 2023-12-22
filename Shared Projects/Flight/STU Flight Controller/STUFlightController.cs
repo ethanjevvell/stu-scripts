@@ -142,8 +142,8 @@ namespace IngameScript {
             /// </summary>
             /// <param name="targetPos"></param>
             /// <param name="MOCK_INERTIA_VECTOR"></param>
-            public void OptimizeShipRoll(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
-                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, MOCK_INERTIA_VECTOR);
+            public void OptimizeShipRoll(Vector3D targetPos) {
+                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos);
                 if (inertiaHeadingNormal == Vector3D.Zero) { return; }
 
                 // Get the current orientation of the ship
@@ -183,14 +183,13 @@ namespace IngameScript {
             /// <param name="targetPos"></param>
             /// <param name="MOCK_INERTIA_VECTOR"></param>
             /// <returns></returns>
-            private Vector3D GetInertiaHeadingNormal(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
+            private Vector3D GetInertiaHeadingNormal(Vector3D targetPos) {
                 // ship inertia vector
-                Vector3D SI = MOCK_INERTIA_VECTOR;
-                SI = Vector3D.Normalize(Vector3D.TransformNormal(SI, CurrentWorldMatrix));
+                Vector3D worldVelocity = Vector3D.Normalize(Vector3D.TransformNormal(VelocityComponents, CurrentWorldMatrix));
                 // ship-to-target vector
                 Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
                 // normal vector of plane containing SI and ST
-                Vector3D crossProduct = Vector3D.Cross(SI, ST);
+                Vector3D crossProduct = Vector3D.Cross(worldVelocity, ST);
 
                 // Cross products approach zero as the two vectors approach parallel
                 // In other words, the ship is moving directly towards the target, so no need to roll

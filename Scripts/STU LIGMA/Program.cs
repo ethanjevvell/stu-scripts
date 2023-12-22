@@ -111,13 +111,7 @@ namespace IngameScript {
                     var finishedLaunch = MainLaunchPlan.Run();
                     if (finishedLaunch) {
                         MainPhase = Phase.Flight;
-                        Broadcaster.Log(new STULog {
-                            Sender = LIGMA.MissileName,
-                            Message = "Entering flight phase",
-                            Type = STULogType.WARNING,
-                            Metadata = LIGMA.GetTelemetryDictionary()
-                        });
-
+                        LIGMA.CreateWarningBroadcast("Entering flight phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
                     };
@@ -127,12 +121,7 @@ namespace IngameScript {
                     var finishedFlight = MainFlightPlan.Run();
                     if (finishedFlight) {
                         MainPhase = Phase.Descent;
-                        Broadcaster.Log(new STULog {
-                            Sender = LIGMA.MissileName,
-                            Message = "Entering descent phase",
-                            Type = STULogType.WARNING,
-                            Metadata = LIGMA.GetTelemetryDictionary()
-                        });
+                        LIGMA.CreateWarningBroadcast("Entering descent phase");
                         LIGMA.ArmWarheads();
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
@@ -140,11 +129,12 @@ namespace IngameScript {
                     break;
 
                 case Phase.Descent:
-                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(500);
-                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetCoordinates, Vector3D.Zero);
+                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(400);
+                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetCoordinates);
                     LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetCoordinates);
 
                     if (velocityStable) {
+                        LIGMA.CreateWarningBroadcast("Entering terminal phase");
                         MainPhase = Phase.Terminal;
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);

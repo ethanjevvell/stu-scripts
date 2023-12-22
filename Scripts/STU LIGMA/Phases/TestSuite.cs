@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -369,11 +368,7 @@ namespace IngameScript {
                             break;
 
                         case LaunchPhase.PerformingManeuver:
-                            // PerformManeuvers(testSequence); <-- this is the original code; used for sequences of maneuvers
-                            var mockTargetPos = new Vector3D(-62291.35, -88137.14, -55521.79);
-                            // transform mockTargetPos to be relative to ship's RemoteControl
-                            var mockInertiaVector = new Vector3D(0, 0, 1);
-                            FlightController.OptimizeShipRoll(mockTargetPos, mockInertiaVector);
+                            PerformManeuvers(testSequence);
                             break;
 
                         case LaunchPhase.Terminal:

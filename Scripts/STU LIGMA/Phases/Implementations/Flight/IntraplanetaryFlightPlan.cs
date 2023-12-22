@@ -38,7 +38,7 @@ namespace IngameScript {
                         var currentWaypoint = FlightWaypoints[waypointIndex];
                         FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
                         FlightController.AlignShipToTarget(currentWaypoint);
-                        FlightController.OptimizeShipRoll(currentWaypoint, Vector3D.Zero);
+                        FlightController.OptimizeShipRoll(currentWaypoint);
 
                         if (Vector3D.Distance(FlightWaypoints[waypointIndex], FlightController.CurrentPosition) < FLIGHT_VELOCITY) {
                             waypointIndex++;

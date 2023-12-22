@@ -68,7 +68,6 @@ namespace IngameScript {
                 Cursor = new Vector2(TopLeft.X, Cursor.Y + DefaultLineHeight);
             }
 
-
             public void StartFrame() {
                 CurrentFrame = Surface.DrawFrame();
 
@@ -339,6 +338,19 @@ namespace IngameScript {
                 NeedToCenterSprite = true;
             }
 
+            public void WriteText(string text) {
+                StartFrame();
+                CurrentFrame.Add(new MySprite() {
+                    Type = SpriteType.TEXT,
+                    Data = text,
+                    Position = Cursor,
+                    RotationOrScale = Surface.FontSize,
+                    Color = Color.White,
+                    Alignment = TextAlignment.LEFT,
+                    FontId = Surface.Font
+                });
+                EndAndPaintFrame();
+            }
         }
     }
 }

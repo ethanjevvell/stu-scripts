@@ -12,7 +12,7 @@ namespace IngameScript {
                 };
 
                 private static LaunchPhase phase = LaunchPhase.Idle;
-                private double LAUNCH_VELOCITY = 150;
+                private double LAUNCH_VELOCITY = 500;
                 private double CurrentElevation;
 
                 public override bool Run() {
@@ -20,14 +20,8 @@ namespace IngameScript {
                     switch (phase) {
 
                         case LaunchPhase.Idle:
-
                             phase = LaunchPhase.Start;
-                            Broadcaster.Log(new STULog {
-                                Sender = MissileName,
-                                Message = "Starting launch burn",
-                                Type = STULogType.WARNING,
-                                Metadata = GetTelemetryDictionary()
-                            });
+                            CreateWarningBroadcast("Starting launch burn");
 
                             break;
 
@@ -36,7 +30,7 @@ namespace IngameScript {
                             FirstRunTasks();
                             FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
 
-                            if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Sealevel, out CurrentElevation)) {
+                            if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
                                 if (CurrentElevation > 1000) {
                                     phase = LaunchPhase.End;
                                     break;

@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\STU Raycaster.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\STU Raycaster.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\STU Raycaster.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Reconnaissance.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Reconnaissance.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Raycaster.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Reconnaissance.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Reconnaissance.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Raycaster.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Raycaster\obj\x64\Debug\STU Raycaster.pdb
