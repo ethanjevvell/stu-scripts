@@ -70,9 +70,8 @@ namespace IngameScript {
                 VelocityController UpController { get; set; }
 
                 private NTable NTable { get; set; }
-                public STUMasterLogBroadcaster Broadcaster;
 
-                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, STUMasterLogBroadcaster broadcaster, NTable Ntable = null) {
+                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
 
                     RemoteControl = remoteControl;
 
@@ -84,12 +83,9 @@ namespace IngameScript {
                     CalculateMaximumAccelerations();
                     CalculateBufferVelocities();
 
-                    ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust, broadcaster);
-                    RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust, broadcaster);
-                    UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust, broadcaster);
-
-                    Broadcaster = broadcaster;
-
+                    ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust);
+                    RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust);
+                    UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust);
                 }
 
                 /// <summary>
@@ -111,9 +107,7 @@ namespace IngameScript {
                     private double MaxPosThrust;
                     private double MaxNegThrust;
 
-                    public STUMasterLogBroadcaster Broadcaster;
-
-                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust, STUMasterLogBroadcaster broadcaster) {
+                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust) {
                         v_buffer = buffer;
                         N = n;
                         decelerationInterval = dt * N;
@@ -121,7 +115,6 @@ namespace IngameScript {
                         MaxPosThrust = maxPosThrust;
                         NegDirThrusters = negDirThrusters;
                         MaxNegThrust = maxNegThrust;
-                        Broadcaster = broadcaster;
                     }
 
                     public bool SetVelocity(double currentVelocity, double desiredVelocity, double gravityVectorComponent) {

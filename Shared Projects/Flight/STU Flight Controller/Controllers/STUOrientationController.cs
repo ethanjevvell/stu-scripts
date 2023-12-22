@@ -57,14 +57,6 @@ namespace IngameScript {
                     }
                 }
 
-                public void RollClockwise() {
-                    SetRoll(-1);
-                }
-
-                public void RollCounterClockwise() {
-                    SetRoll(1);
-                }
-
             }
         }
     }

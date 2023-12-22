@@ -65,13 +65,9 @@ namespace IngameScript {
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
 
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "ALL SYSTEMS NOMINAL",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("ALL SYSTEMS GO");
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros, Broadcaster);
+                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
             }
 
@@ -82,11 +78,7 @@ namespace IngameScript {
                     CreateFatalErrorBroadcast("No remote control blocks found on grid");
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Remote control... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Remote control... nominal");
             }
 
             private static void LoadThrusters(IMyGridTerminalSystem grid) {
@@ -103,12 +95,7 @@ namespace IngameScript {
                     allThrusters[i] = thrusterBlocks[i] as IMyThrust;
                 }
 
-                Broadcaster.Log(new STULog {
-                    Sender = "LIGMA-I",
-                    Message = "Thrusters... nominal",
-                    Type = STULogType.OK,
-                });
-
+                CreateOkBroadcast("Thrusters... nominal");
                 Thrusters = allThrusters;
             }
 
@@ -122,11 +109,7 @@ namespace IngameScript {
                 for (int i = 0; i < gyroBlocks.Count; i++) {
                     gyros[i] = gyroBlocks[i] as IMyGyro;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Gyros... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Gyros... nominal");
                 Gyros = gyros;
             }
 
@@ -140,11 +123,7 @@ namespace IngameScript {
                 for (int i = 0; i < batteryBlocks.Count; i++) {
                     batteries[i] = batteryBlocks[i] as IMyBatteryBlock;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Batteries... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Batteries... nominal");
                 Batteries = batteries;
             }
 
@@ -158,11 +137,7 @@ namespace IngameScript {
                 for (int i = 0; i < gasTankBlocks.Count; i++) {
                     fuelTanks[i] = gasTankBlocks[i] as IMyGasTank;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Fuel tanks... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Fuel tanks... nominal");
                 GasTanks = fuelTanks;
             }
 
@@ -176,11 +151,7 @@ namespace IngameScript {
                 for (int i = 0; i < warheadBlocks.Count; i++) {
                     warheads[i] = warheadBlocks[i] as IMyWarhead;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Warheads... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Warheads... nominal");
                 Warheads = warheads;
             }
 
@@ -189,11 +160,7 @@ namespace IngameScript {
                 if (connector == null) {
                     CreateFatalErrorBroadcast("Either no connectors found, or too many connectors found. Only one allowed.");
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "Connector... nominal",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast("Connector... nominal");
                 Connector = connector as IMyShipConnector;
             }
 
@@ -202,11 +169,7 @@ namespace IngameScript {
                 foreach (IMyBatteryBlock battery in Batteries) {
                     capacity += battery.MaxStoredPower * 1000;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Total power capacity: {capacity} kWh",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast($"Total power capacity: {capacity} kWh");
                 PowerCapacity = capacity;
             }
 
@@ -215,11 +178,7 @@ namespace IngameScript {
                 foreach (IMyGasTank tank in GasTanks) {
                     capacity += tank.Capacity;
                 }
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = $"Total fuel capacity: {capacity} L",
-                    Type = STULogType.OK,
-                });
+                CreateOkBroadcast($"Total fuel capacity: {capacity} L");
                 FuelCapacity = capacity;
             }
 
@@ -245,12 +204,13 @@ namespace IngameScript {
                 MeasureCurrentPower();
             }
 
-            public static void PingMissionControl() {
+            public static void SendTelemetry() {
+                // Empty message means pure telemetry message
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
                     Message = "",
-                    Type = STULogType.OK,
-                    Metadata = GetTelemetryDictionary()
+                    Type = STULogType.INFO,
+                    Metadata = GetTelemetryDictionary(),
                 });
             }
 
@@ -258,21 +218,11 @@ namespace IngameScript {
                 Array.ForEach(Warheads, warhead => {
                     warhead.IsArmed = true;
                 });
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "WARHEADS ARMED",
-                    Type = STULogType.ERROR,
-                    Metadata = GetTelemetryDictionary()
-                });
+                CreateWarningBroadcast("WARHEADS ARMED");
             }
 
             public static void SelfDestruct() {
-                Broadcaster.Log(new STULog {
-                    Sender = MissileName,
-                    Message = "It was fun while it lasted",
-                    Type = STULogType.WARNING,
-                    Metadata = GetTelemetryDictionary()
-                });
+                CreateErrorBroadcast("SELF DESTRUCT INITIATED");
                 foreach (IMyWarhead warhead in Warheads) {
                     warhead.IsArmed = true;
                 }
@@ -293,12 +243,28 @@ namespace IngameScript {
             }
 
             public static void CreateFatalErrorBroadcast(string message) {
+                CreateBroadcast($"FATAL -- {message}", STULogType.ERROR);
+                throw new Exception(message);
+            }
+
+            public static void CreateErrorBroadcast(string message) {
+                CreateBroadcast(message, STULogType.ERROR);
+            }
+
+            public static void CreateWarningBroadcast(string message) {
+                CreateBroadcast(message, STULogType.WARNING);
+            }
+
+            public static void CreateOkBroadcast(string message) {
+                CreateBroadcast(message, STULogType.OK);
+            }
+
+            private static void CreateBroadcast(string message, STULogType type) {
                 Broadcaster.Log(new STULog {
                     Sender = MissileName,
-                    Message = $"FATAL - {message}",
-                    Type = STULogType.ERROR,
+                    Message = message,
+                    Type = type,
                 });
-                throw new Exception(message);
             }
 
         }

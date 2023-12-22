@@ -1,4 +1,6 @@
-﻿namespace IngameScript {
+﻿using Sandbox.ModAPI.Ingame;
+
+namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
             public class IntraplanetaryLaunchPlan : ILaunchPlan {
@@ -9,9 +11,9 @@
                     End
                 };
 
-                private bool velocityStable = false;
                 private static LaunchPhase phase = LaunchPhase.Idle;
                 private double LAUNCH_VELOCITY = 150;
+                private double CurrentElevation;
 
                 public override bool Run() {
 
@@ -32,11 +34,13 @@
                         case LaunchPhase.Start:
 
                             FirstRunTasks();
-                            velocityStable = FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
+                            FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
 
-                            if (velocityStable) {
-                                phase = LaunchPhase.End;
-                                break;
+                            if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Sealevel, out CurrentElevation)) {
+                                if (CurrentElevation > 1000) {
+                                    phase = LaunchPhase.End;
+                                    break;
+                                }
                             }
 
                             break;

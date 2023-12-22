@@ -6,8 +6,9 @@ namespace IngameScript {
 
             public class SpaceToSpaceFlightPlan : IFlightPlan {
 
-                Vector3D LaunchPos;
-                Vector3D TargetPos;
+                private Vector3D LaunchPos;
+                private Vector3D TargetPos;
+                private const double FLIGHT_VELOCITY = 200;
 
                 public SpaceToSpaceFlightPlan(Vector3D launchPos, Vector3D targetPos) {
                     LaunchPos = launchPos;
@@ -16,11 +17,11 @@ namespace IngameScript {
 
                 public override bool Run() {
                     // REMOVE ZERO VECTOR WHEN DONE TESTING
-                    FlightController.AdjustShipRoll(TargetPos, Vector3D.Zero);
-                    var velocityStable = FlightController.SetStableForwardVelocity(150);
-                    var orientationStable = FlightController.OrientShip(TargetPos);
-                    if (velocityStable && orientationStable) {
-                        FlightController.SetRoll(0);
+                    FlightController.OptimizeShipRoll(TargetPos, Vector3D.Zero);
+                    FlightController.AlignShipToTarget(TargetPos);
+                    var velocityStable = FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
+                    if (velocityStable) {
+                        FlightController.SetVr(0);
                         return true;
                     }
                     return false;

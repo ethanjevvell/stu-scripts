@@ -12,8 +12,8 @@ namespace IngameScript {
                 private const int numWaypoints = 12;
                 // Will be mulitplied by the max orbit altitude to get the altitude of the first waypoint
                 private const double FIRST_ORBIT_WP_COEFFICIENT = 0.6;
-
-                private int nextWaypoint = 0;
+                private const int FLIGHT_VELOCITY = 500;
+                private int waypointIndex = 0;
 
                 List<Vector3D> FlightWaypoints;
 
@@ -33,15 +33,18 @@ namespace IngameScript {
 
                 public override bool Run() {
 
-                    while (nextWaypoint < FlightWaypoints.Count) {
-                        FlightController.SetStableForwardVelocity(200);
-                        FlightController.OrientShip(FlightWaypoints[nextWaypoint]);
+                    while (waypointIndex < FlightWaypoints.Count) {
 
-                        if (Vector3D.Distance(FlightWaypoints[nextWaypoint], FlightController.CurrentPosition) < 500) {
-                            nextWaypoint++;
+                        var currentWaypoint = FlightWaypoints[waypointIndex];
+                        FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
+                        FlightController.AlignShipToTarget(currentWaypoint);
+                        FlightController.OptimizeShipRoll(currentWaypoint, Vector3D.Zero);
+
+                        if (Vector3D.Distance(FlightWaypoints[waypointIndex], FlightController.CurrentPosition) < FLIGHT_VELOCITY) {
+                            waypointIndex++;
                             Broadcaster.Log(new STULog {
                                 Sender = MissileName,
-                                Message = "Starting waypoint " + nextWaypoint,
+                                Message = "Starting waypoint " + waypointIndex,
                                 Type = STULogType.WARNING,
                                 Metadata = GetTelemetryDictionary()
                             });

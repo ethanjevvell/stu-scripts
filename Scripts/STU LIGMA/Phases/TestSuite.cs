@@ -365,13 +365,7 @@ namespace IngameScript {
 
                         case LaunchPhase.Idle:
                             phase = LaunchPhase.PerformingManeuver;
-
-                            Broadcaster.Log(new STULog {
-                                Sender = MissileName,
-                                Message = "Starting test sequence",
-                                Type = STULogType.WARNING,
-                                Metadata = GetTelemetryDictionary()
-                            });
+                            CreateOkBroadcast("Starting test suite");
                             break;
 
                         case LaunchPhase.PerformingManeuver:
@@ -379,7 +373,7 @@ namespace IngameScript {
                             var mockTargetPos = new Vector3D(-62291.35, -88137.14, -55521.79);
                             // transform mockTargetPos to be relative to ship's RemoteControl
                             var mockInertiaVector = new Vector3D(0, 0, 1);
-                            FlightController.AdjustShipRoll(mockTargetPos, mockInertiaVector);
+                            FlightController.OptimizeShipRoll(mockTargetPos, mockInertiaVector);
                             break;
 
                         case LaunchPhase.Terminal:

@@ -48,8 +48,8 @@ namespace IngameScript {
             Idle,
             Launch,
             Flight,
-            Terminal,
-            Impact
+            Descent,
+            Terminal
         }
 
         enum MissileMode {
@@ -100,7 +100,7 @@ namespace IngameScript {
             }
 
             LIGMA.UpdateMeasurements();
-            LIGMA.PingMissionControl();
+            LIGMA.SendTelemetry();
 
             switch (MainPhase) {
 
@@ -117,33 +117,46 @@ namespace IngameScript {
                             Type = STULogType.WARNING,
                             Metadata = LIGMA.GetTelemetryDictionary()
                         });
+
+                        // Stop any roll created during this phase
+                        LIGMA.FlightController.SetVr(0);
                     };
                     break;
 
                 case Phase.Flight:
                     var finishedFlight = MainFlightPlan.Run();
                     if (finishedFlight) {
-                        MainPhase = Phase.Terminal;
+                        MainPhase = Phase.Descent;
                         Broadcaster.Log(new STULog {
                             Sender = LIGMA.MissileName,
-                            Message = "Entering terminal phase",
+                            Message = "Entering descent phase",
                             Type = STULogType.WARNING,
                             Metadata = LIGMA.GetTelemetryDictionary()
                         });
                         LIGMA.ArmWarheads();
+                        // Stop any roll created during this phase
+                        LIGMA.FlightController.SetVr(0);
                     };
                     break;
 
-                case Phase.Terminal:
-                    LIGMA.FlightController.SetStableForwardVelocity(150);
-                    LIGMA.FlightController.OrientShip(LIGMA.TargetCoordinates);
-                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates) < 30) {
-                        LIGMA.SelfDestruct();
+                case Phase.Descent:
+                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(500);
+                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetCoordinates, Vector3D.Zero);
+                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetCoordinates);
+
+                    if (velocityStable) {
+                        MainPhase = Phase.Terminal;
+                        // Stop any roll created during this phase
+                        LIGMA.FlightController.SetVr(0);
                     }
                     break;
 
-                case Phase.Impact:
-                    // TODO
+                case Phase.Terminal:
+                    LIGMA.FlightController.StableFreeFall();
+                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetCoordinates);
+                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates) < 30) {
+                        LIGMA.SelfDestruct();
+                    }
                     break;
 
             }

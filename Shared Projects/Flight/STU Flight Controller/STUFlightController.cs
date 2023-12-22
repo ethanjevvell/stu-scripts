@@ -19,8 +19,8 @@ namespace IngameScript {
             public Vector3D PreviousPosition { get; set; }
             public NTable VelocityNTable { get; set; }
 
-            public MatrixD CurrentOrientation { get; set; }
-            public MatrixD PreviousOrientation { get; set; }
+            public MatrixD CurrentWorldMatrix { get; set; }
+            public MatrixD PreviousWorldMatrix { get; set; }
 
             public IMyThrust[] AllThrusters { get; set; }
             public IMyGyro[] AllGyroscopes { get; set; }
@@ -28,34 +28,31 @@ namespace IngameScript {
             STUVelocityController VelocityController { get; set; }
             STUOrientationController OrientationController { get; set; }
 
-            STUMasterLogBroadcaster Broadcaster { get; set; }
-
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
             /// Be sure to orient the Remote Control block so that its forward direction is the direction you want to be considered the "forward" direction of your ship.
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
-            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, STUMasterLogBroadcaster broadcaster, NTable Ntable = null) {
+            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, NTable Ntable = null) {
                 TimeStep = timeStep;
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
                 VelocityNTable = Ntable;
 
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, broadcaster, VelocityNTable);
+                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
+
                 // Force dampeners on for the time being; will get turned off on launch
                 RemoteControl.DampenersOverride = true;
 
                 Update();
-
-                Broadcaster = broadcaster;
             }
 
             public void MeasureCurrentVelocity() {
                 Vector3D worldVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
-                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousOrientation));
+                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousWorldMatrix));
                 // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
                 // We reverse that by convention because it's easier to think about
                 VelocityComponents = localVelocity *= new Vector3D(1, 1, -1);
@@ -63,14 +60,14 @@ namespace IngameScript {
             }
 
             public void MeasureCurrentPositionAndOrientation() {
-                CurrentOrientation = RemoteControl.WorldMatrix;
+                CurrentWorldMatrix = RemoteControl.WorldMatrix;
                 CurrentPosition = RemoteControl.GetPosition();
             }
 
             public void Update() {
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
-                PreviousOrientation = CurrentOrientation;
+                PreviousWorldMatrix = CurrentWorldMatrix;
                 PreviousPosition = CurrentPosition;
             }
 
@@ -102,6 +99,14 @@ namespace IngameScript {
             }
 
             /// <summary>
+            /// Sets the ship's roll. Positive values roll the ship clockwise, negative values roll the ship counterclockwise.
+            /// </summary>
+            /// <param name="roll"></param>
+            public void SetVr(double roll) {
+                OrientationController.SetRoll(roll);
+            }
+
+            /// <summary>
             /// Sets the ship into a steady forward flight while controlling lateral thrusters. Good for turning while maintaining a forward velocity.
             /// </summary>
             /// <param name="desiredVelocity"></param>
@@ -113,50 +118,36 @@ namespace IngameScript {
                 return forwardStable && rightStable && upStable;
             }
 
+            /// <summary>
+            /// Puts the ship into a stable free-fall by stabilizing x-y velocity components while letting z accelerate with gravity.
+            /// </summary>
+            /// <returns></returns>
             public bool StableFreeFall() {
                 bool rightStable = SetVx(0);
                 bool upStable = SetVy(0);
                 return rightStable && upStable;
             }
 
-            public bool OrientShip(Vector3D targetPos) {
+            /// <summary>
+            /// Aligns the ship's forward direction with the target position. Returns true if the ship is aligned.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <returns></returns>
+            public bool AlignShipToTarget(Vector3D targetPos) {
                 return OrientationController.AlignShipToTarget(targetPos, CurrentPosition);
             }
 
-            private Vector3D GetInertiaHeadingNormal(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
-                // ship inertia vector
-                Vector3D SI = MOCK_INERTIA_VECTOR;
-                SI = Vector3D.Normalize(Vector3D.TransformNormal(SI, RemoteControl.WorldMatrix));
-                // ship-to-target vector
-                Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
-                // normal vector of plane containing SI and ST
-                Vector3D crossProduct = Vector3D.Cross(SI, ST);
-
-                if (Math.Abs(crossProduct.Length()) < 0.01) {
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = "Cross product SI X ST = 0",
-                        Type = STULogType.WARNING,
-                        Metadata = LIGMA.GetTelemetryDictionary()
-                    });
-                    return Vector3D.Zero;
-                }
-
-                return Vector3D.Normalize(crossProduct);
-            }
-
-            private double CalculateRollAngle(Vector3D normalVector, Vector3D lateralFaceNormal) {
-                var dotProduct = Vector3D.Dot(normalVector, lateralFaceNormal);
-                var angle = Math.Acos(dotProduct);
-                return angle - Math.PI / 4;
-            }
-
-            public void AdjustShipRoll(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
-                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, VelocityComponents);
+            /// <summary>
+            /// Rolls the ship to optimize the ship's inertia vector for a given target position. Effectively allows the ship to turn faster, at the cost of more fuel.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <param name="MOCK_INERTIA_VECTOR"></param>
+            public void OptimizeShipRoll(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
+                Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos, MOCK_INERTIA_VECTOR);
                 if (inertiaHeadingNormal == Vector3D.Zero) { return; }
 
                 // Get the current orientation of the ship
-                MatrixD currentOrientation = RemoteControl.WorldMatrix.GetOrientation();
+                MatrixD currentOrientation = CurrentWorldMatrix.GetOrientation();
 
                 // Define the normals for two perpendicular lateral faces in the ship's local space
                 Vector3D[] lateralFaceNormals = {
@@ -180,30 +171,47 @@ namespace IngameScript {
 
                 // If close enough, stop the roll
                 if (Math.Abs(rollAdjustment) < 0.003) {
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = $"Roll complete",
-                        Type = STULogType.OK,
-                        Metadata = LIGMA.GetTelemetryDictionary(),
-                    });
                     OrientationController.SetRoll(0);
-
-                    // Otherwise, apply roll
                 } else {
-                    Broadcaster.Log(new STULog {
-                        Sender = "Roll Adjustment",
-                        Message = $"Roll adjustment: {rollAdjustment} radians",
-                        Type = STULogType.WARNING,
-                        Metadata = LIGMA.GetTelemetryDictionary(),
-                    });
                     OrientationController.SetRoll(rollAdjustment);
                 }
             }
 
-            public void SetRoll(double roll) {
-                OrientationController.SetRoll(roll);
+            /// <summary>
+            /// Calculates a normal vector for the plane containing the ship's inertia vector and the vector from the ship to the target.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <param name="MOCK_INERTIA_VECTOR"></param>
+            /// <returns></returns>
+            private Vector3D GetInertiaHeadingNormal(Vector3D targetPos, Vector3D MOCK_INERTIA_VECTOR) {
+                // ship inertia vector
+                Vector3D SI = MOCK_INERTIA_VECTOR;
+                SI = Vector3D.Normalize(Vector3D.TransformNormal(SI, CurrentWorldMatrix));
+                // ship-to-target vector
+                Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
+                // normal vector of plane containing SI and ST
+                Vector3D crossProduct = Vector3D.Cross(SI, ST);
+
+                // Cross products approach zero as the two vectors approach parallel
+                // In other words, the ship is moving directly towards the target, so no need to roll
+                if (Math.Abs(crossProduct.Length()) < 0.01) {
+                    return Vector3D.Zero;
+                }
+
+                return Vector3D.Normalize(crossProduct);
             }
 
+            /// <summary>
+            /// Calculate the roll angle needed to offset the ship's local lateral face normal 45 degrees from velocity-heading normal.
+            /// </summary>
+            /// <param name="normalVector"></param>
+            /// <param name="lateralFaceNormal"></param>
+            /// <returns></returns>
+            private double CalculateRollAngle(Vector3D normalVector, Vector3D lateralFaceNormal) {
+                var dotProduct = Vector3D.Dot(normalVector, lateralFaceNormal);
+                var angle = Math.Acos(dotProduct);
+                return angle - Math.PI / 4;
+            }
         }
     }
 }
