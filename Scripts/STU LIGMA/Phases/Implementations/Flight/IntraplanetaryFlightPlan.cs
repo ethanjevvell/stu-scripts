@@ -9,9 +9,9 @@ namespace IngameScript {
             public class IntraplanetaryFlightPlan : IFlightPlan {
 
                 // How many orbital waypoints will be constructed around the planet
-                private const int numWaypoints = 12;
+                private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 // Will be mulitplied by the max orbit altitude to get the altitude of the first waypoint
-                private const double FIRST_ORBIT_WP_COEFFICIENT = 0.6;
+                private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
                 private const int FLIGHT_VELOCITY = 500;
                 private int waypointIndex = 0;
 
@@ -42,12 +42,7 @@ namespace IngameScript {
 
                         if (Vector3D.Distance(FlightWaypoints[waypointIndex], FlightController.CurrentPosition) < FLIGHT_VELOCITY) {
                             waypointIndex++;
-                            Broadcaster.Log(new STULog {
-                                Sender = MissileName,
-                                Message = "Starting waypoint " + waypointIndex,
-                                Type = STULogType.WARNING,
-                                Metadata = GetTelemetryDictionary()
-                            });
+                            CreateWarningBroadcast("Starting waypoint " + waypointIndex);
                         }
 
                         return false;
@@ -78,14 +73,14 @@ namespace IngameScript {
 
                     // Generate points on the circle
                     var points = new List<Vector3D>();
-                    for (int i = 0; i < numWaypoints; i++) {
-                        double theta = 2 * Math.PI * i / numWaypoints;
+                    for (int i = 0; i < TOTAL_ORBITAL_WAYPOINTS; i++) {
+                        double theta = 2 * Math.PI * i / TOTAL_ORBITAL_WAYPOINTS;
                         Vector3D point = center + orbitRadius * (Math.Cos(theta) * u + Math.Sin(theta) * v);
                         points.Add(point);
                     }
 
                     // The first point is scaled down to be closer to the planet
-                    points[0] = center + (planetRadius + FIRST_ORBIT_WP_COEFFICIENT * maxOrbitAltitude) * (Math.Cos(0) * u + Math.Sin(0) * v);
+                    points[0] = center + (planetRadius + FIRST_ORBIT_WAYPOINT_COEFFICIENT * maxOrbitAltitude) * (Math.Cos(0) * u + Math.Sin(0) * v);
                     return points;
                 }
 

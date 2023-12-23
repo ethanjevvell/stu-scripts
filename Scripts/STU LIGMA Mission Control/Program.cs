@@ -10,10 +10,8 @@ namespace IngameScript {
         private const string LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_MAIN_LCD:";
         private const string LIGMA_MISSION_CONTROL_AUX_LOG_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_LOG_LCD:";
 
-        private const string LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL = "LIGMA_MISSION_CONTROL";
-        private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
-
-        IMyBroadcastListener listener;
+        IMyBroadcastListener LIGMAListener;
+        IMyBroadcastListener ReconListener;
         MyIGCMessage message;
 
         // MAIN LCDS
@@ -32,7 +30,9 @@ namespace IngameScript {
         STULog tempLog;
 
         public Program() {
-            listener = IGC.RegisterBroadcastListener(LIGMA_VEHICLE_BROADCASTER_CHANNEL);
+
+            LIGMAListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_VEHICLE_BROADCASTER);
+            ReconListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_RECONNOITERER_BROADCASTER);
 
             try {
                 mainLCDGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_MAIN_LCDS_GROUP);
@@ -59,26 +59,56 @@ namespace IngameScript {
         public void Main(string argument) {
             Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
 
-            if (argument == "DETONATE") {
-                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, "DETONATE", TransmissionDistance.AntennaRelay);
-            } else if (!string.IsNullOrEmpty(argument)) {
-                IGC.SendBroadcastMessage(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL, argument, TransmissionDistance.AntennaRelay);
+            if (!string.IsNullOrEmpty(argument)) {
+                IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, argument, TransmissionDistance.AntennaRelay);
                 Echo($"Sending message: {argument}");
             }
 
-            while (listener.HasPendingMessage) {
-                message = listener.AcceptMessage();
+            HandleIncomingBroadcasts();
+        }
+
+        public void HandleIncomingBroadcasts() {
+            HandleIncomingLIGMABroadcasts();
+            HandleIncomingReconBroadcasts();
+        }
+
+        public void HandleIncomingLIGMABroadcasts() {
+            while (LIGMAListener.HasPendingMessage) {
+                message = LIGMAListener.AcceptMessage();
                 try {
                     tempLog = STULog.Deserialize(message.Data.ToString());
-                    PublishData();
                 } catch {
                     tempLog = new STULog {
-                        Sender = "LIGMA Missile",
+                        Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                         Message = $"Received invalid message: {message.Data}",
                         Type = STULogType.ERROR
                     };
-                    mainPublisher.UpdateDisplays(tempLog);
                 }
+                PublishData();
+            }
+
+        }
+
+        public void HandleIncomingReconBroadcasts() {
+            while (ReconListener.HasPendingMessage) {
+                message = ReconListener.AcceptMessage();
+                try {
+                    tempLog = STULog.Deserialize(message.Data.ToString());
+                    STULog commandLog = new STULog {
+                        Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
+                        Message = "-targetData",
+                        Type = STULogType.INFO,
+                        Metadata = tempLog.Metadata
+                    };
+                    IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, commandLog.Serialize(), TransmissionDistance.AntennaRelay);
+                } catch {
+                    tempLog = new STULog {
+                        Sender = LIGMA_VARIABLES.LIGMA_RECONNOITERER_NAME,
+                        Message = $"Received invalid message: {tempLog.Serialize()}",
+                        Type = STULogType.ERROR
+                    };
+                }
+                logPublisher.UpdateDisplays(tempLog);
             }
         }
 

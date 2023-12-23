@@ -7,8 +7,6 @@ using VRageMath;
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        private const string LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL = "LIGMA_MISSION_CONTROL";
-        private const string LIGMA_VEHICLE_BROADCASTER_CHANNEL = "LIGMA_VEHICLE_CONTROL";
         public bool ALREADY_RAN_FIRST_COMMAND = false;
 
         public struct Planet {
@@ -31,7 +29,7 @@ namespace IngameScript {
             }
         };
 
-        MyCommandLine commandLine = new MyCommandLine();
+        MyCommandLine CommandLineParser = new MyCommandLine();
 
         LIGMA Missile;
         MissileReadout Display;
@@ -62,8 +60,8 @@ namespace IngameScript {
         }
 
         public Program() {
-            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VEHICLE_BROADCASTER_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            Listener = IGC.RegisterBroadcastListener(LIGMA_MISSION_CONTROL_BROADCASTER_CHANNEL);
+            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_VEHICLE_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
+            Listener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER);
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
             MainPhase = Phase.Idle;
@@ -76,27 +74,9 @@ namespace IngameScript {
         void Main(string argument) {
 
             if (Listener.HasPendingMessage) {
-
                 var message = Listener.AcceptMessage();
                 var command = message.Data.ToString();
-
-                if (command == "DETONATE") {
-                    LIGMA.SelfDestruct();
-                }
-
-                if (!ALREADY_RAN_FIRST_COMMAND) {
-                    if (commandLine.TryParse(command)) {
-                        Broadcaster.Log(new STULog {
-                            Sender = LIGMA.MissileName,
-                            Message = $"Received command: {command}",
-                            Type = STULogType.WARNING,
-                            Metadata = LIGMA.GetTelemetryDictionary()
-                        });
-                        FirstRunTasks(command);
-                        MainPhase = Phase.Launch;
-                        ALREADY_RAN_FIRST_COMMAND = true;
-                    }
-                }
+                ParseIncomingCommand(command);
             }
 
             LIGMA.UpdateMeasurements();
@@ -153,16 +133,59 @@ namespace IngameScript {
 
         }
 
-        public void FirstRunTasks(string argument) {
+        public void ParseIncomingCommand(string logString) {
 
-            var testing = argument == "-test";
-            // If using test switch, bypass all first run tasks
-            if (!testing) {
-                ParseTargetCoordinates(argument);
-                DeduceFlightMode(argument);
+            var log = STULog.Deserialize(logString);
+            var command = log.Message;
+
+            if (CommandLineParser.TryParse(command)) {
+
+                if (CommandLineParser.Switch("targetData")) {
+                    var metadata = log.Metadata;
+                    MyDetectedEntityInfo hitInfo = STURaycaster.DeserializeHitInfo(metadata);
+                    SetTargetCoordinates(hitInfo.Position);
+                    string x = LIGMA.TargetCoordinates.X.ToString("0.00");
+                    string y = LIGMA.TargetCoordinates.Y.ToString("0.00");
+                    string z = LIGMA.TargetCoordinates.Z.ToString("0.00");
+                    string broadcastString = $"CONFIRMED - Target coordinates set to ({x}, {y}, {z})";
+                    LIGMA.CreateOkBroadcast(broadcastString);
+                    return;
+                }
+
+                if (CommandLineParser.Switch("LAUNCH")) {
+
+                    if (ALREADY_RAN_FIRST_COMMAND) {
+                        LIGMA.CreateErrorBroadcast("Cannot launch more than once");
+                        return;
+                    }
+
+                    if (LIGMA.TargetCoordinates == null) {
+                        LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
+                        return;
+                    }
+
+                    ALREADY_RAN_FIRST_COMMAND = true;
+                    FirstRunTasks();
+                    MainPhase = Phase.Launch;
+                    return;
+
+                }
+
+                if (CommandLineParser.Switch("DETONATE")) {
+                    LIGMA.SelfDestruct();
+                    return;
+                }
+
+                LIGMA.CreateErrorBroadcast($"Invalid command given: {command}");
+
             } else {
-                Mode = MissileMode.Testing;
+                LIGMA.CreateErrorBroadcast($"Failed to parse command: {command}");
             }
+        }
+
+        public void FirstRunTasks() {
+
+            DeduceFlightMode();
 
             switch (Mode) {
 
@@ -189,12 +212,7 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.Testing:
-                    Broadcaster.Log(new STULog {
-                        Sender = LIGMA.MissileName,
-                        Message = "Entering testing mode",
-                        Type = STULogType.WARNING,
-                        Metadata = LIGMA.GetTelemetryDictionary()
-                    });
+                    LIGMA.CreateWarningBroadcast("Entering testing mode");
                     MainLaunchPlan = new LIGMA.TestSuite();
                     break;
 
@@ -206,7 +224,7 @@ namespace IngameScript {
 
         }
 
-        public void DeduceFlightMode(string argument) {
+        public void DeduceFlightMode() {
 
             Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
             Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetCoordinates);
@@ -261,23 +279,14 @@ namespace IngameScript {
             return null;
         }
 
-        public void ParseTargetCoordinates(string argument) {
-
-            if (commandLine.ArgumentCount != 1) {
-                LIGMA.CreateFatalErrorBroadcast("Only accepts on argument, which is \"X Y Z\" with no commas");
-            }
-
-            var coordStrings = commandLine.Argument(0).Split(' ');
-            double x = ParseCoordinate(coordStrings[0]);
-            double y = ParseCoordinate(coordStrings[1]);
-            double z = ParseCoordinate(coordStrings[2]);
-
-            LIGMA.TargetCoordinates = new Vector3D(x, y, z);
+        public void SetTargetCoordinates(Vector3D targetCoordinates) {
+            LIGMA.TargetCoordinates = targetCoordinates;
         }
 
         public double ParseCoordinate(string doubleString) {
             try {
-                return double.Parse(doubleString);
+                string numPortion = doubleString.Split(':')[1].Trim().ToString();
+                return double.Parse(numPortion);
             } catch {
                 LIGMA.CreateFatalErrorBroadcast($"Invalid coordinate: {doubleString}");
                 throw new Exception($"Invalid coordinate: {doubleString}");
