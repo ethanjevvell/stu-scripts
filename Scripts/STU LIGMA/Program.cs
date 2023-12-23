@@ -65,9 +65,6 @@ namespace IngameScript {
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
             MainPhase = Phase.Idle;
-
-            // Script updates every 100 ticks (roughly 1.67 seconds)
-            // IMPORTANT: This must match Mission Control update frequency
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -110,8 +107,8 @@ namespace IngameScript {
 
                 case Phase.Descent:
                     var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(400);
-                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetCoordinates);
-                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetCoordinates);
+                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetData.Position);
+                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetData.Position);
 
                     if (velocityStable) {
                         LIGMA.CreateWarningBroadcast("Entering terminal phase");
@@ -123,8 +120,8 @@ namespace IngameScript {
 
                 case Phase.Terminal:
                     LIGMA.FlightController.StableFreeFall();
-                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetCoordinates);
-                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates) < 30) {
+                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetData.Position);
+                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position) < 30) {
                         LIGMA.SelfDestruct();
                     }
                     break;
@@ -140,15 +137,15 @@ namespace IngameScript {
 
             if (CommandLineParser.TryParse(command)) {
 
+                var switches = CommandLineParser.Switches;
+
+                if (switches.Count > 1) {
+                    LIGMA.CreateErrorBroadcast("Too many switches given; only one switch supported for now");
+                    return;
+                }
+
                 if (CommandLineParser.Switch("targetData")) {
-                    var metadata = log.Metadata;
-                    MyDetectedEntityInfo hitInfo = STURaycaster.DeserializeHitInfo(metadata);
-                    SetTargetCoordinates(hitInfo.Position);
-                    string x = LIGMA.TargetCoordinates.X.ToString("0.00");
-                    string y = LIGMA.TargetCoordinates.Y.ToString("0.00");
-                    string z = LIGMA.TargetCoordinates.Z.ToString("0.00");
-                    string broadcastString = $"CONFIRMED - Target coordinates set to ({x}, {y}, {z})";
-                    LIGMA.CreateOkBroadcast(broadcastString);
+                    HandleIncomingTargetData(log);
                     return;
                 }
 
@@ -159,7 +156,7 @@ namespace IngameScript {
                         return;
                     }
 
-                    if (LIGMA.TargetCoordinates == null) {
+                    if (LIGMA.TargetData.Position == null) {
                         LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
                         return;
                     }
@@ -179,7 +176,9 @@ namespace IngameScript {
                 LIGMA.CreateErrorBroadcast($"Invalid command given: {command}");
 
             } else {
+
                 LIGMA.CreateErrorBroadcast($"Failed to parse command: {command}");
+
             }
         }
 
@@ -191,7 +190,7 @@ namespace IngameScript {
 
                 case MissileMode.Intraplanetary:
                     MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
-                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates);
+                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position);
                     break;
 
                 case MissileMode.PlanetToSpace:
@@ -204,7 +203,7 @@ namespace IngameScript {
 
                 case MissileMode.SpaceToSpace:
                     MainLaunchPlan = new LIGMA.SpaceToSpaceLaunchPlan();
-                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetCoordinates);
+                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position);
                     break;
 
                 case MissileMode.Interplanetary:
@@ -227,7 +226,7 @@ namespace IngameScript {
         public void DeduceFlightMode() {
 
             Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
-            Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetCoordinates);
+            Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
 
             if (OnSamePlanet(launchPos, targetPos)) {
                 Mode = MissileMode.Intraplanetary;
@@ -279,10 +278,6 @@ namespace IngameScript {
             return null;
         }
 
-        public void SetTargetCoordinates(Vector3D targetCoordinates) {
-            LIGMA.TargetCoordinates = targetCoordinates;
-        }
-
         public double ParseCoordinate(string doubleString) {
             try {
                 string numPortion = doubleString.Split(':')[1].Trim().ToString();
@@ -307,6 +302,20 @@ namespace IngameScript {
                     return "interplanetary flight";
                 default:
                     return "invalid flight mode";
+            }
+        }
+
+        public void HandleIncomingTargetData(STULog log) {
+            try {
+                var metadata = log.Metadata;
+                LIGMA.TargetData = STURaycaster.DeserializeHitInfo(metadata);
+                string x = LIGMA.TargetData.Position.X.ToString("0.00");
+                string y = LIGMA.TargetData.Position.Y.ToString("0.00");
+                string z = LIGMA.TargetData.Position.Z.ToString("0.00");
+                string broadcastString = $"CONFIRMED - Target coordinates set to ({x}, {y}, {z})";
+                LIGMA.CreateOkBroadcast(broadcastString);
+            } catch {
+                LIGMA.CreateErrorBroadcast("Failed to parse target data");
             }
         }
     }

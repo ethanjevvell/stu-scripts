@@ -20,13 +20,7 @@
                         case LaunchPhase.Idle:
 
                             phase = LaunchPhase.Start;
-                            Broadcaster.Log(new STULog {
-                                Sender = MissileName,
-                                Message = "Starting launch burn",
-                                Type = STULogType.WARNING,
-                                Metadata = GetTelemetryDictionary()
-                            });
-
+                            CreateWarningBroadcast("Starting launch burn");
                             break;
 
                         case LaunchPhase.Start:

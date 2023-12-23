@@ -43,21 +43,28 @@ namespace IngameScript {
                 Camera.EnableRaycast = true;
             }
 
-            public MyDetectedEntityInfo Raycast(double distance = double.NaN) {
-                distance = double.IsNaN(distance) ? RaycastDistance : distance;
-                if (!Camera.CanScan(distance)) {
+            /// <summary>
+            /// Fires a raycast from the camera and returns the hit entity info. Uses RaycastDistance, RaycastPitch, and RaycastYaw.
+            /// </summary>
+            /// <returns></returns>
+            /// <exception cref="Exception"></exception>
+            public MyDetectedEntityInfo Raycast() {
+                if (!Camera.CanScan(RaycastDistance)) {
                     throw new Exception();
                 }
-                return Camera.Raycast(distance, RaycastPitch, RaycastYaw);
+                return Camera.Raycast(RaycastDistance, RaycastPitch, RaycastYaw);
             }
 
             public void ToggleRaycast() {
                 Camera.EnableRaycast = !Camera.EnableRaycast;
             }
 
+            /// <summary>
+            /// Returns a string with the hit info. Always check if a hit.IsEmpty() before using this.
+            /// </summary>
+            /// <param name="hit"></param>
             public string GetHitInfoString(MyDetectedEntityInfo hit) {
-                var hitPos = hit.HitPosition ?? Vector3D.Zero;
-                var distance = hitPos == Vector3.Zero ? 0 : Vector3D.Distance(hitPos, Camera.GetPosition());
+                double distance = Vector3D.Distance((Vector3D)hit.HitPosition, Camera.GetPosition());
                 return $"Name: {hit.Name}\n" +
                     $"Type: {hit.Type}\n" +
                     $"Position: {hit.Position}\n" +
@@ -87,16 +94,27 @@ namespace IngameScript {
                 };
             }
 
+            /// <summary>
+            /// Turns a hit info dictionary<string, string> into a MyDetectedEntityInfo. Always surround with try/catch.
+            /// </summary>
+            /// <param name="hitInfoDictionary"></param>
+            /// <returns></returns>
+            /// <exception cref="Exception"></exception>
             public static MyDetectedEntityInfo DeserializeHitInfo(Dictionary<string, string> hitInfoDictionary) {
-                Vector3D hitPosition;
+
                 Vector3D velocity;
+                Vector3D hitPosition;
+                bool parsedVelocity = Vector3D.TryParse(hitInfoDictionary["Velocity"], out velocity);
+                bool parsedHitPosition = Vector3D.TryParse(hitInfoDictionary["HitPosition"], out hitPosition);
+
+                if (!parsedVelocity || !parsedHitPosition) {
+                    throw new Exception("Failed to parse velocity and/or hit position");
+                }
 
                 long entityId = long.Parse(hitInfoDictionary["EntityId"]);
                 string name = hitInfoDictionary["Name"];
                 MyDetectedEntityType type = (MyDetectedEntityType)Enum.Parse(typeof(MyDetectedEntityType), hitInfoDictionary["Type"]);
-                Vector3D.TryParse(hitInfoDictionary["HitPosition"], out hitPosition);
                 MatrixD orientation = DeserializeMatrixD(hitInfoDictionary["Orientation"]);
-                Vector3D.TryParse(hitInfoDictionary["Velocity"], out velocity);
                 BoundingBoxD boundingBox = DeserializeBoundingBoxD(hitInfoDictionary["BoundingBox"]);
                 MyRelationsBetweenPlayerAndBlock relationship = (MyRelationsBetweenPlayerAndBlock)Enum.Parse(typeof(MyRelationsBetweenPlayerAndBlock), hitInfoDictionary["Relationship"]);
                 long timeStamp = long.Parse(hitInfoDictionary["TimeStamp"]);

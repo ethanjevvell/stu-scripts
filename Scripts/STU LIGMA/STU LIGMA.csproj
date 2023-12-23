@@ -46,7 +46,7 @@
     <AdditionalFiles Include="MDK\MDK.paths.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
-    <Compile Include="Missile.cs" />
+    <Compile Include="LIGMA.cs" />
     <Compile Include="Phases\Implementations\Flight\SpaceToSpaceFlightPlan.cs" />
     <Compile Include="Phases\Abstract Classes\IFlightPlan.cs" />
     <Compile Include="Phases\Implementations\Flight\IntraplanetaryFlightPlan.cs" />

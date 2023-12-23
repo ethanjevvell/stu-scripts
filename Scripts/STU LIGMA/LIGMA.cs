@@ -7,13 +7,12 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public static Vector3D TargetCoordinates;
-            public static Vector3D LaunchCoordinates;
+            public static MyDetectedEntityInfo TargetData { get; set; }
+            public static Vector3D LaunchCoordinates { get; set; }
 
-            public static Planet? TargetPlanet;
-            public static Planet? LaunchPlanet;
+            public static Planet? TargetPlanet { get; set; }
+            public static Planet? LaunchPlanet { get; set; }
 
-            public static string MissileName = "LIGMA-I";
             public const float TimeStep = 1.0f / 6.0f;
 
             public static STUFlightController FlightController { get; set; }
@@ -207,7 +206,7 @@ namespace IngameScript {
             public static void SendTelemetry() {
                 // Empty message means pure telemetry message
                 Broadcaster.Log(new STULog {
-                    Sender = MissileName,
+                    Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                     Message = "",
                     Type = STULogType.INFO,
                     Metadata = GetTelemetryDictionary(),
@@ -261,7 +260,7 @@ namespace IngameScript {
 
             private static void CreateBroadcast(string message, STULogType type) {
                 Broadcaster.Log(new STULog {
-                    Sender = MissileName,
+                    Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                     Message = message,
                     Type = type,
                 });

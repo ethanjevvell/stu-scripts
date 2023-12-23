@@ -94,13 +94,7 @@ namespace IngameScript {
                 message = ReconListener.AcceptMessage();
                 try {
                     tempLog = STULog.Deserialize(message.Data.ToString());
-                    STULog commandLog = new STULog {
-                        Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
-                        Message = "-targetData",
-                        Type = STULogType.INFO,
-                        Metadata = tempLog.Metadata
-                    };
-                    IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, commandLog.Serialize(), TransmissionDistance.AntennaRelay);
+                    SendTargetDataToLIGMA();
                 } catch {
                     tempLog = new STULog {
                         Sender = LIGMA_VARIABLES.LIGMA_RECONNOITERER_NAME,
@@ -110,6 +104,16 @@ namespace IngameScript {
                 }
                 logPublisher.UpdateDisplays(tempLog);
             }
+        }
+
+        public void SendTargetDataToLIGMA() {
+            STULog commandLog = new STULog {
+                Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
+                Message = "-targetData",
+                Type = STULogType.INFO,
+                Metadata = tempLog.Metadata
+            };
+            IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, commandLog.Serialize(), TransmissionDistance.AntennaRelay);
         }
 
         public void PublishData() {
