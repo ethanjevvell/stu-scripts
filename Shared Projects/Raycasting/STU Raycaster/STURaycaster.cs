@@ -102,13 +102,19 @@ namespace IngameScript {
             /// <exception cref="Exception"></exception>
             public static MyDetectedEntityInfo DeserializeHitInfo(Dictionary<string, string> hitInfoDictionary) {
 
-                Vector3D velocity;
-                Vector3D hitPosition;
-                bool parsedVelocity = Vector3D.TryParse(hitInfoDictionary["Velocity"], out velocity);
-                bool parsedHitPosition = Vector3D.TryParse(hitInfoDictionary["HitPosition"], out hitPosition);
+                Vector3 velocity;
 
-                if (!parsedVelocity || !parsedHitPosition) {
-                    throw new Exception("Failed to parse velocity and/or hit position");
+                try {
+                    velocity = DeserializeVector3(hitInfoDictionary["Velocity"]);
+                } catch {
+                    throw new Exception(hitInfoDictionary["Velocity"]);
+                }
+
+                Vector3D hitPosition;
+                bool parsedPosition = Vector3D.TryParse(hitInfoDictionary["Position"], out hitPosition);
+
+                if (!parsedPosition) {
+                    throw new Exception($"ERR: V = {hitInfoDictionary["Velocity"]}, P = {hitInfoDictionary["Position"]}");
                 }
 
                 long entityId = long.Parse(hitInfoDictionary["EntityId"]);
@@ -162,6 +168,16 @@ namespace IngameScript {
                     elements[4], elements[5], elements[6], elements[7],
                     elements[8], elements[9], elements[10], elements[11],
                     elements[12], elements[13], elements[14], elements[15]);
+            }
+
+            private static Vector3 DeserializeVector3(string vectorString) {
+                vectorString = vectorString.Replace("{", "");
+                vectorString = vectorString.Replace("}", "");
+                string[] vectorStringParts = vectorString.Split(' ');
+                double x = double.Parse(vectorStringParts[0].Split(':')[1]);
+                double y = double.Parse(vectorStringParts[1].Split(':')[1]);
+                double z = double.Parse(vectorStringParts[2].Split(':')[1]);
+                return new Vector3(x, y, z);
             }
         }
     }

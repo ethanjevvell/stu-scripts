@@ -24,6 +24,9 @@ namespace IngameScript {
             private STULogType type;
             private Dictionary<string, string> metadata;
 
+            private const string COMPONENT_DELIMITER = "\x1F";
+            private const string METADATA_DELIMITER = "\x1E";
+
             public STULog() { }
 
             public STULog(string sender, string message, STULogType type, Dictionary<string, string> metadata = null) {
@@ -41,7 +44,7 @@ namespace IngameScript {
             /// <exception cref="ArgumentException">Thrown if deserialization fails.</exception>"
             public static STULog Deserialize(string s) {
 
-                string[] components = s.Split(';');
+                string[] components = s.Split(new string[] { COMPONENT_DELIMITER }, StringSplitOptions.None);
 
                 STULogType logType;
                 if (Enum.TryParse(components[2], out logType) == false) {
@@ -64,7 +67,7 @@ namespace IngameScript {
 
             private static Dictionary<string, string> ParseMetadata(string metadataString) {
                 Dictionary<string, string> metadata = new Dictionary<string, string>();
-                string[] metadataKeyValuePairs = metadataString.Split('&');
+                string[] metadataKeyValuePairs = metadataString.Split(new string[] { METADATA_DELIMITER }, StringSplitOptions.None);
 
                 foreach (string pair in metadataKeyValuePairs) {
                     string[] keyValue = pair.Split('=');
@@ -95,7 +98,7 @@ namespace IngameScript {
             public string Serialize() {
 
                 if (Metadata == null) {
-                    return $"{Sender};{Message};{Type}";
+                    return string.Join(COMPONENT_DELIMITER, Sender, Message, Type);
                 }
 
                 string[] keyPairStrings = new string[Metadata.Keys.Count];
@@ -104,7 +107,7 @@ namespace IngameScript {
                     keyPairStrings[i] = $"{pair.Key}={pair.Value}";
                     i++;
                 }
-                return $"{Sender};{Message};{Type};{string.Join("&", keyPairStrings)}";
+                return string.Join(COMPONENT_DELIMITER, Sender, Message, Type, string.Join(METADATA_DELIMITER, keyPairStrings));
             }
 
             // GETTERS AND SETTERS // 
@@ -122,7 +125,14 @@ namespace IngameScript {
                 }
             }
 
-            public string Message { get; set; }
+            public string Message {
+                get {
+                    return message;
+                }
+                set {
+                    message = value;
+                }
+            }
 
             public STULogType Type {
                 get {

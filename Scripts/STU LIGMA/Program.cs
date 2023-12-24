@@ -29,6 +29,8 @@ namespace IngameScript {
             }
         };
 
+        public Dictionary<LIGMA_VARIABLES.COMMANDS, Action> LIGMACommands = new Dictionary<LIGMA_VARIABLES.COMMANDS, Action>();
+
         MyCommandLine CommandLineParser = new MyCommandLine();
 
         LIGMA Missile;
@@ -41,6 +43,8 @@ namespace IngameScript {
 
         LIGMA.IFlightPlan MainFlightPlan;
         LIGMA.ILaunchPlan MainLaunchPlan;
+
+        STULog IncomingLog;
 
         enum Phase {
             Idle,
@@ -65,6 +69,9 @@ namespace IngameScript {
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
             MainPhase = Phase.Idle;
+            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
+            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
+            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -132,52 +139,42 @@ namespace IngameScript {
 
         public void ParseIncomingCommand(string logString) {
 
-            var log = STULog.Deserialize(logString);
-            var command = log.Message;
+            try {
+                IncomingLog = STULog.Deserialize(logString);
+            } catch {
+                LIGMA.CreateFatalErrorBroadcast($"Failed to deserialize incoming log: {logString}");
+            }
 
-            if (CommandLineParser.TryParse(command)) {
+            string message = IncomingLog.Message;
 
-                var switches = CommandLineParser.Switches;
+            if (CommandLineParser.TryParse(message)) {
 
-                if (switches.Count > 1) {
-                    LIGMA.CreateErrorBroadcast("Too many switches given; only one switch supported for now");
+                int arguments = CommandLineParser.ArgumentCount;
+
+                if (arguments != 1) {
+                    LIGMA.CreateErrorBroadcast("LIGMA only accepts one argument at a time.");
                     return;
                 }
 
-                if (CommandLineParser.Switch("targetData")) {
-                    HandleIncomingTargetData(log);
+                LIGMA_VARIABLES.COMMANDS commandEnum;
+                string commandString = CommandLineParser.Argument(0);
+
+                if (!Enum.TryParse(commandString, out commandEnum)) {
+                    LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands enum.");
                     return;
                 }
 
-                if (CommandLineParser.Switch("LAUNCH")) {
-
-                    if (ALREADY_RAN_FIRST_COMMAND) {
-                        LIGMA.CreateErrorBroadcast("Cannot launch more than once");
-                        return;
-                    }
-
-                    if (LIGMA.TargetData.Position == null) {
-                        LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
-                        return;
-                    }
-
-                    ALREADY_RAN_FIRST_COMMAND = true;
-                    FirstRunTasks();
-                    MainPhase = Phase.Launch;
-                    return;
-
-                }
-
-                if (CommandLineParser.Switch("DETONATE")) {
-                    LIGMA.SelfDestruct();
+                Action commandAction;
+                if (!LIGMACommands.TryGetValue(commandEnum, out commandAction)) {
+                    LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands dictionary.");
                     return;
                 }
 
-                LIGMA.CreateErrorBroadcast($"Invalid command given: {command}");
+                commandAction();
 
             } else {
 
-                LIGMA.CreateErrorBroadcast($"Failed to parse command: {command}");
+                LIGMA.CreateErrorBroadcast($"Failed to parse command: {message}");
 
             }
         }
@@ -305,18 +302,37 @@ namespace IngameScript {
             }
         }
 
-        public void HandleIncomingTargetData(STULog log) {
+        public void HandleIncomingTargetData() {
             try {
-                var metadata = log.Metadata;
-                LIGMA.TargetData = STURaycaster.DeserializeHitInfo(metadata);
+                LIGMA.TargetData = STURaycaster.DeserializeHitInfo(IncomingLog.Metadata);
                 string x = LIGMA.TargetData.Position.X.ToString("0.00");
                 string y = LIGMA.TargetData.Position.Y.ToString("0.00");
                 string z = LIGMA.TargetData.Position.Z.ToString("0.00");
                 string broadcastString = $"CONFIRMED - Target coordinates set to ({x}, {y}, {z})";
                 LIGMA.CreateOkBroadcast(broadcastString);
-            } catch {
-                LIGMA.CreateErrorBroadcast("Failed to parse target data");
+            } catch (Exception e) {
+                LIGMA.CreateErrorBroadcast($"Failed to parse target data: {e}");
             }
+        }
+
+        public void Launch() {
+            if (ALREADY_RAN_FIRST_COMMAND) {
+                LIGMA.CreateErrorBroadcast("Cannot launch more than once");
+                return;
+            }
+
+            if (LIGMA.TargetData.Position == null) {
+                LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
+                return;
+            }
+
+            ALREADY_RAN_FIRST_COMMAND = true;
+            FirstRunTasks();
+            MainPhase = Phase.Launch;
+        }
+
+        public void Detonate() {
+            LIGMA.SelfDestruct();
         }
     }
 }

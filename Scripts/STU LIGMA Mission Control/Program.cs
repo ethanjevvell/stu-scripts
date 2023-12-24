@@ -27,7 +27,8 @@ namespace IngameScript {
         LogLCDPublisher logPublisher;
 
         // Holds log data temporarily for each run
-        STULog tempLog;
+        STULog IncomingLog;
+        STULog OutgoingLog;
 
         public Program() {
 
@@ -59,9 +60,14 @@ namespace IngameScript {
         public void Main(string argument) {
             Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
 
+            OutgoingLog = new STULog {
+                Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
+                Message = argument,
+                Type = STULogType.INFO
+            };
+
             if (!string.IsNullOrEmpty(argument)) {
-                IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, argument, TransmissionDistance.AntennaRelay);
-                Echo($"Sending message: {argument}");
+                IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, OutgoingLog.Serialize(), TransmissionDistance.AntennaRelay);
             }
 
             HandleIncomingBroadcasts();
@@ -76,9 +82,9 @@ namespace IngameScript {
             while (LIGMAListener.HasPendingMessage) {
                 message = LIGMAListener.AcceptMessage();
                 try {
-                    tempLog = STULog.Deserialize(message.Data.ToString());
+                    IncomingLog = STULog.Deserialize(message.Data.ToString());
                 } catch {
-                    tempLog = new STULog {
+                    IncomingLog = new STULog {
                         Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                         Message = $"Received invalid message: {message.Data}",
                         Type = STULogType.ERROR
@@ -93,32 +99,32 @@ namespace IngameScript {
             while (ReconListener.HasPendingMessage) {
                 message = ReconListener.AcceptMessage();
                 try {
-                    tempLog = STULog.Deserialize(message.Data.ToString());
+                    IncomingLog = STULog.Deserialize(message.Data.ToString());
                     SendTargetDataToLIGMA();
                 } catch {
-                    tempLog = new STULog {
+                    IncomingLog = new STULog {
                         Sender = LIGMA_VARIABLES.LIGMA_RECONNOITERER_NAME,
-                        Message = $"Received invalid message: {tempLog.Serialize()}",
+                        Message = $"Received invalid message: {IncomingLog.Serialize()}",
                         Type = STULogType.ERROR
                     };
                 }
-                logPublisher.UpdateDisplays(tempLog);
+                logPublisher.UpdateDisplays(IncomingLog);
             }
         }
 
         public void SendTargetDataToLIGMA() {
             STULog commandLog = new STULog {
                 Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
-                Message = "-targetData",
+                Message = LIGMA_VARIABLES.COMMANDS.UpdateTargetData.ToString(),
                 Type = STULogType.INFO,
-                Metadata = tempLog.Metadata
+                Metadata = IncomingLog.Metadata
             };
             IGC.SendBroadcastMessage(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER, commandLog.Serialize(), TransmissionDistance.AntennaRelay);
         }
 
         public void PublishData() {
-            mainPublisher.UpdateDisplays(tempLog);
-            logPublisher.UpdateDisplays(tempLog);
+            mainPublisher.UpdateDisplays(IncomingLog);
+            logPublisher.UpdateDisplays(IncomingLog);
         }
     }
 }
