@@ -69,10 +69,11 @@ namespace IngameScript {
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
             MainPhase = Phase.Idle;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
         void Main(string argument) {
@@ -142,7 +143,8 @@ namespace IngameScript {
             try {
                 IncomingLog = STULog.Deserialize(logString);
             } catch {
-                LIGMA.CreateFatalErrorBroadcast($"Failed to deserialize incoming log: {logString}");
+                LIGMA.CreateErrorBroadcast($"Failed to deserialize incoming log: {logString}");
+                return;
             }
 
             string message = IncomingLog.Message;
@@ -321,7 +323,7 @@ namespace IngameScript {
                 return;
             }
 
-            if (LIGMA.TargetData.Position == null) {
+            if (LIGMA.TargetData.Position == default(Vector3D)) {
                 LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
                 return;
             }
