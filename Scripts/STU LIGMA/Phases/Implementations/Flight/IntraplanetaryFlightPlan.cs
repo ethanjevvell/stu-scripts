@@ -12,7 +12,7 @@ namespace IngameScript {
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 // Will be mulitplied by the max orbit altitude to get the altitude of the first waypoint
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
-                private const int FLIGHT_VELOCITY = 500;
+                private const int FLIGHT_VELOCITY = 200;
                 private int waypointIndex = 0;
 
                 List<Vector3D> FlightWaypoints;

@@ -211,6 +211,10 @@ namespace IngameScript {
                 var angle = Math.Acos(dotProduct);
                 return angle - Math.PI / 4;
             }
+
+            public void UpdateShipMass() {
+                STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
+            }
         }
     }
 }

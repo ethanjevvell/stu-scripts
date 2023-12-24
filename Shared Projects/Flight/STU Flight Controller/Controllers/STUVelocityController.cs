@@ -33,7 +33,7 @@ namespace IngameScript {
                 /// <summary>
                 /// All velocity controllers deal with the same grid mass, so it's shared.
                 /// </summary>
-                static float ShipMass { get; set; }
+                public static float ShipMass { get; set; }
 
                 IMyRemoteControl RemoteControl { get; set; }
 

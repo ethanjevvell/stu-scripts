@@ -12,7 +12,7 @@ namespace IngameScript {
                 };
 
                 private static LaunchPhase phase = LaunchPhase.Idle;
-                private double LAUNCH_VELOCITY = 500;
+                private double LAUNCH_VELOCITY = 150;
                 private double CurrentElevation;
 
                 public override bool Run() {

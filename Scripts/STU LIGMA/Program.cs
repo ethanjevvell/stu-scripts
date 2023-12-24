@@ -114,7 +114,7 @@ namespace IngameScript {
                     break;
 
                 case Phase.Descent:
-                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(400);
+                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(80);
                     LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetData.Position);
                     LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetData.Position);
 
@@ -331,6 +331,8 @@ namespace IngameScript {
             ALREADY_RAN_FIRST_COMMAND = true;
             FirstRunTasks();
             MainPhase = Phase.Launch;
+            // Insurance in case LIGMA was modified on launch pad
+            LIGMA.FlightController.UpdateShipMass();
         }
 
         public void Detonate() {
