@@ -113,12 +113,10 @@ namespace IngameScript
             // Runtime.UpdateFrequency = UpdateFrequency.Update100;
 
             // instantiate the LogBroadcaster
-            Echo("instantiate the log broadcaster\n");
             LogBroadcaster = new STUMasterLogBroadcaster("LHQ_MASTER_LOGGER", IGC, TransmissionDistance.CurrentConstruct);
 
             // instantiate a dock acuator parameter struct and add it to the ship registry
             // for all known ships
-            Echo("instantiate a dock actuator parameter struct and add it to the ship registry for all known ships\n");
             DockActuatorParameters CBT_parameters = new DockActuatorParameters();
                 CBT_parameters.hinge1angle = 0;
                 CBT_parameters.pistonDistance = 10;
@@ -155,7 +153,6 @@ namespace IngameScript
                 ShipRegistry.Add("reset", reset_parameters);
 
             // cop-out code to get a list of dock names, sorted alphabetically
-            Echo("cop-out for loop for english names of stuff\n");
             for (int i = 1; i <= numRunways - 1; i++)
             {
                 if (i <= numRunways / 2)
@@ -172,7 +169,6 @@ namespace IngameScript
 
             // get list of all dock hinge 1s, then get list of all dock hinge 1
             // english names (by referencing the gathered objects) and sort
-            Echo("get list of all dock hinge 1s, then get list of all dock hinge 1 english names and sort\n");
             GridTerminalSystem.SearchBlocksOfName("Dock Hinge 1", dockHinge1sRaw, hinge => hinge is IMyMotorStator);
             foreach (var hinge in dockHinge1sRaw)
             {
@@ -183,7 +179,6 @@ namespace IngameScript
             dockHinge1sRaw = dockHinge1sRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock pistons
-            Echo("do the same for all dock pistons\n");
             GridTerminalSystem.SearchBlocksOfName("Dock Piston", dockPistonsRaw, piston => piston is IMyPistonBase);
             foreach (var piston in dockPistonsRaw)
             {
@@ -193,7 +188,6 @@ namespace IngameScript
             dockPistonsRaw = dockPistonsRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock hinge 2s
-            Echo("do the same for all dock hinge 2s\n");
             GridTerminalSystem.SearchBlocksOfName("Dock Hinge 2", dockHinge2sRaw, hinge => hinge is IMyMotorStator);
             foreach (var hinge in dockHinge2sRaw)
             {
@@ -203,7 +197,6 @@ namespace IngameScript
             dockHinge2sRaw = dockHinge2sRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all dock connectors
-            Echo("do the same for all dock connectors\n");
             GridTerminalSystem.SearchBlocksOfName("Dock Connector", dockConnectorsRaw, connector => connector is IMyShipConnector);
             foreach (var connector in dockConnectorsRaw)
             {
@@ -213,13 +206,11 @@ namespace IngameScript
             dockConnectorsRaw = dockConnectorsRaw.OrderBy(o => o.CustomName).ToList();
 
             // do the above for all runway distance lights
-            Echo("do the same for all runway distance lights\n");
             GridTerminalSystem.SearchBlocksOfName("Dock Distance Light", dockDistanceLightsRaw, light => light is IMyInteriorLight);
             dockDistanceLightsRaw = dockDistanceLightsRaw.OrderBy(o => o.CustomName).ToList();
 
             // fucky wucky for-loop to cleverly build out the dockDistanceLights_Name dictionary
             // at the same time, add the light object to the dockDistanceLights_Objects dictionary
-            Echo("fucky wucky for loop\n");
             for (int i = 0; i < numRunways; i++)
             {
                 // create a new key and instantiate the list that will serve as each dictionary's value
@@ -238,11 +229,6 @@ namespace IngameScript
                 }
             }
 
-            // sort the dockDistanceLightsDict_Names and dockDistanceLightsDict_Objects dictionaries
-            // by the conventional order (E1, E2, E3... W6, W7, W8)
-            // dockDistanceLightsDict_Names = dockDistanceLightsDict_Names.ToImmutableSortedDictionary(dockDistanceLightsDict_Names);
-
-            
 
             // create instances of DockActuatorGroup
             Echo("create instances of dock actuator group\n");
@@ -276,13 +262,6 @@ namespace IngameScript
                 Echo($"{title.Name}");
             }
 
-            // assign each DockActuatorGroup to a state machine
-            // foreach (var item in DockActuatorGroups)
-            // {
-            //     StateMachines.Add(new DockActuatorGroupFSM(item,Runtime));
-            // }
-
-
 
         }
 
@@ -314,7 +293,14 @@ namespace IngameScript
                     dock.Move(-90, 0, -90);
                 }
             }
-            else { Echo("invalid entry");  return; }
+            else { Echo($"Invalid entry\n" +
+                $"[SHIP],[DOCK]\n" +
+                $"Ship registry:\n");  
+                foreach (var key in ShipRegistry.Keys)
+                {
+                    Echo($"{key}\n");
+                }
+                return; }
 
             // string manipulation logic to extract shipID and dock from argument
             int inflectionPoint = argument.IndexOf(",", 0);
