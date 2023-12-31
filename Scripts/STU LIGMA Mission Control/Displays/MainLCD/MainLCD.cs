@@ -25,8 +25,10 @@ namespace IngameScript {
 
             public MainLCD(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize) {
                 VelocityComponents = Vector3D.Zero;
+                FuelCapacity = 0;
                 CurrentFuel = 0;
                 CurrentPower = 0;
+                PowerCapacity = 0;
                 Drawer = MainLCDMapper.GetDrawFunction(block, displayIndex);
             }
 
