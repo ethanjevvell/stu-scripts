@@ -152,6 +152,20 @@ namespace IngameScript
                 reset_parameters.shipDistance = 1;
                 ShipRegistry.Add("reset", reset_parameters);
 
+            DockActuatorParameters MNTS_parameters = new DockActuatorParameters();
+                MNTS_parameters.hinge1angle = 52.5F;
+                MNTS_parameters.pistonDistance = 0;
+                MNTS_parameters.hinge2angle = -50;
+                MNTS_parameters.shipDistance = 0;
+                ShipRegistry.Add("MNTS", MNTS_parameters);
+
+            DockActuatorParameters HACKETT_parameters = new DockActuatorParameters();
+                HACKETT_parameters.hinge1angle = 63;
+                HACKETT_parameters.pistonDistance = 0;
+                HACKETT_parameters.hinge2angle = -63;
+                HACKETT_parameters.shipDistance = 0;
+                ShipRegistry.Add("HACKETT", HACKETT_parameters);
+
             // cop-out code to get a list of dock names, sorted alphabetically
             for (int i = 1; i <= numRunways - 1; i++)
             {
