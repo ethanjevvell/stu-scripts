@@ -126,24 +126,31 @@ namespace IngameScript
 
             DockActuatorParameters B2R_parameters = new DockActuatorParameters();
                 B2R_parameters.hinge1angle = 0;
-                B2R_parameters.pistonDistance = (float)6.4;
+                B2R_parameters.pistonDistance = 6.4F;
                 B2R_parameters.hinge2angle = 18;
                 B2R_parameters.shipDistance = 17;
                 ShipRegistry.Add("B2R", B2R_parameters);
 
             DockActuatorParameters MNTS_parameters = new DockActuatorParameters();
-                MNTS_parameters.hinge1angle = 52.5F;
-                MNTS_parameters.pistonDistance = 0;
-                MNTS_parameters.hinge2angle = -50;
+                MNTS_parameters.hinge1angle = 36F;
+                MNTS_parameters.pistonDistance = 3.1F;
+                MNTS_parameters.hinge2angle = -36;
                 MNTS_parameters.shipDistance = 0;
                 ShipRegistry.Add("MNTS", MNTS_parameters);
 
             DockActuatorParameters HACKETT_parameters = new DockActuatorParameters();
-                HACKETT_parameters.hinge1angle = 63;
-                HACKETT_parameters.pistonDistance = 0;
-                HACKETT_parameters.hinge2angle = -63;
+                HACKETT_parameters.hinge1angle = 36;
+                HACKETT_parameters.pistonDistance = 4.8F;
+                HACKETT_parameters.hinge2angle = -36;
                 HACKETT_parameters.shipDistance = 0;
                 ShipRegistry.Add("HACKETT", HACKETT_parameters);
+
+            DockActuatorParameters FATBOY_parameters = new DockActuatorParameters();
+                FATBOY_parameters.hinge1angle = 36;
+                FATBOY_parameters.pistonDistance = 4.8F;
+                FATBOY_parameters.hinge2angle = -36;
+                FATBOY_parameters.shipDistance = 0;
+                ShipRegistry.Add("FATBOY", FATBOY_parameters);
 
 
             DockActuatorParameters grabItems_parameters = new DockActuatorParameters();
@@ -267,7 +274,9 @@ namespace IngameScript
                     ShipRegistry[desiredShip].hinge2angle
                     );
 
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].TurnOffRunwayLights(desiredDock, ShipRegistry[desiredShip].shipDistance);
                 DockActuatorGroups[dockNames.IndexOf(desiredDock)].ActivateRunwayLight(desiredDock, ShipRegistry[desiredShip].shipDistance);
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].BlinkRunwayLights(desiredDock, ShipRegistry[desiredShip].shipDistance);
 
                 Echo ($"Sent {ShipRegistry[desiredShip].hinge1angle}, {ShipRegistry[desiredShip].pistonDistance}, {ShipRegistry[desiredShip].hinge2angle} to Dock Actuator Group {DockActuatorGroups[dockNames.IndexOf(desiredDock)]}");
             }

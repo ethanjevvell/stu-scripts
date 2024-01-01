@@ -155,29 +155,54 @@ namespace IngameScript
                 }
             }
 
-            public void ActivateRunwayLight(string dock, int lightIndex)
+            public IMyInteriorLight GetRunwayLightHandle(string dock, int lightindex)
             {
-                // turn off all runway lights of a given runway
+                string strLightIndex = lightindex.ToString();
+                if (lightindex < 10) { strLightIndex = $"0{strLightIndex}"; }
+                IMyInteriorLight light = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {strLightIndex}") as IMyInteriorLight;
+                return light;
+            }
+
+            public void TurnOffRunwayLights(string dock, int lightIndex)
+            {
                 for (int i = 1; i <= NumDistanceLights; i++)
                 {
-                    string strI = i.ToString();
-                    if (i < 10) { strI = $"0{i.ToString()}"; };
-                    IMyInteriorLight light = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {strI}") as IMyInteriorLight;
+                    IMyInteriorLight light = GetRunwayLightHandle(dock, i);
+
+                    //string strI = i.ToString();
+                    //if (i < 10) { strI = $"0{i.ToString()}"; };
+                    //IMyInteriorLight light = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {strI}") as IMyInteriorLight;
+                    light.Color = Color.White;
+                    light.BlinkIntervalSeconds = 0;
+                    light.BlinkOffset = 0;
                     light.Enabled = false;
                 }
+            }
 
+            public void ActivateRunwayLight(string dock, int lightIndex)
+            {
                 // turn on just the landing light of a given runway
-                Echo($"check 2");
                 if (lightIndex == 0) { return; }
                 else
                 {
-                    string strLightIndex = lightIndex.ToString();
-                    Echo($"{lightIndex}");
-                    if (lightIndex < 10) { strLightIndex = $"0{lightIndex.ToString()}"; };
-                    Echo($"{dock}\n{lightIndex}\n{strLightIndex}");
-                    IMyInteriorLight landingLight = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {lightIndex}") as IMyInteriorLight;
+                    IMyInteriorLight landingLight = GetRunwayLightHandle(dock, lightIndex);
                     landingLight.Enabled = true;
                     landingLight.Color = Color.White;
+                }
+            }
+
+            public void BlinkRunwayLights(string dock, int lightIndex)
+            {
+                if (lightIndex == 0) { return; };
+
+                for (int i = 1;i < lightIndex; i++)
+                {
+                    IMyInteriorLight light = GetRunwayLightHandle(dock, i);
+                    light.Enabled = true;
+                    light.Color = Color.Blue;
+                    light.BlinkIntervalSeconds = 1;
+                    light.BlinkLength = (100/3);
+                    light.BlinkOffset = (i%3)*(100/3);
                 }
             }
 
