@@ -113,6 +113,10 @@ namespace IngameScript
 
                 StateMachines.Add(new AirlockFSM(GridTerminalSystem.GetBlockWithName(airlockNames[i]) as IMyDoor, GridTerminalSystem.GetBlockWithName(airlockNames[i+1]) as IMyDoor, Echo, Runtime, IGC));
             }
+
+            // custom add pairs of doors
+            StateMachines.Add(new AirlockFSM(GridTerminalSystem.GetBlockWithName("MatProc Roof Airlock A") as IMyDoor, GridTerminalSystem.GetBlockWithName("MatProc Roof Airlock B") as IMyDoor, Echo, Runtime, IGC));
+            StateMachines.Add(new AirlockFSM(GridTerminalSystem.GetBlockWithName("LHQ Airlock 0A") as IMyDoor, GridTerminalSystem.GetBlockWithName("LHQ Airlock 0B") as IMyDoor, Echo, Runtime, IGC));
         }
 
         public void Main(string argument, UpdateType updateSource)

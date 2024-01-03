@@ -118,10 +118,10 @@ namespace IngameScript
                 ShipRegistry.Add("CBT", CBT_parameters);
 
             DockActuatorParameters HBM_parameters = new DockActuatorParameters();
-                HBM_parameters.hinge1angle = 45;
-                HBM_parameters.pistonDistance = 0;
-                HBM_parameters.hinge2angle = -45;
-                HBM_parameters.shipDistance = 0;
+                HBM_parameters.hinge1angle = 27;
+                HBM_parameters.pistonDistance = 4.2F;
+                HBM_parameters.hinge2angle = -27;
+                HBM_parameters.shipDistance = 4;
                 ShipRegistry.Add("HBM", HBM_parameters);
 
             DockActuatorParameters B2R_parameters = new DockActuatorParameters();
@@ -262,6 +262,8 @@ namespace IngameScript
             int inflectionPoint = argument.IndexOf(",", 0);
             desiredShip = argument.Substring(0,inflectionPoint); desiredShip = desiredShip.Trim();
             desiredDock = argument.Substring(inflectionPoint + 1, argument.Length - inflectionPoint - 1); desiredDock = desiredDock.Trim();
+
+            if (desiredShip == "connected") { DockActuatorGroups[dockNames.IndexOf(desiredDock)].TurnOffRunwayLights(desiredDock, 0); }
 
             // logic to look up ship parameters and call Move() to dock actuator group
             if (ShipRegistry.ContainsKey(desiredShip))
