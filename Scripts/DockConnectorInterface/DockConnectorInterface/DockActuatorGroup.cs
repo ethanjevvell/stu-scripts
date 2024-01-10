@@ -46,8 +46,10 @@ namespace IngameScript
             public List<float> lastTargetPosition = new List<float>();
 
             Action<string> Echo;
+            IMyGridTerminalSystem GridTerminalSystem;
+            int NumDistanceLights;
 
-            public DockActuatorGroup(string name, IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights)
+            public DockActuatorGroup(string name, IMyMotorStator hinge1, IMyPistonBase piston,IMyMotorStator hinge2, IMyShipConnector connector, List<IMyInteriorLight> distanceLights, Action<string> echo, IMyGridTerminalSystem grid, int numDistanceLights)
             {
                 Name = name;
                 Hinge1 = hinge1;
@@ -55,6 +57,9 @@ namespace IngameScript
                 Hinge2 = hinge2;
                 Connector = connector;
                 DistanceLights = distanceLights;
+                Echo = echo;
+                GridTerminalSystem = grid;
+                NumDistanceLights = numDistanceLights;
             }
 
             public string Name { get; set; }
@@ -73,16 +78,11 @@ namespace IngameScript
 
             public void Move(float hinge1TargetPosition, float pistonTargetPosition, float  hinge2TargetPosition)
             {
-                lastHinge1Target = hinge1TargetPosition;
-                lastPistonTarget = pistonTargetPosition;
-                lastHinge2Target = hinge2TargetPosition;
-
                 Disconnect(Connector);
                 MovePiston(Piston, 0);
                 MoveHinge(Hinge1, hinge1TargetPosition);
                 MoveHinge(Hinge2, hinge2TargetPosition);
                 MovePiston(Piston, pistonTargetPosition);
-
             }
 
             public void MoveHinge(IMyMotorStator hinge, float targetPosition)
@@ -101,9 +101,6 @@ namespace IngameScript
                 // logic to keep the targetPosition within the bounds of what is allowable
                 if (targetPosition > 90) { targetPosition = 90; };
                 if (targetPosition < -90) { targetPosition = -90; };
-
-                // had to remove the logic that locks the hinges because I realized
-                // that this code block runs basically instantaneously due to the FSM construction.
 
                 // set the hinge limits to the extremes
                 hinge.UpperLimitDeg = 90;
@@ -158,14 +155,55 @@ namespace IngameScript
                 }
             }
 
-            public void IlluminateLight(List<IMyInteriorLight> distanceLights, int lightIndex)
+            public IMyInteriorLight GetRunwayLightHandle(string dock, int lightindex)
             {
-                foreach (var light in distanceLights)
+                string strLightIndex = lightindex.ToString();
+                if (lightindex < 10) { strLightIndex = $"0{strLightIndex}"; }
+                IMyInteriorLight light = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {strLightIndex}") as IMyInteriorLight;
+                return light;
+            }
+
+            public void TurnOffRunwayLights(string dock, int lightIndex)
+            {
+                for (int i = 1; i <= NumDistanceLights; i++)
                 {
+                    IMyInteriorLight light = GetRunwayLightHandle(dock, i);
+
+                    //string strI = i.ToString();
+                    //if (i < 10) { strI = $"0{i.ToString()}"; };
+                    //IMyInteriorLight light = GridTerminalSystem.GetBlockWithName($"{dock} Dock Distance Light {strI}") as IMyInteriorLight;
+                    light.Color = Color.White;
+                    light.BlinkIntervalSeconds = 0;
+                    light.BlinkOffset = 0;
                     light.Enabled = false;
                 }
+            }
 
-                distanceLights[lightIndex].Enabled = true;
+            public void ActivateRunwayLight(string dock, int lightIndex)
+            {
+                // turn on just the landing light of a given runway
+                if (lightIndex == 0) { return; }
+                else
+                {
+                    IMyInteriorLight landingLight = GetRunwayLightHandle(dock, lightIndex);
+                    landingLight.Enabled = true;
+                    landingLight.Color = Color.White;
+                }
+            }
+
+            public void BlinkRunwayLights(string dock, int lightIndex)
+            {
+                if (lightIndex == 0) { return; };
+
+                for (int i = 1;i < lightIndex; i++)
+                {
+                    IMyInteriorLight light = GetRunwayLightHandle(dock, i);
+                    light.Enabled = true;
+                    light.Color = Color.Blue;
+                    light.BlinkIntervalSeconds = 1;
+                    light.BlinkLength = (100/3);
+                    light.BlinkOffset = (i%3)*(100/3);
+                }
             }
 
             public void Retract(IMyShipConnector Connector)

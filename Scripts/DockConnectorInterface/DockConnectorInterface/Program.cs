@@ -69,12 +69,7 @@ namespace IngameScript
 
         public STUMasterLogBroadcaster LogBroadcaster;
         public string LogSender = "ATC Computer";
-
-        public float currentHingePosition;
-        public float currentHingeVelocity;
-
-        public float currentPistonPosition;
-
+        
         public string desiredShip;
         public string desiredDock;
 
@@ -91,9 +86,9 @@ namespace IngameScript
         public Dictionary<string, List<string>> dockDistanceLightsDict_Names = new Dictionary<string, List<string>>();
         public Dictionary<int, List<IMyInteriorLight>> dockDistanceLightsDict_Objects = new Dictionary<int, List<IMyInteriorLight>>();
 
-        int numRunways = 16;
-        int numDistanceLightsOfARunway = 17;
-        public List<string> runwayNames = new List<string>();
+        public int numRunways = 16;
+        public int numDistanceLightsOfARunway = 17;
+        public List<string> dockNames = new List<string>();
 
         public struct DockActuatorParameters
         {
@@ -110,159 +105,120 @@ namespace IngameScript
 
         public Program()
         {
-            // Runtime.UpdateFrequency = UpdateFrequency.Update100;
-
             // instantiate the LogBroadcaster
             LogBroadcaster = new STUMasterLogBroadcaster("LHQ_MASTER_LOGGER", IGC, TransmissionDistance.CurrentConstruct);
 
             // instantiate a dock acuator parameter struct and add it to the ship registry
             // for all known ships
             DockActuatorParameters CBT_parameters = new DockActuatorParameters();
-                CBT_parameters.hinge1angle = 0;
-                CBT_parameters.pistonDistance = 10;
-                CBT_parameters.hinge2angle = -36;
+                CBT_parameters.hinge1angle = 0F;
+                CBT_parameters.pistonDistance = 10F;
+                CBT_parameters.hinge2angle = -36F;
                 CBT_parameters.shipDistance = 16;
                 ShipRegistry.Add("CBT", CBT_parameters);
 
             DockActuatorParameters HBM_parameters = new DockActuatorParameters();
-                HBM_parameters.hinge1angle = 45;
-                HBM_parameters.pistonDistance = 0;
-                HBM_parameters.hinge2angle = -45;
-                HBM_parameters.shipDistance = 0;
+                HBM_parameters.hinge1angle = 27;
+                HBM_parameters.pistonDistance = 4.2F;
+                HBM_parameters.hinge2angle = -27;
+                HBM_parameters.shipDistance = 4;
                 ShipRegistry.Add("HBM", HBM_parameters);
 
             DockActuatorParameters B2R_parameters = new DockActuatorParameters();
                 B2R_parameters.hinge1angle = 0;
-                B2R_parameters.pistonDistance = (float)6.4;
+                B2R_parameters.pistonDistance = 6.4F;
                 B2R_parameters.hinge2angle = 18;
                 B2R_parameters.shipDistance = 17;
                 ShipRegistry.Add("B2R", B2R_parameters);
+
+            DockActuatorParameters MNTS_parameters = new DockActuatorParameters();
+                MNTS_parameters.hinge1angle = 36F;
+                MNTS_parameters.pistonDistance = 3.1F;
+                MNTS_parameters.hinge2angle = -36;
+                MNTS_parameters.shipDistance = 0;
+                ShipRegistry.Add("MNTS", MNTS_parameters);
+
+            DockActuatorParameters HACKETT_parameters = new DockActuatorParameters();
+                HACKETT_parameters.hinge1angle = 36;
+                HACKETT_parameters.pistonDistance = 4.8F;
+                HACKETT_parameters.hinge2angle = -36;
+                HACKETT_parameters.shipDistance = 0;
+                ShipRegistry.Add("HACKETT", HACKETT_parameters);
+
+            DockActuatorParameters FATBOY_parameters = new DockActuatorParameters();
+                FATBOY_parameters.hinge1angle = 36;
+                FATBOY_parameters.pistonDistance = 4.8F;
+                FATBOY_parameters.hinge2angle = -36;
+                FATBOY_parameters.shipDistance = 0;
+                ShipRegistry.Add("FATBOY", FATBOY_parameters);
+
 
             DockActuatorParameters grabItems_parameters = new DockActuatorParameters();
                 grabItems_parameters.hinge1angle = 90;
                 grabItems_parameters.pistonDistance = 0;
                 grabItems_parameters.hinge2angle = -90;
-                grabItems_parameters.shipDistance = 1;
+                grabItems_parameters.shipDistance = 0;
                 ShipRegistry.Add("grabitems", grabItems_parameters);
 
             DockActuatorParameters reset_parameters = new DockActuatorParameters();
-                reset_parameters.hinge1angle = -90;
-                reset_parameters.pistonDistance = 0;
-                reset_parameters.hinge2angle = -90;
-                reset_parameters.shipDistance = 1;
+                reset_parameters.hinge1angle = -90F;
+                reset_parameters.pistonDistance = 0F;
+                reset_parameters.hinge2angle = -90F;
+                reset_parameters.shipDistance = 0;
                 ShipRegistry.Add("reset", reset_parameters);
 
+            
             // cop-out code to get a list of dock names, sorted alphabetically
             for (int i = 1; i <= numRunways - 1; i++)
             {
                 if (i <= numRunways / 2)
                 {
-                    runwayNames.Add($"E{i}");
+                    dockNames.Add($"E{i}");
                 }
                 else
                 {
-                    runwayNames.Add($"W{i % (numRunways / 2)}");
+                    dockNames.Add($"W{i % (numRunways / 2)}");
                 }
             }
-            runwayNames.Add("W8");
-            runwayNames.Sort();
+            dockNames.Add("W8");
+            dockNames.Sort();
 
-            // get list of all dock hinge 1s, then get list of all dock hinge 1
-            // english names (by referencing the gathered objects) and sort
-            GridTerminalSystem.SearchBlocksOfName("Dock Hinge 1", dockHinge1sRaw, hinge => hinge is IMyMotorStator);
-            foreach (var hinge in dockHinge1sRaw)
+            // procedurally generate DockActuatorGroup objects by looping through dockNames
+            // and grabbing the associated items from the network
+            for (int i = 0; i < dockNames.Count; i++)
             {
-                Echo($"adding {hinge.CustomName} to list");
-                dockHinge1s.Add(hinge.CustomName);
-            }
-            dockHinge1s.Sort();
-            dockHinge1sRaw = dockHinge1sRaw.OrderBy(o => o.CustomName).ToList();
-
-            // do the above for all dock pistons
-            GridTerminalSystem.SearchBlocksOfName("Dock Piston", dockPistonsRaw, piston => piston is IMyPistonBase);
-            foreach (var piston in dockPistonsRaw)
-            {
-                dockPistons.Add(piston.CustomName);
-            }
-            dockPistons.Sort();
-            dockPistonsRaw = dockPistonsRaw.OrderBy(o => o.CustomName).ToList();
-
-            // do the above for all dock hinge 2s
-            GridTerminalSystem.SearchBlocksOfName("Dock Hinge 2", dockHinge2sRaw, hinge => hinge is IMyMotorStator);
-            foreach (var hinge in dockHinge2sRaw)
-            {
-                dockHinge2s.Add(hinge.CustomName);
-            }
-            dockHinge2s.Sort();
-            dockHinge2sRaw = dockHinge2sRaw.OrderBy(o => o.CustomName).ToList();
-
-            // do the above for all dock connectors
-            GridTerminalSystem.SearchBlocksOfName("Dock Connector", dockConnectorsRaw, connector => connector is IMyShipConnector);
-            foreach (var connector in dockConnectorsRaw)
-            {
-                dockConnectors.Add(connector.CustomName);
-            }
-            dockConnectors.Sort();
-            dockConnectorsRaw = dockConnectorsRaw.OrderBy(o => o.CustomName).ToList();
-
-            // do the above for all runway distance lights
-            GridTerminalSystem.SearchBlocksOfName("Dock Distance Light", dockDistanceLightsRaw, light => light is IMyInteriorLight);
-            dockDistanceLightsRaw = dockDistanceLightsRaw.OrderBy(o => o.CustomName).ToList();
-
-            // fucky wucky for-loop to cleverly build out the dockDistanceLights_Name dictionary
-            // at the same time, add the light object to the dockDistanceLights_Objects dictionary
-            for (int i = 0; i < numRunways; i++)
-            {
-                // create a new key and instantiate the list that will serve as each dictionary's value
-                //Echo($"\nouter layer i = {i}");
-                dockDistanceLightsDict_Names.Add(dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2), new List<string>());
-                //Echo("wrote to Names dictionary");
-                dockDistanceLightsDict_Objects.Add(i, new List<IMyInteriorLight>());
-                //Echo("wrote to Object dictionary");
-                //Echo($"{dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)}");
+                List<IMyInteriorLight> lights = new List<IMyInteriorLight>();
                 for (int j = 0; j < numDistanceLightsOfARunway; j++)
                 {
-                    // take the name of the light from the Raw list and add it to the dictionary's list
-                    //Echo($"inner layer j = {j}");
-                    dockDistanceLightsDict_Names[dockDistanceLightsRaw[i * numDistanceLightsOfARunway].CustomName.Substring(0, 2)].Add(dockDistanceLightsRaw[j+i * numDistanceLightsOfARunway].CustomName);
-                    dockDistanceLightsDict_Objects[i].Add(dockDistanceLightsRaw[j * i] as IMyInteriorLight);
+                    string strLightNumber = (j+1).ToString();
+                    if (j < 9) { strLightNumber = $"0{strLightNumber}"; };
+                    lights.Add(GridTerminalSystem.GetBlockWithName($"{dockNames[i]} Dock Distance Light {strLightNumber}") as IMyInteriorLight);
                 }
-            }
 
+                IMyMotorStator hinge1 = GridTerminalSystem.GetBlockWithName($"{dockNames[i]} Dock Hinge 1") as IMyMotorStator;
+                IMyPistonBase piston = GridTerminalSystem.GetBlockWithName($"{dockNames[i]} Dock Piston") as IMyPistonBase;
+                IMyMotorStator hinge2 = GridTerminalSystem.GetBlockWithName($"{dockNames[i]} Dock Hinge 2") as IMyMotorStator;
+                IMyShipConnector connector = GridTerminalSystem.GetBlockWithName($"{dockNames[i]} Dock Connector") as IMyShipConnector;
 
-            // create instances of DockActuatorGroup
-            Echo("create instances of dock actuator group\n");
-            if (dockHinge1s.Count() != numRunways) { Echo($"dim mismatch between hinge1s list count: {dockHinge1s.Count()} and explicit numRunways: {numRunways}"); } ;
-            if (dockPistons.Count() != numRunways) { Echo($"dim mismatch between pistons list count: {dockPistons.Count()} and explicit numRunways: {numRunways}"); };
-            if (dockHinge2s.Count() != numRunways) { Echo($"dim mismatch between hinge2s list count: {dockHinge2s.Count()} and explicit numRunways: {numRunways}"); };
-            if (dockConnectors.Count() != numRunways) { Echo($"dim mismatch between connectors list count: {dockConnectors.Count()} and explicit numRunways: {numRunways}"); };
-            for (int i = 0; i < numRunways; i++)
-            {
-                Echo($"instance {i}");
-                Echo($"name: {runwayNames[i]}");
-                Echo($"hinge1: {dockHinge1s[i]}");
-                Echo($"piston: {dockPistons[i]}");
-                Echo($"hinge2: {dockHinge2s[i]}");
-                Echo($"connector: {dockConnectors[i]}");
-                Echo($"light group: {dockDistanceLightsRaw[i*numDistanceLightsOfARunway]}");
+                if (hinge1 == null || piston == null || hinge2 == null || connector == null) { Echo($"One or more of the objects is null"); };
+
                 DockActuatorGroups.Add(new DockActuatorGroup(
-                    runwayNames[i],
-                    dockHinge1sRaw[i] as IMyMotorStator,
-                    dockPistonsRaw[i] as IMyPistonBase,
-                    dockHinge2sRaw[i] as IMyMotorStator,
-                    dockConnectorsRaw[i] as IMyShipConnector,
-                    dockDistanceLightsDict_Objects[i])) ;
-                Echo($"{DockActuatorGroups[i].Hinge1.CustomName}\n");
+                    dockNames[i],
+                    hinge1,
+                    piston,
+                    hinge2,
+                    connector,
+                    lights,
+                    Echo,
+                    GridTerminalSystem,
+                    numDistanceLightsOfARunway)
+                    ); ;
+
+                Echo($"{DockActuatorGroups[i].Name}\n");
             }
 
             DockActuatorGroups.OrderBy(o => o.Name);
-            Echo($"sorted list of dock actuator groups:");
-            foreach (var title in DockActuatorGroups)
-            {
-                Echo($"{title.Name}");
-            }
-
-
+            
         }
 
         public void Save()
@@ -304,23 +260,27 @@ namespace IngameScript
 
             // string manipulation logic to extract shipID and dock from argument
             int inflectionPoint = argument.IndexOf(",", 0);
-            desiredShip = argument.Substring(0,inflectionPoint);
-            desiredDock = argument.Substring(inflectionPoint + 1, argument.Length - inflectionPoint - 1);
+            desiredShip = argument.Substring(0,inflectionPoint); desiredShip = desiredShip.Trim();
+            desiredDock = argument.Substring(inflectionPoint + 1, argument.Length - inflectionPoint - 1); desiredDock = desiredDock.Trim();
+
+            if (desiredShip == "connected") { DockActuatorGroups[dockNames.IndexOf(desiredDock)].TurnOffRunwayLights(desiredDock, 0); }
 
             // logic to look up ship parameters and call Move() to dock actuator group
             if (ShipRegistry.ContainsKey(desiredShip))
             {
-                Echo ($"Attempting to send {desiredShip} parameters to Dock Actuator Group of terminal {desiredDock}\n");
-                
-                DockActuatorGroups[runwayNames.IndexOf(desiredDock)].Move(
+                Echo($"Attempting to send {desiredShip} parameters to Dock Actuator Group of terminal {desiredDock}\n");
+
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].Move(
                     ShipRegistry[desiredShip].hinge1angle,
                     ShipRegistry[desiredShip].pistonDistance,
                     ShipRegistry[desiredShip].hinge2angle
                     );
-                Echo($"runwayNames.IndexOf(desiredDock) = {runwayNames.IndexOf(desiredDock)}");
-                DockActuatorGroups[runwayNames.IndexOf(desiredDock)].IlluminateLight(dockDistanceLightsDict_Objects[runwayNames.IndexOf(desiredDock)], ShipRegistry[desiredShip].shipDistance);
 
-                Echo ($"Sent {ShipRegistry[desiredShip].hinge1angle}, {ShipRegistry[desiredShip].pistonDistance}, {ShipRegistry[desiredShip].hinge2angle} to Dock Actuator Group {DockActuatorGroups[runwayNames.IndexOf(desiredDock)]}");
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].TurnOffRunwayLights(desiredDock, ShipRegistry[desiredShip].shipDistance);
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].ActivateRunwayLight(desiredDock, ShipRegistry[desiredShip].shipDistance);
+                DockActuatorGroups[dockNames.IndexOf(desiredDock)].BlinkRunwayLights(desiredDock, ShipRegistry[desiredShip].shipDistance);
+
+                Echo ($"Sent {ShipRegistry[desiredShip].hinge1angle}, {ShipRegistry[desiredShip].pistonDistance}, {ShipRegistry[desiredShip].hinge2angle} to Dock Actuator Group {DockActuatorGroups[dockNames.IndexOf(desiredDock)]}");
             }
             else { Echo($"could not find key \"{desiredShip}\""); return; }
 

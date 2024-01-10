@@ -77,7 +77,7 @@ namespace IngameScript
 
             public void HandleActivateLight()
             {
-                HardwareGroup.IlluminateLight(HardwareGroup.DistanceLights, 1);
+                HardwareGroup.ActivateRunwayLight("BAD STRING FIX LATER", 1);
                 
                 currentState = State.disconnectConnector;
                 return;
