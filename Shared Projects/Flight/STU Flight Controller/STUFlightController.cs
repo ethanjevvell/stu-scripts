@@ -14,6 +14,8 @@ namespace IngameScript {
             public double VelocityMagnitude { get; set; }
             public Vector3D VelocityComponents { get; set; }
 
+            public float CurrentStoppingDistance { get; }
+
             public Vector3D CurrentPosition { get; set; }
             public Vector3D StartPosition { get; set; }
             public Vector3D PreviousPosition { get; set; }
@@ -64,11 +66,21 @@ namespace IngameScript {
                 CurrentPosition = RemoteControl.GetPosition();
             }
 
+            public float GetForwardStoppingDistance()
+            {
+                float mass = STUVelocityController.ShipMass as float;
+                float velocity = VelocityMagnitude;
+                float force = STUVelocityController.MaximumReverseAcceleration as float;
+                float dx = (-1*velocity^2*mass)/(2*force); //kinematic equation for "how far would I travel if I slammed on the brakes right now?"
+                return dx;
+            }
+
             public void Update() {
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 PreviousWorldMatrix = CurrentWorldMatrix;
                 PreviousPosition = CurrentPosition;
+                CurrentStoppingDistance = GetForwardStoppingDistance();
             }
 
             /// <summary>
