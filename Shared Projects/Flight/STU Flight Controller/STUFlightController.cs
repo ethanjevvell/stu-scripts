@@ -15,7 +15,6 @@ namespace IngameScript {
             public Vector3D VelocityComponents { get; set; }
 
             public Vector3D CurrentPosition { get; set; }
-            public Vector3D StartPosition { get; set; }
             public Vector3D PreviousPosition { get; set; }
             public NTable VelocityNTable { get; set; }
 

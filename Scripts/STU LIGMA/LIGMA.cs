@@ -214,17 +214,14 @@ namespace IngameScript {
             }
 
             public static void ArmWarheads() {
-                Array.ForEach(Warheads, warhead => {
+                foreach (IMyWarhead warhead in Warheads) {
                     warhead.IsArmed = true;
-                });
+                }
                 CreateWarningBroadcast("WARHEADS ARMED");
             }
 
             public static void SelfDestruct() {
                 CreateErrorBroadcast("SELF DESTRUCT INITIATED");
-                foreach (IMyWarhead warhead in Warheads) {
-                    warhead.IsArmed = true;
-                }
                 foreach (IMyWarhead warhead in Warheads) {
                     warhead.Detonate();
                 }

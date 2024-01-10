@@ -41,8 +41,10 @@ namespace IngameScript {
         Phase MainPhase;
         MissileMode Mode;
 
-        LIGMA.IFlightPlan MainFlightPlan;
         LIGMA.ILaunchPlan MainLaunchPlan;
+        LIGMA.IFlightPlan MainFlightPlan;
+        LIGMA.IDescentPlan MainDescentPlan;
+        LIGMA.ITerminalPlan MainTerminalPlan;
 
         STULog IncomingLog;
 
@@ -107,31 +109,24 @@ namespace IngameScript {
                     if (finishedFlight) {
                         MainPhase = Phase.Descent;
                         LIGMA.CreateWarningBroadcast("Entering descent phase");
-                        LIGMA.ArmWarheads();
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
                     };
                     break;
 
                 case Phase.Descent:
-                    var velocityStable = LIGMA.FlightController.SetStableForwardVelocity(80);
-                    LIGMA.FlightController.OptimizeShipRoll(LIGMA.TargetData.Position);
-                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetData.Position);
-
-                    if (velocityStable) {
-                        LIGMA.CreateWarningBroadcast("Entering terminal phase");
+                    var finishedDescent = MainDescentPlan.Run();
+                    if (finishedDescent) {
                         MainPhase = Phase.Terminal;
+                        LIGMA.CreateWarningBroadcast("Entering terminal phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
-                    }
+                    };
+                    //
                     break;
 
                 case Phase.Terminal:
-                    LIGMA.FlightController.StableFreeFall();
-                    LIGMA.FlightController.AlignShipToTarget(LIGMA.TargetData.Position);
-                    if (Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position) < 30) {
-                        LIGMA.SelfDestruct();
-                    }
+                    var finishedTerminal = MainTerminalPlan.Run();
                     break;
 
             }
@@ -189,7 +184,7 @@ namespace IngameScript {
 
                 case MissileMode.Intraplanetary:
                     MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
-                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position);
+                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan();
                     break;
 
                 case MissileMode.PlanetToSpace:
@@ -202,7 +197,9 @@ namespace IngameScript {
 
                 case MissileMode.SpaceToSpace:
                     MainLaunchPlan = new LIGMA.SpaceToSpaceLaunchPlan();
-                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position);
+                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan();
+                    MainDescentPlan = new LIGMA.SpaceToSpaceDescentPlan();
+                    MainTerminalPlan = new LIGMA.SpaceToSpaceTerminalPlan();
                     break;
 
                 case MissileMode.Interplanetary:
@@ -333,6 +330,7 @@ namespace IngameScript {
             MainPhase = Phase.Launch;
             // Insurance in case LIGMA was modified on launch pad
             LIGMA.FlightController.UpdateShipMass();
+            LIGMA.CreateOkBroadcast($"Launching in {GetModeString()}");
         }
 
         public void Detonate() {

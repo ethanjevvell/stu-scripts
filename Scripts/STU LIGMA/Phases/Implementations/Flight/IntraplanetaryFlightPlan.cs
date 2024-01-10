@@ -26,9 +26,9 @@ namespace IngameScript {
                     }
                 }
 
-                public IntraplanetaryFlightPlan(Vector3D launch, Vector3D target) {
-                    var orbitalWaypoints = GenerateAllOrbitalWaypoints((Vector3D)LaunchPlanet?.Center, (double)LaunchPlanet?.Radius, launch, target);
-                    FlightWaypoints = GetOptimalOrbitalPath(target, orbitalWaypoints);
+                public IntraplanetaryFlightPlan() {
+                    var orbitalWaypoints = GenerateAllOrbitalWaypoints((Vector3D)LaunchPlanet?.Center, (double)LaunchPlanet?.Radius, LaunchCoordinates, TargetData.Position);
+                    FlightWaypoints = GetOptimalOrbitalPath(TargetData.Position, orbitalWaypoints);
                 }
 
                 public override bool Run() {

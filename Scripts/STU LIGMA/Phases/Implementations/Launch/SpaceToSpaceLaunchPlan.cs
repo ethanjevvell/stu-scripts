@@ -1,48 +1,22 @@
-﻿namespace IngameScript {
+﻿using VRageMath;
+
+namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
             public class SpaceToSpaceLaunchPlan : ILaunchPlan {
 
-                private enum LaunchPhase {
-                    Idle,
-                    Start,
-                    End
-                };
-
-                private bool velocityStable = false;
-                private static LaunchPhase phase = LaunchPhase.Idle;
-                private double LAUNCH_VELOCITY = 150;
+                private int LAUNCH_VELOCITY = 50;
+                private int LAUNCH_DISTANCE = 150;
 
                 public override bool Run() {
+                    FirstRunTasks();
 
-                    switch (phase) {
-
-                        case LaunchPhase.Idle:
-
-                            phase = LaunchPhase.Start;
-                            CreateWarningBroadcast("Starting launch burn");
-                            break;
-
-                        case LaunchPhase.Start:
-
-                            FirstRunTasks();
-                            velocityStable = FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
-
-                            if (velocityStable) {
-                                phase = LaunchPhase.End;
-                                break;
-                            }
-
-                            break;
-
-                        case LaunchPhase.End:
-
-                            return true;
-
+                    FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
+                    if (Vector3D.Distance(FlightController.CurrentPosition, LaunchCoordinates) >= LAUNCH_DISTANCE) {
+                        return true;
                     }
 
                     return false;
-
                 }
 
             }
