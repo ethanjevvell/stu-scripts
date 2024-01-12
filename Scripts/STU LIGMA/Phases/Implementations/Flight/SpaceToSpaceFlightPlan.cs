@@ -10,8 +10,8 @@
 
                     FlightController.OptimizeShipRoll(TargetData.Position);
                     FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
-
                     var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
+
                     if (shipAligned) {
                         return true;
                     }

@@ -127,6 +127,7 @@ namespace IngameScript {
 
                 case Phase.Terminal:
                     var finishedTerminal = MainTerminalPlan.Run();
+                    // Detonation is handled purely by the DetonationSensor
                     break;
 
             }
@@ -185,6 +186,8 @@ namespace IngameScript {
                 case MissileMode.Intraplanetary:
                     MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
                     MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan();
+                    MainDescentPlan = new LIGMA.IntraplanetaryDescentPlan();
+                    MainTerminalPlan = new LIGMA.IntraplanetaryTerminalPlan();
                     break;
 
                 case MissileMode.PlanetToSpace:

@@ -49,6 +49,7 @@
     <Compile Include="LIGMA.cs" />
     <Compile Include="Phases\Abstract Classes\IDescentPlan.cs" />
     <Compile Include="Phases\Abstract Classes\ITerminalPlan.cs" />
+    <Compile Include="Phases\Implementations\Descent\IntraplanetaryDescentPlan.cs" />
     <Compile Include="Phases\Implementations\Descent\SpaceToSpaceDescentPlan.cs" />
     <Compile Include="Phases\Implementations\Flight\SpaceToSpaceFlightPlan.cs" />
     <Compile Include="Phases\Abstract Classes\IFlightPlan.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="Phases\Abstract Classes\ILaunchPlan.cs" />
     <Compile Include="Phases\Implementations\Launch\IntraplanetaryLaunchPlan.cs" />
     <Compile Include="Phases\Implementations\Launch\SpaceToSpaceLaunchPlan.cs" />
+    <Compile Include="Phases\Implementations\Terminal\IntraplanetaryTerminalPlan.cs" />
     <Compile Include="Phases\Implementations\Terminal\SpaceToSpaceTerminalPlan.cs" />
     <Compile Include="Phases\TestSuite.cs" />
     <Compile Include="Program.cs" />
