@@ -52,7 +52,7 @@ namespace IngameScript {
                 double MaximumDownThrust { get; set; }
 
                 double MaximumForwardAcceleration { get; set; }
-                double MaximumReverseAcceleration { get; set; }
+                public double MaximumReverseAcceleration { get; set; }
                 double MaximumLeftAcceleration { get; set; }
                 double MaximumRightAcceleration { get; set; }
                 double MaximumUpAcceleration { get; set; }
