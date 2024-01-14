@@ -6,11 +6,11 @@ using VRageMath;
 namespace IngameScript {
     partial class Program {
 
-        public enum STULogType {
-            OK,
-            ERROR,
-            WARNING,
-            INFO
+        public static class STULogType {
+            public const string OK = "OK";
+            public const string ERROR = "ERROR";
+            public const string WARNING = "WARNING";
+            public const string INFO = "INFO";
         }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace IngameScript {
 
             private string message;
             private string sender;
-            private STULogType type;
+            private string type;
             private Dictionary<string, string> metadata;
 
             private const string COMPONENT_DELIMITER = "\x1F";
@@ -29,7 +29,7 @@ namespace IngameScript {
 
             public STULog() { }
 
-            public STULog(string sender, string message, STULogType type, Dictionary<string, string> metadata = null) {
+            public STULog(string sender, string message, string type, Dictionary<string, string> metadata = null) {
                 Sender = sender;
                 Message = message;
                 Type = type;
@@ -46,11 +46,7 @@ namespace IngameScript {
 
                 string[] components = s.Split(new string[] { COMPONENT_DELIMITER }, StringSplitOptions.None);
 
-                STULogType logType;
-                if (Enum.TryParse(components[2], out logType) == false) {
-                    throw new ArgumentException($"Malformed log string; invalid log type: {components[2]}.");
-                }
-
+                string logType = components[2];
                 switch (components.Length) {
                     case 3:
                         // No metadata
@@ -78,7 +74,7 @@ namespace IngameScript {
                 return metadata;
             }
 
-            public static Color GetColor(STULogType type) {
+            public static Color GetColor(string type) {
                 switch (type) {
                     case STULogType.OK:
                         return Color.Green;
@@ -134,7 +130,7 @@ namespace IngameScript {
                 }
             }
 
-            public STULogType Type {
+            public string Type {
                 get {
                     return type;
                 }
@@ -156,3 +152,4 @@ namespace IngameScript {
 
     }
 }
+

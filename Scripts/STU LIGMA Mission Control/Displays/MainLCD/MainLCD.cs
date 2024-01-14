@@ -51,7 +51,6 @@ namespace IngameScript {
                     CurrentPower = double.Parse(log.Metadata["CurrentPower"]);
                     FuelCapacity = double.Parse(log.Metadata["FuelCapacity"]);
                     PowerCapacity = double.Parse(log.Metadata["PowerCapacity"]);
-
                 } catch {
                     VelocityComponents = Vector3D.Zero;
                     CurrentFuel = 69;
