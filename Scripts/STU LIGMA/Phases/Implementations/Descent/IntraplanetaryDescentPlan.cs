@@ -3,19 +3,21 @@
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
-            public class IntraplanetaryLaunchPlan : ILaunchPlan {
+            public class IntraplanetaryDescentPlan : IDescentPlan {
 
-                private double LAUNCH_VELOCITY = 150;
-                private double ELEVATION_CUTOFF = 1000;
+                private double DESCENT_VELOCITY = 200;
+                private double ELEVATION_CUTOFF = 2000;
                 private double CurrentElevation;
 
                 public override bool Run() {
 
                     FirstRunTasks();
-                    FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
+                    FlightController.AlignShipToTarget(TargetData.Position);
+                    FlightController.OptimizeShipRoll(TargetData.Position);
+                    FlightController.SetStableForwardVelocity(DESCENT_VELOCITY);
 
                     if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
-                        if (CurrentElevation > ELEVATION_CUTOFF) {
+                        if (CurrentElevation <= ELEVATION_CUTOFF) {
                             return true;
                         }
                     }
@@ -23,7 +25,6 @@ namespace IngameScript {
                     return false;
 
                 }
-
             }
         }
     }

@@ -16,6 +16,7 @@ namespace IngameScript {
             public const float TimeStep = 1.0f / 6.0f;
 
             public static STUFlightController FlightController { get; set; }
+            public static IMySensorBlock DetonationSensor { get; set; }
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -58,6 +59,7 @@ namespace IngameScript {
                 LoadFuelTanks(grid);
                 LoadWarheads(grid);
                 LoadConnector(grid);
+                LoadDetonationSensor(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -163,6 +165,40 @@ namespace IngameScript {
                 Connector = connector as IMyShipConnector;
             }
 
+            private static void LoadDetonationSensor(IMyGridTerminalSystem grid) {
+                var sensor = grid.GetBlockWithName("Detonation Sensor");
+                if (sensor == null) {
+                    CreateFatalErrorBroadcast("No detonation sensor detected on grid.");
+                }
+                CreateOkBroadcast("Detonation sensor... nominal");
+                DetonationSensor = sensor as IMySensorBlock;
+                // Disable sensor immediately to prevent premature detonation
+                DetonationSensor.Enabled = false;
+
+                // Sensor distance configuration
+                DetonationSensor.FrontExtend = 5;
+                DetonationSensor.BackExtend = 0;
+                DetonationSensor.LeftExtend = 1;
+                DetonationSensor.RightExtend = 1;
+                DetonationSensor.TopExtend = 1;
+                DetonationSensor.BottomExtend = 1;
+
+                // Sensor activation configuration
+                DetonationSensor.DetectAsteroids = true;
+                DetonationSensor.DetectEnemy = true;
+                DetonationSensor.DetectFloatingObjects = true;
+                DetonationSensor.DetectLargeShips = true;
+                DetonationSensor.DetectNeutral = true;
+                DetonationSensor.DetectSmallShips = true;
+                DetonationSensor.DetectStations = true;
+                DetonationSensor.DetectSubgrids = true;
+
+                // Sensor deactivation configuration
+                DetonationSensor.DetectFriendly = false;
+                DetonationSensor.DetectOwner = false;
+                DetonationSensor.DetectPlayers = false;
+            }
+
             private static void MeasureTotalPowerCapacity() {
                 double capacity = 0;
                 foreach (IMyBatteryBlock battery in Batteries) {
@@ -214,17 +250,14 @@ namespace IngameScript {
             }
 
             public static void ArmWarheads() {
-                Array.ForEach(Warheads, warhead => {
+                foreach (IMyWarhead warhead in Warheads) {
                     warhead.IsArmed = true;
-                });
+                }
                 CreateWarningBroadcast("WARHEADS ARMED");
             }
 
             public static void SelfDestruct() {
                 CreateErrorBroadcast("SELF DESTRUCT INITIATED");
-                foreach (IMyWarhead warhead in Warheads) {
-                    warhead.IsArmed = true;
-                }
                 foreach (IMyWarhead warhead in Warheads) {
                     warhead.Detonate();
                 }

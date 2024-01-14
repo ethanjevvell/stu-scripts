@@ -1,29 +1,21 @@
-﻿using VRageMath;
-
-namespace IngameScript {
+﻿namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
             public class SpaceToSpaceFlightPlan : IFlightPlan {
 
-                private Vector3D LaunchPos;
-                private Vector3D TargetPos;
-                private const double FLIGHT_VELOCITY = 200;
-
-                public SpaceToSpaceFlightPlan(Vector3D launchPos, Vector3D targetPos) {
-                    LaunchPos = launchPos;
-                    TargetPos = targetPos;
-                }
+                private const double FLIGHT_VELOCITY = 80;
 
                 public override bool Run() {
-                    // REMOVE ZERO VECTOR WHEN DONE TESTING
-                    FlightController.OptimizeShipRoll(TargetPos);
-                    FlightController.AlignShipToTarget(TargetPos);
-                    var velocityStable = FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
-                    if (velocityStable) {
-                        FlightController.SetVr(0);
+
+                    FlightController.OptimizeShipRoll(TargetData.Position);
+                    FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
+                    var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
+
+                    if (shipAligned) {
                         return true;
                     }
+
                     return false;
                 }
 

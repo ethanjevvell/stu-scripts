@@ -17,7 +17,6 @@ namespace IngameScript {
             public float CurrentStoppingDistance { get; }
 
             public Vector3D CurrentPosition { get; set; }
-            public Vector3D StartPosition { get; set; }
             public Vector3D PreviousPosition { get; set; }
             public NTable VelocityNTable { get; set; }
 
@@ -222,6 +221,10 @@ namespace IngameScript {
                 var dotProduct = Vector3D.Dot(normalVector, lateralFaceNormal);
                 var angle = Math.Acos(dotProduct);
                 return angle - Math.PI / 4;
+            }
+
+            private void MaintainInterceptCourse(Vector3D targetPos, double desiredVelocity) {
+                // TODO
             }
 
             public void UpdateShipMass() {
