@@ -29,7 +29,7 @@ namespace IngameScript {
             }
         };
 
-        public Dictionary<LIGMA_VARIABLES.COMMANDS, Action> LIGMACommands = new Dictionary<LIGMA_VARIABLES.COMMANDS, Action>();
+        public Dictionary<string, Action> LIGMACommands = new Dictionary<string, Action>();
 
         MyCommandLine CommandLineParser = new MyCommandLine();
 
@@ -154,16 +154,9 @@ namespace IngameScript {
                     return;
                 }
 
-                LIGMA_VARIABLES.COMMANDS commandEnum;
                 string commandString = CommandLineParser.Argument(0);
-
-                if (!Enum.TryParse(commandString, out commandEnum)) {
-                    LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands enum.");
-                    return;
-                }
-
                 Action commandAction;
-                if (!LIGMACommands.TryGetValue(commandEnum, out commandAction)) {
+                if (!LIGMACommands.TryGetValue(commandString, out commandAction)) {
                     LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands dictionary.");
                     return;
                 }
