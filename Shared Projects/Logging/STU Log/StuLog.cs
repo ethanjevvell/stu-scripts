@@ -52,14 +52,14 @@ namespace IngameScript {
                 }
 
                 switch (components.Length) {
-                    // No metadata
                     case 3:
+                        // No metadata
                         return new STULog(components[0], components[1], logType);
-                    // Contains metadata
                     case 4:
+                        // Contains metadata
                         return new STULog(components[0], components[1], logType, ParseMetadata(components[3]));
-                    // Any other number of components is invalid
                     default:
+                        // Any other number of components is invalid
                         throw new ArgumentException($"Malformed log string; invalid number of components: {components.Length}.");
                 }
 
