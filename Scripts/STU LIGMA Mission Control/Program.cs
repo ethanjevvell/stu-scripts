@@ -1,5 +1,6 @@
 ﻿
 using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 
 namespace IngameScript {
@@ -58,8 +59,6 @@ namespace IngameScript {
         }
 
         public void Main(string argument) {
-            Echo($"Last runtime: {Runtime.LastRunTimeMs} ms");
-
             OutgoingLog = new STULog {
                 Sender = LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER,
                 Message = argument,
@@ -83,12 +82,13 @@ namespace IngameScript {
                 message = LIGMAListener.AcceptMessage();
                 try {
                     IncomingLog = STULog.Deserialize(message.Data.ToString());
-                } catch {
+                } catch (Exception e) {
                     IncomingLog = new STULog {
                         Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                         Message = $"Received invalid message: {message.Data}",
                         Type = STULogType.ERROR
                     };
+                    IncomingLog.Message = e.ToString();
                 }
                 PublishData();
             }

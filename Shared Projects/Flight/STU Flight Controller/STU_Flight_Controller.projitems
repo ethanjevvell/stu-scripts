@@ -12,5 +12,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUOrientationController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUVelocityController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\STUInterceptCalculator.cs" />
   </ItemGroup>
 </Project>

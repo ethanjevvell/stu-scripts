@@ -17,6 +17,7 @@ namespace IngameScript {
 
             public static STUFlightController FlightController { get; set; }
             public static IMySensorBlock DetonationSensor { get; set; }
+            public static STURaycaster Raycaster { get; set; }
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -60,6 +61,7 @@ namespace IngameScript {
                 LoadWarheads(grid);
                 LoadConnector(grid);
                 LoadDetonationSensor(grid);
+                LoadRaycaster(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -197,6 +199,15 @@ namespace IngameScript {
                 DetonationSensor.DetectFriendly = false;
                 DetonationSensor.DetectOwner = false;
                 DetonationSensor.DetectPlayers = false;
+            }
+
+            private static void LoadRaycaster(IMyGridTerminalSystem grid) {
+                var raycaster = grid.GetBlockWithName("Raycaster");
+                if (raycaster == null) {
+                    CreateFatalErrorBroadcast("No raycaster detected on grid.");
+                }
+                CreateOkBroadcast("Raycaster... nominal");
+                Raycaster = new STURaycaster(raycaster as IMyCameraBlock);
             }
 
             private static void MeasureTotalPowerCapacity() {
