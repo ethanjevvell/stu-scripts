@@ -7,6 +7,8 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
+            public static bool TargetLocked { get; set; }
+
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
 
@@ -52,6 +54,7 @@ namespace IngameScript {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
+                TargetLocked = false;
 
                 LoadRemoteController(grid);
                 LoadThrusters(grid);
@@ -208,6 +211,7 @@ namespace IngameScript {
                 }
                 CreateOkBroadcast("Raycaster... nominal");
                 Raycaster = new STURaycaster(raycaster as IMyCameraBlock);
+                Raycaster.RaycastDistance = 20000;
             }
 
             private static void MeasureTotalPowerCapacity() {
@@ -272,6 +276,22 @@ namespace IngameScript {
                 foreach (IMyWarhead warhead in Warheads) {
                     warhead.Detonate();
                 }
+            }
+
+            public static void RaycastForTarget() {
+                MyDetectedEntityInfo hitInfo = Raycaster.Raycast();
+                if (!hitInfo.IsEmpty()) {
+                    if (!TargetLocked) {
+                        CreateOkBroadcast("Target acquired; self-guidance system taking over");
+                        TargetLocked = true;
+                    }
+                    UpdateTargetData(hitInfo);
+                }
+            }
+
+            public static void UpdateTargetData(MyDetectedEntityInfo hitInfo) {
+                TargetData = hitInfo;
+                CreateOkBroadcast($"Target data updated: {TargetData.Position}");
             }
 
             public static Dictionary<string, string> GetTelemetryDictionary() {

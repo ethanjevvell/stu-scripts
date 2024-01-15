@@ -50,7 +50,7 @@ namespace IngameScript {
             /// <exception cref="Exception"></exception>
             public MyDetectedEntityInfo Raycast() {
                 if (!Camera.CanScan(RaycastDistance)) {
-                    throw new Exception();
+                    return default(MyDetectedEntityInfo);
                 }
                 return Camera.Raycast(RaycastDistance, RaycastPitch, RaycastYaw);
             }

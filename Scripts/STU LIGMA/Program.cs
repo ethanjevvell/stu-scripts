@@ -53,7 +53,7 @@ namespace IngameScript {
             Launch,
             Flight,
             Descent,
-            Terminal
+            Terminal,
         }
 
         enum MissileMode {
@@ -86,6 +86,7 @@ namespace IngameScript {
                 ParseIncomingCommand(command);
             }
 
+            LIGMA.RaycastForTarget();
             LIGMA.UpdateMeasurements();
             LIGMA.SendTelemetry();
 
@@ -129,6 +130,7 @@ namespace IngameScript {
                     var finishedTerminal = MainTerminalPlan.Run();
                     // Detonation is handled purely by the DetonationSensor
                     break;
+
 
             }
 
@@ -299,7 +301,7 @@ namespace IngameScript {
 
         public void HandleIncomingTargetData() {
             try {
-                LIGMA.TargetData = STURaycaster.DeserializeHitInfo(IncomingLog.Metadata);
+                LIGMA.UpdateTargetData(STURaycaster.DeserializeHitInfo(IncomingLog.Metadata));
                 string x = LIGMA.TargetData.Position.X.ToString("0.00");
                 string y = LIGMA.TargetData.Position.Y.ToString("0.00");
                 string z = LIGMA.TargetData.Position.Z.ToString("0.00");
@@ -332,5 +334,6 @@ namespace IngameScript {
         public void Detonate() {
             LIGMA.SelfDestruct();
         }
+
     }
 }
