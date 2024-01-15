@@ -20,6 +20,7 @@ namespace IngameScript {
             public static STUFlightController FlightController { get; set; }
             public static IMySensorBlock DetonationSensor { get; set; }
             public static STURaycaster Raycaster { get; set; }
+            public static STUFlightController.STUInterceptCalculator InterceptCalculator { get; set; }
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -75,6 +76,7 @@ namespace IngameScript {
 
                 FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
+                InterceptCalculator = new STUFlightController.STUInterceptCalculator();
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {
@@ -181,12 +183,12 @@ namespace IngameScript {
                 DetonationSensor.Enabled = false;
 
                 // Sensor distance configuration
-                DetonationSensor.FrontExtend = 5;
-                DetonationSensor.BackExtend = 0;
-                DetonationSensor.LeftExtend = 1;
-                DetonationSensor.RightExtend = 1;
-                DetonationSensor.TopExtend = 1;
-                DetonationSensor.BottomExtend = 1;
+                DetonationSensor.FrontExtend = 7;
+                DetonationSensor.BackExtend = 10;
+                DetonationSensor.LeftExtend = 10;
+                DetonationSensor.RightExtend = 10;
+                DetonationSensor.TopExtend = 10;
+                DetonationSensor.BottomExtend = 10;
 
                 // Sensor activation configuration
                 DetonationSensor.DetectAsteroids = true;
@@ -278,18 +280,27 @@ namespace IngameScript {
                 }
             }
 
-            public static void RaycastForTarget() {
-                MyDetectedEntityInfo hitInfo = Raycaster.Raycast();
-                if (!hitInfo.IsEmpty()) {
-                    if (!TargetLocked) {
-                        CreateOkBroadcast("Target acquired; self-guidance system taking over");
-                        TargetLocked = true;
-                    }
-                    UpdateTargetData(hitInfo);
-                }
-            }
-
             public static void UpdateTargetData(MyDetectedEntityInfo hitInfo) {
+                InterceptCalculator.ChaserPosition = FlightController.CurrentPosition;
+                InterceptCalculator.ChaserSpeed = FlightController.VelocityMagnitude;
+                InterceptCalculator.RunnerPosition = hitInfo.Position;
+                InterceptCalculator.RunnerVelocity = hitInfo.Velocity;
+                var interceptionPoint = InterceptCalculator.InterceptionPoint;
+
+                // return new MyDetectedEntityInfo(entityId, name, type, hitPosition, orientation, velocity, relationship, boundingBox, timeStamp);
+                MyDetectedEntityInfo myDetectedEntityInfo = new MyDetectedEntityInfo(
+                    hitInfo.EntityId,
+                    hitInfo.Name,
+                    hitInfo.Type,
+                    // LIGMA "thinks" the target is at the interception point
+                    interceptionPoint,
+                    hitInfo.Orientation,
+                    hitInfo.Velocity,
+                    hitInfo.Relationship,
+                    hitInfo.BoundingBox,
+                    hitInfo.TimeStamp
+                );
+
                 TargetData = hitInfo;
                 CreateOkBroadcast($"Target data updated: {TargetData.Position}");
             }

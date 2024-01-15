@@ -8,15 +8,16 @@
 
                 public override bool Run() {
 
-                    FlightController.OptimizeShipRoll(TargetData.Position);
-                    FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
-                    var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
+                    return true;
+                    //FlightController.OptimizeShipRoll(TargetData.Position);
+                    //FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
+                    //var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
 
-                    if (shipAligned) {
-                        return true;
-                    }
+                    //if (shipAligned) {
+                    //    return true;
+                    //}
 
-                    return false;
+                    //return false;
                 }
 
             }
