@@ -86,7 +86,6 @@ namespace IngameScript {
                 ParseIncomingCommand(command);
             }
 
-            LIGMA.RaycastForTarget();
             LIGMA.UpdateMeasurements();
             LIGMA.SendTelemetry();
 
@@ -130,7 +129,6 @@ namespace IngameScript {
                     var finishedTerminal = MainTerminalPlan.Run();
                     // Detonation is handled purely by the DetonationSensor
                     break;
-
 
             }
 
@@ -186,7 +184,10 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.PlanetToSpace:
-                    LIGMA.CreateFatalErrorBroadcast("Planet to space flight not yet implemented");
+                    MainLaunchPlan = new LIGMA.PlanetToSpaceLaunchPlan();
+                    MainFlightPlan = new LIGMA.PlanetToSpaceFlightPlan();
+                    MainDescentPlan = new LIGMA.PlanetToSpaceDescentPlan();
+                    MainTerminalPlan = new LIGMA.PlanetToSpaceTerminalPlan();
                     break;
 
                 case MissileMode.SpaceToPlanet:

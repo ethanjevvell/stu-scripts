@@ -222,10 +222,6 @@ namespace IngameScript {
                 return angle - Math.PI / 4;
             }
 
-            private void MaintainInterceptCourse(Vector3D targetPos, double desiredVelocity) {
-                // TODO
-            }
-
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }

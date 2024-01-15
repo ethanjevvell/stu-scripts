@@ -13,6 +13,9 @@
                         Connector.Disconnect();
                         // Disable dampeners to prevent Stuxnet
                         RemoteControl.DampenersOverride = false;
+                        foreach (var tank in GasTanks) {
+                            tank.Stockpile = false;
+                        }
                         IS_FIRST_RUN = false;
                     }
                 }
