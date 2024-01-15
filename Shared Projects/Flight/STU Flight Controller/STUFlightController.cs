@@ -69,7 +69,7 @@ namespace IngameScript {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)VelocityMagnitude;
                 float force = (float)VelocityController.MaximumReverseAcceleration;
-                float dx = ((-velocity * velocity) * 2 * mass) / (2 * force); //kinematic equation for "how far would I travel if I slammed on the brakes right now?"
+                float dx = ((-velocity * velocity) * mass) / (2 * force); //kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
             }
 
