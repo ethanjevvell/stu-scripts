@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lean Manufacturing", "Lean Manufacturing.csproj", "{7479B793-5EC9-48A5-AB16-9933789042CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7479B793-5EC9-48A5-AB16-9933789042CA}.Debug|x64.ActiveCfg = Debug|x64
+		{7479B793-5EC9-48A5-AB16-9933789042CA}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {952D1FC0-1D40-47D4-90C1-4CF162F2458E}
+	EndGlobalSection
+EndGlobal
