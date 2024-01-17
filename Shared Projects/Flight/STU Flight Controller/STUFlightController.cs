@@ -11,6 +11,7 @@ namespace IngameScript {
 
             IMyRemoteControl RemoteControl { get; set; }
 
+            public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
             public Vector3D VelocityComponents { get; set; }
 
@@ -41,11 +42,12 @@ namespace IngameScript {
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
                 VelocityNTable = Ntable;
+                TargetVelocity = 0;
 
                 VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
 
-                // Force dampeners on for the time being; will get turned off on launch
+                // Keep dampeners on while on launch pad; these are turned off at launch 
                 RemoteControl.DampenersOverride = true;
 
                 Update();
@@ -53,7 +55,7 @@ namespace IngameScript {
 
             public void MeasureCurrentVelocity() {
                 Vector3D worldVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
-                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(PreviousWorldMatrix));
+                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(CurrentWorldMatrix));
                 // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
                 // We reverse that by convention because it's easier to think about
                 VelocityComponents = localVelocity *= new Vector3D(1, 1, -1);
@@ -122,6 +124,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetStableForwardVelocity(double desiredVelocity) {
+                TargetVelocity = desiredVelocity;
                 bool forwardStable = SetVz(desiredVelocity);
                 bool rightStable = SetVx(0);
                 bool upStable = SetVy(0);

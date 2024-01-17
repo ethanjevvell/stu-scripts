@@ -282,7 +282,8 @@ namespace IngameScript {
 
             public static void UpdateTargetData(MyDetectedEntityInfo hitInfo) {
                 InterceptCalculator.ChaserPosition = FlightController.CurrentPosition;
-                InterceptCalculator.ChaserSpeed = FlightController.VelocityMagnitude;
+                // Use our desired velocity for the calculation instead of our actual velocity
+                InterceptCalculator.ChaserSpeed = FlightController.TargetVelocity;
                 InterceptCalculator.RunnerPosition = hitInfo.Position;
                 InterceptCalculator.RunnerVelocity = hitInfo.Velocity;
                 var interceptionPoint = InterceptCalculator.InterceptionPoint;
