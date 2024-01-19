@@ -12,8 +12,8 @@ namespace IngameScript {
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
 
-            public static Planet? TargetPlanet { get; set; }
-            public static Planet? LaunchPlanet { get; set; }
+            public static LIGMA_VARIABLES.Planet? TargetPlanet { get; set; }
+            public static LIGMA_VARIABLES.Planet? LaunchPlanet { get; set; }
 
             public const float TimeStep = 1.0f / 6.0f;
 
@@ -77,6 +77,7 @@ namespace IngameScript {
                 FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
+
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {

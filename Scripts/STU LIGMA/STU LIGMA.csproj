@@ -63,6 +63,7 @@
     <Compile Include="Phases\Implementations\Terminal\IntraplanetaryTerminalPlan.cs" />
     <Compile Include="Phases\Implementations\Terminal\PlanetToSpaceTerminalPlan.cs" />
     <Compile Include="Phases\Implementations\Terminal\SpaceToSpaceTerminalPlan.cs" />
+    <Compile Include="Phases\STUOrbitHelpers.cs" />
     <Compile Include="Phases\TestSuite.cs" />
     <Compile Include="Program.cs" />
     <AdditionalFiles Include="Instructions.readme" />
