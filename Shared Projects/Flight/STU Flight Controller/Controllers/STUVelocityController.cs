@@ -300,7 +300,9 @@ namespace IngameScript {
 
                 private static void SetThrusterOverrides(IMyThrust[] thrusters, double overrideValue) {
                     foreach (IMyThrust thruster in thrusters) {
-                        thruster.ThrustOverride = Math.Min(thruster.MaxThrust, (float)overrideValue);
+                        // MaxEffectiveThrust = MaxThrust for hydrogen thrusters, but not for atmospheric or ion thrusters
+                        // If we chose MaxThrust instead, hydrogen thrusters would be unaffected, but atmospheric and ion thrusters would always be inefficient fired at full power
+                        thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)overrideValue);
                     }
                 }
 

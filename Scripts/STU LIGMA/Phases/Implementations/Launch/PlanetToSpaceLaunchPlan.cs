@@ -10,6 +10,13 @@ namespace IngameScript {
                 private double ELEVATION_CUTOFF = 2000;
                 private double CurrentElevation;
 
+                private enum LaunchPhase {
+                    Start,
+                    StraightFlight,
+                    CircumnavigatePlanet,
+                    End
+                }
+
                 public override bool Run() {
 
                     FirstRunTasks();
