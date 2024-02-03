@@ -6,7 +6,7 @@ namespace IngameScript {
 
             public class PlanetToSpaceFlightPlan : IFlightPlan {
 
-                private const double FLIGHT_VELOCITY = 150;
+                private const double FLIGHT_VELOCITY = 400;
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
@@ -33,6 +33,7 @@ namespace IngameScript {
                         if (lineIntersectsPlanet) {
                             PlanetToOrbit = planet;
                             OrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
+                            OrbitHelper.GenerateStandardOrbitalPath();
                             CreateOkBroadcast($"Created orbital plan for {kvp.Key}");
                             return;
                         }

@@ -6,7 +6,7 @@ namespace IngameScript {
 
             public class PlanetToSpaceLaunchPlan : ILaunchPlan {
 
-                private double LAUNCH_VELOCITY = 200;
+                private double LAUNCH_VELOCITY = 400;
                 public static double ELEVATION_CUTOFF = 2000;
                 private double CurrentElevation;
 

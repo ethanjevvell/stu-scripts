@@ -33,6 +33,7 @@ namespace IngameScript {
                         if (lineIntersectsPlanet) {
                             PlanetToOrbit = planet;
                             OrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
+                            OrbitHelper.GenerateStandardOrbitalPath();
                             CreateOkBroadcast($"Created orbital plan for {kvp.Key}");
                             return;
                         }
@@ -93,7 +94,6 @@ namespace IngameScript {
                 private bool CircumnavigatePlanet() {
                     return OrbitHelper.MaintainOrbitalFlight(FLIGHT_VELOCITY);
                 }
-
 
             }
         }
