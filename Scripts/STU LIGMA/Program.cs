@@ -171,7 +171,10 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.SpaceToPlanet:
-                    LIGMA.CreateFatalErrorBroadcast("Space to planet flight not yet implemented");
+                    MainLaunchPlan = new LIGMA.SpaceToPlanetLaunchPlan();
+                    MainFlightPlan = new LIGMA.SpaceToPlanetFlightPlan();
+                    MainDescentPlan = new LIGMA.SpaceToPlanetDescentPlan();
+                    MainTerminalPlan = new LIGMA.SpaceToPlanetTerminalPlan();
                     break;
 
                 case MissileMode.SpaceToSpace:

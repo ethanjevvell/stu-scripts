@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Planetary Measurements", "STU Planetary Measurements.csproj", "{4AD89F9C-B1F6-45C9-9471-664EDB3158A0}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{57B50592-7BEB-4012-A879-DEF8C4C735F0}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Type", "..\..\Shared Projects\Displays\STU Display Type\STU Display Type.shproj", "{A2C2A7B0-3894-43F4-8EB5-71BFC87BE730}"
 EndProject
@@ -30,7 +30,7 @@ Global
 		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{4ad89f9c-b1f6-45c9-9471-664edb3158a0}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{4ad89f9c-b1f6-45c9-9471-664edb3158a0}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{4ad89f9c-b1f6-45c9-9471-664edb3158a0}*SharedItemsImports = 4
-		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

@@ -87,6 +87,7 @@ namespace IngameScript {
 
                     // .Take() slices from the beginning of the list to the specified index, but is exclusive of that index
                     orbit = orbit.Take(optimalExitPointIndex + 1).ToList();
+                    CreateOkBroadcast($"Early exit: {orbit[orbit.Count - 1]}");
                     return orbit;
 
                 }

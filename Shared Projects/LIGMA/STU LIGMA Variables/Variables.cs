@@ -34,7 +34,13 @@ namespace IngameScript {
                     Radius = 9453.8439,
                     Center = new Vector3D(16400.0530046 ,  136405.82841528, -113627.17741361)
                 }
-            }
+            },
+                {
+                   "Mars", new Planet {
+                    Radius = 62763.4881,
+                    Center = new Vector3D(1031060.3327, 131094.9846, 1631139.8156)
+                   }
+                }
         };
 
         }
