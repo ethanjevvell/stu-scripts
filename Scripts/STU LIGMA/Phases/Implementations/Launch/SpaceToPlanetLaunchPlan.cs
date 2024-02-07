@@ -6,7 +6,7 @@ namespace IngameScript {
             public class SpaceToPlanetLaunchPlan : ILaunchPlan {
 
                 private int LAUNCH_VELOCITY = 50;
-                private int LAUNCH_DISTANCE = 150;
+                public static int LAUNCH_DISTANCE = 150;
 
                 public override bool Run() {
                     FirstRunTasks();

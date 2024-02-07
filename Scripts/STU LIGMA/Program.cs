@@ -185,7 +185,10 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.Interplanetary:
-                    LIGMA.CreateFatalErrorBroadcast("Interplanetary flight not yet implemented");
+                    MainLaunchPlan = new LIGMA.InterplanetaryLaunchPlan();
+                    MainFlightPlan = new LIGMA.InterplanetaryFlightPlan();
+                    MainDescentPlan = new LIGMA.InterplanetaryDescentPlan();
+                    MainTerminalPlan = new LIGMA.InterplanetaryTerminalPlan();
                     break;
 
                 case MissileMode.Testing:
@@ -244,10 +247,9 @@ namespace IngameScript {
         }
 
         public LIGMA_VARIABLES.Planet? GetPlanetOfPoint(Vector3D point) {
-            var detectionBuffer = 1000;
             foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
                 LIGMA_VARIABLES.Planet planet = kvp.Value;
-                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
+                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
                 // if the point is inside the planet's detection sphere or intersects it, it is on the planet
                 if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
                     return planet;

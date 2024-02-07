@@ -31,7 +31,13 @@ namespace IngameScript {
 
                 public List<Vector3D> OptimalOrbitalPath = new List<Vector3D>();
 
-                public void GenerateStandardOrbitalPath() {
+                public void GenerateIntraplanetaryOrbitalPath() {
+                    var allWaypoints = GenerateAllOrbitalWaypoints((Vector3D)LaunchPlanet?.Center, (double)LaunchPlanet?.Radius, LaunchCoordinates, TargetData.Position);
+                    var orbitalPath = GetOptimalOrbitalPath(TargetData.Position, allWaypoints);
+                    OptimalOrbitalPath = orbitalPath;
+                }
+
+                public void GeneratePlanetToSpaceOrbitalPath() {
 
                     var allWaypoints = GenerateAllOrbitalWaypoints((Vector3D)LaunchPlanet?.Center, (double)LaunchPlanet?.Radius, LaunchCoordinates, TargetData.Position);
                     var orbitalPath = GetOptimalOrbitalPath(TargetData.Position, allWaypoints);
@@ -46,10 +52,33 @@ namespace IngameScript {
                     double centerToTargetPointDistance = Vector3D.Distance(targetPosition, (Vector3D)LaunchPlanet?.Center);
 
                     if (centerToTargetPointDistance > centerToFinalOrbitalPointDistance) {
+                        CreateWarningBroadcast("Finding early breakoff orbit");
                         orbitalPath = findEarlyBreakoffOrbit(orbitalPath);
+                        CreateOkBroadcast(orbitalPath[orbitalPath.Count - 1].ToString());
                     }
 
                     OptimalOrbitalPath = orbitalPath;
+
+                }
+
+                public void GenerateSpaceToPlanetOrbitalPath(Vector3D startPos) {
+
+                    var allWaypoints = GenerateAllOrbitalWaypoints((Vector3D)TargetPlanet?.Center, (double)TargetPlanet?.Radius, startPos, TargetData.Position);
+                    var orbitalPath = GetOptimalOrbitalPath(TargetData.Position, allWaypoints);
+
+                    Vector3D finalOrbitalPoint = orbitalPath[orbitalPath.Count - 1];
+                    Vector3D centerToFinalOrbitalPoint = finalOrbitalPoint - (Vector3D)TargetPlanet?.Center;
+
+                    double centerToFinalOrbitalPointDistance = Vector3D.Distance(finalOrbitalPoint, (Vector3D)TargetPlanet?.Center);
+                    double centerToLaunchPointDistance = Vector3D.Distance(startPos, (Vector3D)TargetPlanet?.Center);
+
+                    if (centerToLaunchPointDistance > centerToFinalOrbitalPointDistance) {
+                        CreateWarningBroadcast("Finding early entry orbit");
+                        orbitalPath = findEarlyEntryOrbit(orbitalPath);
+                    }
+
+                    OptimalOrbitalPath = orbitalPath;
+
                 }
 
                 private List<Vector3D> findEarlyBreakoffOrbit(List<Vector3D> orbit) {
@@ -92,6 +121,40 @@ namespace IngameScript {
 
                 }
 
+                private List<Vector3D> findEarlyEntryOrbit(List<Vector3D> orbit) {
+                    if (orbit.Count <= 2) {
+                        return orbit;
+                    }
+
+                    double[] angles = new double[orbit.Count];
+                    for (int i = 0; i < orbit.Count - 1; i++) {
+                        angles[i] = findAngleBetween(LaunchCoordinates, orbit[i], orbit[i + 1]);
+                    }
+
+                    CreateOkBroadcast("Angles: " + string.Join(", ", angles));
+
+                    // find the index of the angle closest to pi
+                    int optimalEntryPointIndex = 0;
+                    double min = Math.Abs(angles[0] - Math.PI);
+                    for (int i = 1; i < angles.Length; i++) {
+                        double currentAngleDifference = Math.Abs(angles[i] - Math.PI);
+                        if (currentAngleDifference < min) {
+                            min = currentAngleDifference;
+                            // draw out the geometry and it becomes clear why we enter at index i instead of i + 1, which we did for early breakoff
+                            optimalEntryPointIndex = i;
+                        }
+                    }
+
+                    if (optimalEntryPointIndex >= orbit.Count) {
+                        CreateFatalErrorBroadcast("Optimal entry point index is out of range; aborting mission");
+                    }
+
+                    CreateOkBroadcast("Finished creation routine");
+                    // slice from optimal entry point to the end of the list
+                    orbit = orbit.GetRange(optimalEntryPointIndex, orbit.Count - optimalEntryPointIndex);
+                    return orbit;
+                }
+
                 private double findAngleBetween(Vector3D currentPoint, Vector3D nextPoint, Vector3D targetPoint) {
                     Vector3D NC = currentPoint - nextPoint;
                     Vector3D NT = targetPoint - nextPoint;
@@ -114,7 +177,7 @@ namespace IngameScript {
                     Vector3D v = Vector3D.Cross(normal, u);
                     v = Vector3D.Normalize(v);
 
-                    double maxOrbitAltitude = planetRadius;
+                    double maxOrbitAltitude = planetRadius * 0.77f;
                     double orbitRadius = planetRadius + maxOrbitAltitude;
 
                     // Generate points on the circle

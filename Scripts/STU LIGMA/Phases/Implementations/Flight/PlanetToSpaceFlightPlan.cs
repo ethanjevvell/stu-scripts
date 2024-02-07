@@ -10,14 +10,14 @@ namespace IngameScript {
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
-                private enum LaunchPhase {
+                private enum FlightPhase {
                     Start,
                     StraightFlight,
                     CircumnavigatePlanet,
                     End
                 }
 
-                private LaunchPhase CurrentPhase = LaunchPhase.Start;
+                private FlightPhase CurrentPhase = FlightPhase.Start;
                 private LIGMA_VARIABLES.Planet? PlanetToOrbit = null;
                 private STUOrbitHelper OrbitHelper;
 
@@ -33,7 +33,7 @@ namespace IngameScript {
                         if (lineIntersectsPlanet) {
                             PlanetToOrbit = planet;
                             OrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
-                            OrbitHelper.GenerateStandardOrbitalPath();
+                            OrbitHelper.GeneratePlanetToSpaceOrbitalPath();
                             CreateOkBroadcast($"Created orbital plan for {kvp.Key}");
                             return;
                         }
@@ -47,29 +47,29 @@ namespace IngameScript {
 
                     switch (CurrentPhase) {
 
-                        case LaunchPhase.Start:
+                        case FlightPhase.Start:
                             if (PlanetToOrbit == null) {
-                                CurrentPhase = LaunchPhase.StraightFlight;
+                                CurrentPhase = FlightPhase.StraightFlight;
                             } else {
-                                CurrentPhase = LaunchPhase.CircumnavigatePlanet;
+                                CurrentPhase = FlightPhase.CircumnavigatePlanet;
                             }
                             break;
 
-                        case LaunchPhase.StraightFlight:
+                        case FlightPhase.StraightFlight:
                             var finishedStraightFlight = StraightFlight();
                             if (finishedStraightFlight) {
-                                CurrentPhase = LaunchPhase.End;
+                                CurrentPhase = FlightPhase.End;
                             }
                             break;
 
-                        case LaunchPhase.CircumnavigatePlanet:
+                        case FlightPhase.CircumnavigatePlanet:
                             var finishedCircumnavigation = CircumnavigatePlanet();
                             if (finishedCircumnavigation) {
-                                CurrentPhase = LaunchPhase.End;
+                                CurrentPhase = FlightPhase.End;
                             }
                             break;
 
-                        case LaunchPhase.End:
+                        case FlightPhase.End:
                             return true;
 
                     }

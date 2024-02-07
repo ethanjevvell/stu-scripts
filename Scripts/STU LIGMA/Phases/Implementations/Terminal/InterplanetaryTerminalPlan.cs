@@ -1,8 +1,7 @@
-﻿
-namespace IngameScript {
+﻿namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
-            public class IntraplanetaryTerminalPlan : ITerminalPlan {
+            public class InterplanetaryTerminalPlan : ITerminalPlan {
 
                 private int TERMINAL_VELOCITY = 300;
 
@@ -16,3 +15,4 @@ namespace IngameScript {
         }
     }
 }
+

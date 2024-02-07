@@ -65,7 +65,7 @@ namespace IngameScript {
                 LoadWarheads(grid);
                 LoadConnector(grid);
                 LoadDetonationSensor(grid);
-                LoadRaycaster(grid);
+                // LoadRaycaster(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -152,7 +152,7 @@ namespace IngameScript {
 
             private static void LoadWarheads(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> warheadBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyWarhead>(warheadBlocks, block => block.CubeGrid == Me.CubeGrid);
+                grid.GetBlocksOfType<IMyWarhead>(warheadBlocks);
                 if (warheadBlocks.Count == 0) {
                     CreateFatalErrorBroadcast("No warheads found on grid");
                 }

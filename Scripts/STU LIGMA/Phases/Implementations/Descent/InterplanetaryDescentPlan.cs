@@ -1,10 +1,9 @@
-﻿
-using Sandbox.ModAPI.Ingame;
+﻿using Sandbox.ModAPI.Ingame;
 
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
-            public class SpaceToPlanetDescentPlan : IDescentPlan {
+            public class InterplanetaryDescentPlan : IDescentPlan {
 
                 private double DESCENT_VELOCITY = 500;
                 private double ELEVATION_CUTOFF = 5000;

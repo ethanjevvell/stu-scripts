@@ -4,21 +4,19 @@ using Sandbox.ModAPI.Ingame;
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
-            public class SpaceToPlanetDescentPlan : IDescentPlan {
+            public class InterplanetaryLaunchPlan : ILaunchPlan {
 
-                private double DESCENT_VELOCITY = 500;
-                private double ELEVATION_CUTOFF = 5000;
+                private double LAUNCH_VELOCITY = 150;
+                public static double ELEVATION_CUTOFF = 1000;
                 private double CurrentElevation;
 
                 public override bool Run() {
 
                     FirstRunTasks();
-                    FlightController.AlignShipToTarget(TargetData.Position);
-                    FlightController.OptimizeShipRoll(TargetData.Position);
-                    FlightController.SetStableForwardVelocity(DESCENT_VELOCITY);
+                    FlightController.SetStableForwardVelocity(LAUNCH_VELOCITY);
 
                     if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
-                        if (CurrentElevation <= ELEVATION_CUTOFF) {
+                        if (CurrentElevation > ELEVATION_CUTOFF) {
                             return true;
                         }
                     }
@@ -31,3 +29,4 @@ namespace IngameScript {
         }
     }
 }
+

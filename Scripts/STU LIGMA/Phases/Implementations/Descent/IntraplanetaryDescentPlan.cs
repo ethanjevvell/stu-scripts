@@ -5,8 +5,8 @@ namespace IngameScript {
         public partial class LIGMA {
             public class IntraplanetaryDescentPlan : IDescentPlan {
 
-                private double DESCENT_VELOCITY = 150;
-                private double ELEVATION_CUTOFF = 2000;
+                private double DESCENT_VELOCITY = 500;
+                private double ELEVATION_CUTOFF = 5000;
                 private double CurrentElevation;
 
                 public override bool Run() {

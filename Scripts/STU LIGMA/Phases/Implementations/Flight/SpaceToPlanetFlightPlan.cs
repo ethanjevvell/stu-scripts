@@ -1,5 +1,6 @@
 ﻿
 using Sandbox.ModAPI.Ingame;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -11,17 +12,82 @@ namespace IngameScript {
                 private double ELEVATION_CUTOFF = 7500;
                 private double CurrentElevation;
 
-                public override bool Run() {
+                private const int TOTAL_ORBITAL_WAYPOINTS = 12;
+                private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
-                    StraightFlight();
+                private enum FlightPhase {
+                    Start,
+                    StraightFlight,
+                    CircumnavigatePlanet,
+                    End
+                }
 
-                    if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
-                        if (CurrentElevation <= ELEVATION_CUTOFF) {
-                            return true;
+                private FlightPhase CurrentPhase = FlightPhase.Start;
+                private LIGMA_VARIABLES.Planet? PlanetToOrbit = null;
+                private STUOrbitHelper OrbitHelper;
+
+                public SpaceToPlanetFlightPlan() {
+
+                    // Find where LIGMA will be when this flight plan starts
+                    Vector3D forwardVector = FlightController.CurrentWorldMatrix.Forward;
+                    CreateOkBroadcast($"Forward vector: {forwardVector}");
+                    Vector3D approximateFlightStart = FlightController.CurrentPosition + forwardVector * SpaceToPlanetLaunchPlan.LAUNCH_DISTANCE;
+                    CreateOkBroadcast($"Approximate flight start: {approximateFlightStart}");
+
+                    foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
+                        LIGMA_VARIABLES.Planet planet = kvp.Value;
+                        BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
+                        bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(approximateFlightStart, TargetData.Position, boundingSphere);
+                        if (lineIntersectsPlanet) {
+                            CreateOkBroadcast($"Line intersects {kvp.Key}");
+                            PlanetToOrbit = planet;
+                            OrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
+                            CreateOkBroadcast($"Created orbit helper for {kvp.Key}");
+                            OrbitHelper.GenerateSpaceToPlanetOrbitalPath(LaunchCoordinates);
+                            CreateOkBroadcast($"Created orbital plan for {kvp.Key}");
+                            return;
                         }
                     }
 
+                    CreateOkBroadcast("No orbital plan needed");
+
+                }
+
+                public override bool Run() {
+
+                    switch (CurrentPhase) {
+
+                        case FlightPhase.Start:
+                            if (PlanetToOrbit == null) {
+                                CurrentPhase = FlightPhase.StraightFlight;
+                            } else {
+                                CurrentPhase = FlightPhase.CircumnavigatePlanet;
+                            }
+                            break;
+
+                        case FlightPhase.StraightFlight:
+                            StraightFlight();
+                            if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
+                                if (CurrentElevation <= ELEVATION_CUTOFF) {
+                                    return true;
+                                }
+                            }
+                            break;
+
+                        case FlightPhase.CircumnavigatePlanet:
+                            var finishedCircumnavigation = CircumnavigatePlanet();
+                            if (finishedCircumnavigation) {
+                                CurrentPhase = FlightPhase.End;
+                            }
+                            break;
+
+                        case FlightPhase.End:
+                            return true;
+
+                    }
+
                     return false;
+
 
                 }
 
@@ -37,6 +103,9 @@ namespace IngameScript {
                     return false;
                 }
 
+                private bool CircumnavigatePlanet() {
+                    return OrbitHelper.MaintainOrbitalFlight(FLIGHT_VELOCITY);
+                }
 
             }
 
