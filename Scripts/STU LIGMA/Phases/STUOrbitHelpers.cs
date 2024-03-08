@@ -259,7 +259,6 @@ namespace IngameScript {
 
                         return false;
                     }
-
                     return true;
                 }
 

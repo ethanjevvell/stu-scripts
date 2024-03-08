@@ -7,12 +7,14 @@ namespace IngameScript {
 
                 private enum FlightPhase {
                     Start,
-                    StraightFlight,
+                    StraightFlightToTarget,
+                    StraightFlightToTargetPlanetOrbit,
                     LaunchPlanetOrbit,
                     TargetPlanetOrbit,
                 }
 
-                private const double FLIGHT_VELOCITY = 300;
+                private const double FLIGHT_VELOCITY = 1000;
+                private const double ORBIT_VELOCITY = 400;
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
@@ -64,25 +66,42 @@ namespace IngameScript {
 
                         case FlightPhase.Start:
                             if (LaunchPlanetOrbitHelper == null && TargetPlanetOrbitHelper == null) {
-                                CurrentPhase = FlightPhase.StraightFlight;
+                                CreateOkBroadcast("Launching straight to target");
+                                CurrentPhase = FlightPhase.StraightFlightToTarget;
                             } else if (LaunchPlanetOrbitHelper != null) {
+                                CreateOkBroadcast("Launching to launch planet orbit");
                                 CurrentPhase = FlightPhase.LaunchPlanetOrbit;
                             } else if (TargetPlanetOrbitHelper != null) {
+                                CreateOkBroadcast("Launching to target planet orbit");
                                 CurrentPhase = FlightPhase.TargetPlanetOrbit;
                             }
                             break;
 
-                        case FlightPhase.StraightFlight:
-                            StraightFlight();
+                        case FlightPhase.StraightFlightToTarget:
+                            if (Vector3D.Distance(FlightController.CurrentPosition, TargetData.Position) >= 20000) {
+                                StraightFlight(TargetData.Position);
+                            } else {
+                                CreateWarningBroadcast("Finished straight flight");
+                                return true;
+                            }
+                            break;
+
+                        case FlightPhase.StraightFlightToTargetPlanetOrbit:
+                            if (Vector3D.Distance(FlightController.CurrentPosition, TargetPlanetOrbitHelper.OptimalOrbitalPath[0]) >= 20000) {
+                                StraightFlight(TargetPlanetOrbitHelper.OptimalOrbitalPath[0]);
+                            } else {
+                                return true;
+                            }
                             break;
 
                         case FlightPhase.LaunchPlanetOrbit:
                             var finishedLaunchPlanetOrbit = LaunchPlanetOrbit();
                             if (finishedLaunchPlanetOrbit) {
                                 if (TargetPlanetOrbitHelper == null) {
-                                    return true;
+                                    CurrentPhase = FlightPhase.StraightFlightToTarget;
+                                    break;
                                 }
-                                CurrentPhase = FlightPhase.TargetPlanetOrbit;
+                                CurrentPhase = FlightPhase.StraightFlightToTargetPlanetOrbit;
                             }
                             break;
 
@@ -95,16 +114,16 @@ namespace IngameScript {
 
                     }
 
-                    return true;
+                    return false;
 
                 }
 
                 private bool LaunchPlanetOrbit() {
-                    return LaunchPlanetOrbitHelper.MaintainOrbitalFlight(FLIGHT_VELOCITY);
+                    return LaunchPlanetOrbitHelper.MaintainOrbitalFlight(ORBIT_VELOCITY);
                 }
 
                 private bool TargetPlanetOrbit() {
-                    return TargetPlanetOrbitHelper.MaintainOrbitalFlight(FLIGHT_VELOCITY);
+                    return TargetPlanetOrbitHelper.MaintainOrbitalFlight(ORBIT_VELOCITY);
                 }
 
                 private bool NeedLaunchPlanetOrbit() {
@@ -132,11 +151,10 @@ namespace IngameScript {
                     return false;
                 }
 
-                private bool StraightFlight() {
-                    FlightController.OptimizeShipRoll(TargetData.Position);
+                private bool StraightFlight(Vector3D targetPoint) {
+                    FlightController.OptimizeShipRoll(targetPoint);
                     FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
-                    var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
-
+                    var shipAligned = FlightController.AlignShipToTarget(targetPoint);
                     if (shipAligned) {
                         return true;
                     }
