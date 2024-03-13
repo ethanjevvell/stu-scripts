@@ -14,7 +14,7 @@ namespace IngameScript {
                 }
 
                 private const double FLIGHT_VELOCITY = 1000;
-                private const double ORBIT_VELOCITY = 400;
+                private const double ORBIT_VELOCITY = 300;
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
@@ -49,7 +49,6 @@ namespace IngameScript {
                     }
 
                     if (NeedTargetPlanetOrbit(ApproximateFlightStart)) {
-                        CurrentPhase = FlightPhase.TargetPlanetOrbit;
                         TargetPlanetOrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
                         TargetPlanetOrbitHelper.GenerateSpaceToPlanetOrbitalPath(ApproximateFlightStart);
                         CreateOkBroadcast($"Created target planet orbital plan for {TargetPlanet.Value.Name}");
@@ -73,7 +72,7 @@ namespace IngameScript {
                                 CurrentPhase = FlightPhase.LaunchPlanetOrbit;
                             } else if (TargetPlanetOrbitHelper != null) {
                                 CreateOkBroadcast("Launching to target planet orbit");
-                                CurrentPhase = FlightPhase.TargetPlanetOrbit;
+                                CurrentPhase = FlightPhase.StraightFlightToTargetPlanetOrbit;
                             }
                             break;
 
@@ -87,10 +86,10 @@ namespace IngameScript {
                             break;
 
                         case FlightPhase.StraightFlightToTargetPlanetOrbit:
-                            if (Vector3D.Distance(FlightController.CurrentPosition, TargetPlanetOrbitHelper.OptimalOrbitalPath[0]) >= 20000) {
+                            if (Vector3D.Distance(FlightController.CurrentPosition, TargetPlanetOrbitHelper.OptimalOrbitalPath[0]) >= 30000) {
                                 StraightFlight(TargetPlanetOrbitHelper.OptimalOrbitalPath[0]);
                             } else {
-                                return true;
+                                CurrentPhase = FlightPhase.TargetPlanetOrbit;
                             }
                             break;
 

@@ -149,7 +149,7 @@ namespace IngameScript {
                         CreateFatalErrorBroadcast("Optimal entry point index is out of range; aborting mission");
                     }
 
-                    CreateOkBroadcast("Finished creation routine");
+                    CreateOkBroadcast("Finished early orbit creation routine");
                     // slice from optimal entry point to the end of the list
                     orbit = orbit.GetRange(optimalEntryPointIndex, orbit.Count - optimalEntryPointIndex);
                     return orbit;

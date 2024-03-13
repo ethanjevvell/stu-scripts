@@ -3,7 +3,7 @@
         public partial class LIGMA {
             public class InterplanetaryTerminalPlan : ITerminalPlan {
 
-                private int TERMINAL_VELOCITY = 300;
+                private int TERMINAL_VELOCITY = 200;
 
                 public override bool Run() {
                     FlightController.SetStableForwardVelocity(TERMINAL_VELOCITY);
