@@ -3,20 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEST", "TEST.csproj", "{1E7F9CAA-7790-42B5-81A1-B345132F21CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Helios Node", "STU Helios Node.csproj", "{3EF6D6EA-1C91-4E6D-A2AF-337FF6C35139}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1E7F9CAA-7790-42B5-81A1-B345132F21CE}.Debug|x64.ActiveCfg = Debug|x64
-		{1E7F9CAA-7790-42B5-81A1-B345132F21CE}.Debug|x64.Build.0 = Debug|x64
+		{3EF6D6EA-1C91-4E6D-A2AF-337FF6C35139}.Debug|x64.ActiveCfg = Debug|x64
+		{3EF6D6EA-1C91-4E6D-A2AF-337FF6C35139}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {A7474122-7853-423C-B3B3-83C239F10DA3}
+		SolutionGuid = {3160D1A4-5FD1-493C-956E-0C9BE58F93A0}
 	EndGlobalSection
 EndGlobal
