@@ -55,6 +55,7 @@ namespace IngameScript {
 
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
+            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
         }
 
@@ -320,6 +321,11 @@ namespace IngameScript {
             } catch (Exception e) {
                 LIGMA.CreateFatalErrorBroadcast($"Error during launch: {e}");
             }
+        }
+
+        public void Test() {
+            MainPhase = Phase.Launch;
+            MainLaunchPlan = new LIGMA.TestSuite();
         }
 
         public void Detonate() {
