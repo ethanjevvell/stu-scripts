@@ -14,8 +14,8 @@ namespace IngameScript {
 
         List<IMyTerminalBlock> solarPanels = new List<IMyTerminalBlock>();
         List<IMyTerminalBlock> brokenPanels = new List<IMyTerminalBlock>();
-
         List<IMyTerminalBlock> storageBlocks = new List<IMyTerminalBlock>();
+        Dictionary<string, string> metadata = new Dictionary<string, string>();
 
         // Measured in megawatts
         float solarPanelOutput;
@@ -41,6 +41,8 @@ namespace IngameScript {
                 throw new Exception("No slave node name found");
             }
 
+            metadata.Add("nodeName", nodeName);
+
         }
 
         public void Main() {
@@ -61,6 +63,22 @@ namespace IngameScript {
                 outgoingLog.Message = "Broken solar panels detected: " + brokenPanels.Count;
                 outgoingLog.Type = STULogType.WARNING;
                 masterLogBroadcaster.Log(outgoingLog);
+            }
+
+            // START METADATA CREATION
+
+            metadata.Add("solarPanelOutput", solarPanelOutput.ToString());
+            metadata.Add("gatlingAmmoBoxes", gatlingAmmoBoxes.ToString());
+
+            string[] brokenPanelNames = new string[brokenPanels.Count];
+            for (int i = 0; i < brokenPanels.Count; i++) {
+                Echo(brokenPanels[i].DisplayNameText + " is broken");
+                brokenPanelNames[i] = brokenPanels[i].DisplayNameText;
+            }
+            metadata.Add("brokenPanels", $"{string.Join(",", brokenPanelNames)}");
+
+            foreach (KeyValuePair<string, string> entry in metadata) {
+                Echo(entry.Key + ": " + entry.Value);
             }
 
         }
@@ -91,6 +109,7 @@ namespace IngameScript {
                 solarPanelOutput += panel.CurrentOutput;
 
             }
+
         }
 
     }
