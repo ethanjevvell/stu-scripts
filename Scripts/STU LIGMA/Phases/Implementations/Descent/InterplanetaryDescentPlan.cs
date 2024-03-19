@@ -3,9 +3,9 @@
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
-            public class IntraplanetaryDescentPlan : IDescentPlan {
+            public class InterplanetaryDescentPlan : IDescentPlan {
 
-                private double DESCENT_VELOCITY = 500;
+                private double DESCENT_VELOCITY = 200;
                 private double ELEVATION_CUTOFF = 5000;
                 private double CurrentElevation;
 
@@ -25,6 +25,7 @@ namespace IngameScript {
                     return false;
 
                 }
+
             }
         }
     }

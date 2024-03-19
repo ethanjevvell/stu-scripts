@@ -4,20 +4,8 @@
 
             public class SpaceToSpaceFlightPlan : IFlightPlan {
 
-                private const double FLIGHT_VELOCITY = 80;
-
                 public override bool Run() {
-
                     return true;
-                    //FlightController.OptimizeShipRoll(TargetData.Position);
-                    //FlightController.SetStableForwardVelocity(FLIGHT_VELOCITY);
-                    //var shipAligned = FlightController.AlignShipToTarget(TargetData.Position);
-
-                    //if (shipAligned) {
-                    //    return true;
-                    //}
-
-                    //return false;
                 }
 
             }

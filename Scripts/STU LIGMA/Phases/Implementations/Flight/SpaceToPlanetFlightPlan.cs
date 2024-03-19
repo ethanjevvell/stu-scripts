@@ -1,12 +1,17 @@
-﻿using VRageMath;
+﻿
+using Sandbox.ModAPI.Ingame;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public class PlanetToSpaceFlightPlan : IFlightPlan {
+            public class SpaceToPlanetFlightPlan : IFlightPlan {
 
-                private const double FLIGHT_VELOCITY = 400;
+                private double FLIGHT_VELOCITY = 500;
+                private double ELEVATION_CUTOFF = 7500;
+                private double CurrentElevation;
+
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 
@@ -21,19 +26,24 @@ namespace IngameScript {
                 private LIGMA_VARIABLES.Planet? PlanetToOrbit = null;
                 private STUOrbitHelper OrbitHelper;
 
-                public PlanetToSpaceFlightPlan() {
+                public SpaceToPlanetFlightPlan() {
+
                     // Find where LIGMA will be when this flight plan starts
                     Vector3D forwardVector = FlightController.CurrentWorldMatrix.Forward;
-                    Vector3D approximateFlightStart = FlightController.CurrentPosition + forwardVector * PlanetToSpaceLaunchPlan.ELEVATION_CUTOFF;
+                    CreateOkBroadcast($"Forward vector: {forwardVector}");
+                    Vector3D approximateFlightStart = FlightController.CurrentPosition + forwardVector * SpaceToPlanetLaunchPlan.LAUNCH_DISTANCE;
+                    CreateOkBroadcast($"Approximate flight start: {approximateFlightStart}");
 
                     foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
                         LIGMA_VARIABLES.Planet planet = kvp.Value;
                         BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
                         bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(approximateFlightStart, TargetData.Position, boundingSphere);
                         if (lineIntersectsPlanet) {
+                            CreateOkBroadcast($"Line intersects {kvp.Key}");
                             PlanetToOrbit = planet;
                             OrbitHelper = new STUOrbitHelper(TOTAL_ORBITAL_WAYPOINTS, FIRST_ORBIT_WAYPOINT_COEFFICIENT);
-                            OrbitHelper.GeneratePlanetToSpaceOrbitalPath();
+                            CreateOkBroadcast($"Created orbit helper for {kvp.Key}");
+                            OrbitHelper.GenerateSpaceToPlanetOrbitalPath(LaunchCoordinates);
                             CreateOkBroadcast($"Created orbital plan for {kvp.Key}");
                             return;
                         }
@@ -56,9 +66,11 @@ namespace IngameScript {
                             break;
 
                         case FlightPhase.StraightFlight:
-                            var finishedStraightFlight = StraightFlight();
-                            if (finishedStraightFlight) {
-                                CurrentPhase = FlightPhase.End;
+                            StraightFlight();
+                            if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out CurrentElevation)) {
+                                if (CurrentElevation <= ELEVATION_CUTOFF) {
+                                    return true;
+                                }
                             }
                             break;
 
@@ -75,6 +87,7 @@ namespace IngameScript {
                     }
 
                     return false;
+
 
                 }
 

@@ -12,8 +12,8 @@ namespace IngameScript {
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
 
-            public static Planet? TargetPlanet { get; set; }
-            public static Planet? LaunchPlanet { get; set; }
+            public static LIGMA_VARIABLES.Planet? TargetPlanet { get; set; }
+            public static LIGMA_VARIABLES.Planet? LaunchPlanet { get; set; }
 
             public const float TimeStep = 1.0f / 6.0f;
 
@@ -65,7 +65,7 @@ namespace IngameScript {
                 LoadWarheads(grid);
                 LoadConnector(grid);
                 LoadDetonationSensor(grid);
-                LoadRaycaster(grid);
+                // LoadRaycaster(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -77,6 +77,7 @@ namespace IngameScript {
                 FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
+
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {
@@ -151,7 +152,7 @@ namespace IngameScript {
 
             private static void LoadWarheads(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> warheadBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyWarhead>(warheadBlocks, block => block.CubeGrid == Me.CubeGrid);
+                grid.GetBlocksOfType<IMyWarhead>(warheadBlocks);
                 if (warheadBlocks.Count == 0) {
                     CreateFatalErrorBroadcast("No warheads found on grid");
                 }

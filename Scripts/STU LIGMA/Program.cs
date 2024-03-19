@@ -9,26 +9,6 @@ namespace IngameScript {
 
         public bool ALREADY_RAN_FIRST_COMMAND = false;
 
-        public struct Planet {
-            public double Radius;
-            public Vector3D Center;
-        }
-
-        public static Dictionary<string, Planet> CelestialBodies = new Dictionary<string, Planet> {
-            {
-                "TestEarth", new Planet {
-                    Radius = 61050.39,
-                    Center = new Vector3D(0, 0, 0)
-                }
-            },
-            {
-                "Luna", new Planet {
-                    Radius = 9453.8439,
-                    Center = new Vector3D(16400.0530046 ,  136405.82841528, -113627.17741361)
-                }
-            }
-        };
-
         public Dictionary<string, Action> LIGMACommands = new Dictionary<string, Action>();
 
         MyCommandLine CommandLineParser = new MyCommandLine();
@@ -191,7 +171,10 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.SpaceToPlanet:
-                    LIGMA.CreateFatalErrorBroadcast("Space to planet flight not yet implemented");
+                    MainLaunchPlan = new LIGMA.SpaceToPlanetLaunchPlan();
+                    MainFlightPlan = new LIGMA.SpaceToPlanetFlightPlan();
+                    MainDescentPlan = new LIGMA.SpaceToPlanetDescentPlan();
+                    MainTerminalPlan = new LIGMA.SpaceToPlanetTerminalPlan();
                     break;
 
                 case MissileMode.SpaceToSpace:
@@ -202,7 +185,10 @@ namespace IngameScript {
                     break;
 
                 case MissileMode.Interplanetary:
-                    LIGMA.CreateFatalErrorBroadcast("Interplanetary flight not yet implemented");
+                    MainLaunchPlan = new LIGMA.InterplanetaryLaunchPlan();
+                    MainFlightPlan = new LIGMA.InterplanetaryFlightPlan();
+                    MainDescentPlan = new LIGMA.InterplanetaryDescentPlan();
+                    MainTerminalPlan = new LIGMA.InterplanetaryTerminalPlan();
                     break;
 
                 case MissileMode.Testing:
@@ -220,8 +206,8 @@ namespace IngameScript {
 
         public void DeduceFlightMode() {
 
-            Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
-            Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
+            LIGMA_VARIABLES.Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
+            LIGMA_VARIABLES.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
 
             if (OnSamePlanet(launchPos, targetPos)) {
                 Mode = MissileMode.Intraplanetary;
@@ -242,29 +228,28 @@ namespace IngameScript {
 
         }
 
-        public bool OnSamePlanet(Planet? launchPlanet, Planet? targetPlanet) {
+        public bool OnSamePlanet(LIGMA_VARIABLES.Planet? launchPlanet, LIGMA_VARIABLES.Planet? targetPlanet) {
             if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
                 return false;
             }
             return launchPlanet.Equals(targetPlanet);
         }
 
-        public bool OnDifferentPlanets(Planet? launchPlanet, Planet? targetPlanet) {
+        public bool OnDifferentPlanets(LIGMA_VARIABLES.Planet? launchPlanet, LIGMA_VARIABLES.Planet? targetPlanet) {
             if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
                 return false;
             }
             return !launchPlanet.Equals(targetPlanet);
         }
 
-        public bool InSpace(Planet? planet) {
+        public bool InSpace(LIGMA_VARIABLES.Planet? planet) {
             return planet == null;
         }
 
-        public Planet? GetPlanetOfPoint(Vector3D point) {
-            var detectionBuffer = 1000;
-            foreach (var body in CelestialBodies.Keys) {
-                Planet planet = CelestialBodies[body];
-                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
+        public LIGMA_VARIABLES.Planet? GetPlanetOfPoint(Vector3D point) {
+            foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
+                LIGMA_VARIABLES.Planet planet = kvp.Value;
+                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
                 // if the point is inside the planet's detection sphere or intersects it, it is on the planet
                 if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
                     return planet;
@@ -314,6 +299,7 @@ namespace IngameScript {
         }
 
         public void Launch() {
+            LIGMA.CreateOkBroadcast("Received launch command");
             if (ALREADY_RAN_FIRST_COMMAND) {
                 LIGMA.CreateErrorBroadcast("Cannot launch more than once");
                 return;
@@ -324,12 +310,16 @@ namespace IngameScript {
                 return;
             }
 
-            ALREADY_RAN_FIRST_COMMAND = true;
-            FirstRunTasks();
-            MainPhase = Phase.Launch;
-            // Insurance in case LIGMA was modified on launch pad
-            LIGMA.FlightController.UpdateShipMass();
-            LIGMA.CreateOkBroadcast($"Launching in {GetModeString()}");
+            try {
+                ALREADY_RAN_FIRST_COMMAND = true;
+                FirstRunTasks();
+                MainPhase = Phase.Launch;
+                // Insurance in case LIGMA was modified on launch pad
+                LIGMA.FlightController.UpdateShipMass();
+                LIGMA.CreateOkBroadcast($"Launching in {GetModeString()}");
+            } catch (Exception e) {
+                LIGMA.CreateFatalErrorBroadcast($"Error during launch: {e}");
+            }
         }
 
         public void Detonate() {

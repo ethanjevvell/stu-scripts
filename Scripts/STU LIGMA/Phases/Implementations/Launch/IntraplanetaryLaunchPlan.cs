@@ -6,7 +6,7 @@ namespace IngameScript {
             public class IntraplanetaryLaunchPlan : ILaunchPlan {
 
                 private double LAUNCH_VELOCITY = 150;
-                private double ELEVATION_CUTOFF = 1000;
+                public static double ELEVATION_CUTOFF = 1000;
                 private double CurrentElevation;
 
                 public override bool Run() {

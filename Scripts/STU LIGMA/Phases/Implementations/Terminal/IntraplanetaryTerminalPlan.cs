@@ -4,7 +4,7 @@ namespace IngameScript {
         public partial class LIGMA {
             public class IntraplanetaryTerminalPlan : ITerminalPlan {
 
-                private int TERMINAL_VELOCITY = 120;
+                private int TERMINAL_VELOCITY = 300;
 
                 public override bool Run() {
                     FlightController.SetStableForwardVelocity(TERMINAL_VELOCITY);
