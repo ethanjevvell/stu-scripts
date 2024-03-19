@@ -360,24 +360,28 @@ namespace IngameScript {
 
                 public override bool Run() {
 
-                    switch (phase) {
-
-                        case LaunchPhase.Idle:
-                            phase = LaunchPhase.PerformingManeuver;
-                            CreateOkBroadcast("Starting test suite");
-                            break;
-
-                        case LaunchPhase.PerformingManeuver:
-                            PerformManeuvers(testSequence);
-                            break;
-
-                        case LaunchPhase.Terminal:
-                            SelfDestruct();
-                            break;
-
-                    }
-
+                    FlightController.AlignShipToTarget(TargetData.Position);
                     return false;
+
+                    // Use this to execute the test suite
+                    //switch (phase) {
+
+                    //    case LaunchPhase.Idle:
+                    //        phase = LaunchPhase.PerformingManeuver;
+                    //        CreateOkBroadcast("Starting test suite");
+                    //        break;
+
+                    //    case LaunchPhase.PerformingManeuver:
+                    //        PerformManeuvers(testSequence);
+                    //        break;
+
+                    //    case LaunchPhase.Terminal:
+                    //        SelfDestruct();
+                    //        break;
+
+                    //}
+
+                    //return false;
                 }
 
                 private void PerformManeuvers(List<Maneuver> maneuvers) {
