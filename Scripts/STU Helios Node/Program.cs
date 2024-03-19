@@ -1,78 +1,86 @@
-﻿using Sandbox.Game.EntityComponents;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
+﻿using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using VRage;
-using VRage.Collections;
-using VRage.Game;
-using VRage.Game.Components;
-using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame;
-using VRage.Game.ModAPI.Ingame.Utilities;
-using VRage.Game.ObjectBuilders.Definitions;
-using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
-        // This file contains your actual script.
-        //
-        // You can either keep all your code here, or you can create separate
-        // code files to make your program easier to navigate while coding.
-        //
-        // In order to add a new utility class, right-click on your project, 
-        // select 'New' then 'Add Item...'. Now find the 'Space Engineers'
-        // category under 'Visual C# Items' on the left hand side, and select
-        // 'Utility Class' in the main area. Name it in the box below, and
-        // press OK. This utility class will be merged in with your code when
-        // deploying your final script.
-        //
-        // You can also simply create a new utility class manually, you don't
-        // have to use the template if you don't want to. Just do so the first
-        // time to see what a utility class looks like.
-        // 
-        // Go to:
-        // https://github.com/malware-dev/MDK-SE/wiki/Quick-Introduction-to-Space-Engineers-Ingame-Scripts
-        //
-        // to learn more about ingame scripts.
+
+        string slaveNodeName;
+
+        STUMasterLogBroadcaster masterLogBroadcaster;
+        STULog outgoingLog = new STULog();
+
+        List<IMyTerminalBlock> solarPanels = new List<IMyTerminalBlock>();
+        List<IMyTerminalBlock> brokenPanels = new List<IMyTerminalBlock>();
+
+        List<IMyTerminalBlock> storageBlocks = new List<IMyTerminalBlock>();
+
+        // Measured in megawatts
+        float solarPanelOutput;
+        int gatlingAmmoBoxes;
 
         public Program() {
-            // The constructor, called only once every session and
-            // always before any other method is called. Use it to
-            // initialize your script. 
-            //     
-            // The constructor is optional and can be removed if not
-            // needed.
-            // 
-            // It's recommended to set Runtime.UpdateFrequency 
-            // here, which will allow your script to run itself without a 
-            // timer block.
+
+            masterLogBroadcaster = new STUMasterLogBroadcaster("HELIOS_MASTER_NODE", IGC, TransmissionDistance.AntennaRelay);
+            GridTerminalSystem.GetBlocksOfType<IMySolarPanel>(solarPanels);
+            GridTerminalSystem.GetBlocksOfType<IMyCargoContainer>(storageBlocks);
+
+            slaveNodeName = Me.CustomData;
+
+            if (solarPanels == null) {
+                throw new Exception("No solar panels found");
+            }
+
+            if (storageBlocks == null) {
+                throw new Exception("No storage blocks found");
+            }
+
+            if (string.IsNullOrEmpty(slaveNodeName)) {
+                throw new Exception("No slave node name found");
+            }
         }
 
-        public void Save() {
-            // Called when the program needs to save its state. Use
-            // this method to save your state to the Storage field
-            // or some other means. 
-            // 
-            // This method is optional and can be removed if not
-            // needed.
-        }
+        public void Main() {
 
-        public void Main(string argument, UpdateType updateSource) {
-            // The main entry point of the script, invoked every time
-            // one of the programmable block's Run actions are invoked,
-            // or the script updates itself. The updateSource argument
-            // describes where the update came from. Be aware that the
-            // updateSource is a  bitfield  and might contain more than 
-            // one update type.
-            // 
-            // The method itself is required, but the arguments above
-            // can be removed if not needed.
+            solarPanelOutput = 0;
+            gatlingAmmoBoxes = 0;
+
+            foreach (IMySolarPanel panel in solarPanels) {
+
+                // Check for broken panels
+                if (!panel.IsFunctional) {
+                    brokenPanels.Add(panel);
+                }
+
+                // Get the output of the solar panels
+                solarPanelOutput += panel.CurrentOutput;
+
+            }
+
+            foreach (IMyCargoContainer storage in storageBlocks) {
+                List<MyInventoryItem> items = new List<MyInventoryItem>();
+                storage.GetInventory().GetItems(items);
+
+                foreach (MyInventoryItem item in items) {
+                    if (item.Type.SubtypeId.ToString() == "NATO_25x184mm") {
+                        gatlingAmmoBoxes += item.Amount.ToIntSafe();
+                    }
+                }
+            }
+
+            Echo("Total solar panel output: " + solarPanelOutput + " MW");
+            Echo("Number of broken panels: " + brokenPanels.Count);
+            Echo("Number of gatling ammo boxes: " + gatlingAmmoBoxes);
+
+            if (brokenPanels.Count > 0) {
+                Echo("WARNING: Broken panel(s) detected");
+                outgoingLog.Sender = slaveNodeName;
+                outgoingLog.Message = "Broken solar panels detected: " + brokenPanels.Count;
+                outgoingLog.Type = STULogType.WARNING;
+                masterLogBroadcaster.Log(outgoingLog);
+            }
         }
     }
 }

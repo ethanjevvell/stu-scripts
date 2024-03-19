@@ -1,0 +1,25 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\STU Helios Node.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\STU Helios Node.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\STU Helios Node.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Helios Node\obj\x64\Debug\STU Helios Node.pdb
