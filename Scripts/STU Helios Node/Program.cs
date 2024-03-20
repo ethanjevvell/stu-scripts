@@ -19,6 +19,7 @@ namespace IngameScript {
 
         // Measured in megawatts
         float solarPanelOutput;
+        float maxHeliosSolarPanelOutput;
         int gatlingAmmoBoxes;
 
         public Program() {
@@ -48,6 +49,7 @@ namespace IngameScript {
         public void Main() {
 
             solarPanelOutput = 0;
+            maxHeliosSolarPanelOutput = 0;
             gatlingAmmoBoxes = 0;
 
             InspectSolarPanels();
@@ -56,6 +58,8 @@ namespace IngameScript {
             Echo("Total solar panel output: " + solarPanelOutput + " MW");
             Echo("Number of broken panels: " + brokenPanels.Count);
             Echo("Number of gatling ammo boxes: " + gatlingAmmoBoxes);
+            Echo("Max solar panel output: " + maxHeliosSolarPanelOutput + " MW");
+            Echo("Max theoretical laser antenna range: " + Math.Sqrt(((maxHeliosSolarPanelOutput * 1000000) - 1000000) / 0.000025) + " km");
 
             if (brokenPanels.Count > 0) {
                 Echo("WARNING: Broken panel(s) detected");
@@ -107,6 +111,9 @@ namespace IngameScript {
 
                 // Get the output of the solar panels
                 solarPanelOutput += panel.CurrentOutput;
+
+                // Get the maximum output of the solar panels
+                maxHeliosSolarPanelOutput += panel.MaxOutput;
 
             }
 
