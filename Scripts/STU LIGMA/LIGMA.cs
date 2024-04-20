@@ -65,7 +65,6 @@ namespace IngameScript {
                 LoadWarheads(grid);
                 LoadConnector(grid);
                 LoadDetonationSensor(grid);
-                // LoadRaycaster(grid);
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
@@ -205,16 +204,6 @@ namespace IngameScript {
                 DetonationSensor.DetectFriendly = false;
                 DetonationSensor.DetectOwner = false;
                 DetonationSensor.DetectPlayers = false;
-            }
-
-            private static void LoadRaycaster(IMyGridTerminalSystem grid) {
-                var raycaster = grid.GetBlockWithName("Raycaster");
-                if (raycaster == null) {
-                    CreateFatalErrorBroadcast("No raycaster detected on grid.");
-                }
-                CreateOkBroadcast("Raycaster... nominal");
-                Raycaster = new STURaycaster(raycaster as IMyCameraBlock);
-                Raycaster.RaycastDistance = 20000;
             }
 
             private static void MeasureTotalPowerCapacity() {

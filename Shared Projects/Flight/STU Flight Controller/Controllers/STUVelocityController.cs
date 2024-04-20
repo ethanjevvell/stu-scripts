@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using System.Collections.Generic;
 using VRageMath;
 
 namespace IngameScript {
@@ -69,6 +70,8 @@ namespace IngameScript {
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
+                public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
+
                 private NTable NTable { get; set; }
 
                 public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
@@ -82,6 +85,7 @@ namespace IngameScript {
                     AssignThrustersByOrientation(allThrusters);
                     CalculateMaximumAccelerations();
                     CalculateBufferVelocities();
+                    CalculateThrustCoefficients();
 
                     ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust);
                     RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust);
@@ -150,14 +154,11 @@ namespace IngameScript {
                     private void ApplyThrust(double force) {
                         SetThrusterOverrides(PosDirThrusters, 0.0f);
                         SetThrusterOverrides(NegDirThrusters, 0.0f);
-
-                        int thrustersLength = force < 0 ? NegDirThrusters.Length : PosDirThrusters.Length;
-                        float thrust = (float)Math.Abs(force / thrustersLength);
-
+                        //int thrustersLength = force < 0 ? NegDirThrusters.Length : PosDirThrusters.Length;
                         if (force < 0) {
-                            SetThrusterOverrides(NegDirThrusters, thrust);
+                            SetThrusterOverrides(NegDirThrusters, Math.Abs(force));
                         } else if (force > 0) {
-                            SetThrusterOverrides(PosDirThrusters, thrust);
+                            SetThrusterOverrides(PosDirThrusters, Math.Abs(force));
                         }
                     }
                 }
@@ -298,11 +299,30 @@ namespace IngameScript {
                     DownBufferVelocity = MaximumDownAcceleration * dt * NTable.Down;
                 }
 
-                private static void SetThrusterOverrides(IMyThrust[] thrusters, double overrideValue) {
+                private void CalculateThrustCoefficients() {
+                    // Array of the the thruster groups
+                    IMyThrust[][] thrusterGroups = new IMyThrust[][] { ForwardThrusters, ReverseThrusters, LeftThrusters, RightThrusters, UpThrusters, DownThrusters };
+                    foreach (IMyThrust[] thrusterGroup in thrusterGroups) {
+                        double maximumFaceThrust = 0;
+                        foreach (IMyThrust thruster in thrusterGroup) {
+                            maximumFaceThrust += thruster.MaxThrust;
+                        }
+                        foreach (IMyThrust thruster in thrusterGroup) {
+                            double coefficient = thruster.MaxThrust / maximumFaceThrust;
+                            ThrustCoefficients.Add(thruster.EntityId.ToString(), coefficient);
+                        }
+                    }
+                }
+
+                private static void SetThrusterOverrides(IMyThrust[] thrusters, double thrust) {
                     foreach (IMyThrust thruster in thrusters) {
                         // MaxEffectiveThrust = MaxThrust for hydrogen thrusters, but not for atmospheric or ion thrusters
                         // If we chose MaxThrust instead, hydrogen thrusters would be unaffected, but atmospheric and ion thrusters would always be inefficient fired at full power
-                        thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)overrideValue);
+                        double thrustCoefficient;
+                        if (!ThrustCoefficients.TryGetValue(thruster.EntityId.ToString(), out thrustCoefficient)) {
+                            throw new Exception("Thrust coefficient not found for thruster: " + thruster.EntityId);
+                        }
+                        thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)thrust * (float)thrustCoefficient);
                     }
                 }
 

@@ -8,38 +8,20 @@
   </BackgroundColor>
   <Sprites>
     <SpriteInfo>
-      <Name>text3</Name>
-      <SpriteType>Status: </SpriteType>
-      <Position>
-        <X>64</X>
-        <Y>-220</Y>
-      </Position>
-      <Size>
-        <X>148.297409</X>
-        <Y>50.59067</Y>
-      </Size>
-      <Color>
-        <R>0</R>
-        <G>255</G>
-        <B>0</B>
-        <A>255</A>
-      </Color>
-      <Rotation>1.56</Rotation>
-      <Type>TEXT</Type>
-      <Font>Debug</Font>
-    </SpriteInfo>
-    <SpriteInfo>
       <Name>Telemetry</Name>
-      <SpriteType>Velocity: 
+      <SpriteType>Velocity:
+   V_x = 
+   V_y = 
+   V_z = 
 Fuel:
 Power:</SpriteType>
       <Position>
-        <X>242</X>
-        <Y>-78</Y>
+        <X>-350</X>
+        <Y>-96</Y>
       </Position>
       <Size>
         <X>113.089066</X>
-        <Y>93.58672</Y>
+        <Y>184.033447</Y>
       </Size>
       <Color>
         <R>0</R>
@@ -52,11 +34,11 @@ Power:</SpriteType>
       <Font>Debug</Font>
     </SpriteInfo>
     <SpriteInfo>
-      <Name>sprite5</Name>
+      <Name>H2</Name>
       <SpriteType>IconHydrogen</SpriteType>
       <Position>
-        <X>126</X>
-        <Y>212</Y>
+        <X>-450</X>
+        <Y>210</Y>
       </Position>
       <Size>
         <X>35</X>
@@ -73,11 +55,11 @@ Power:</SpriteType>
       <Font>Debug</Font>
     </SpriteInfo>
     <SpriteInfo>
-      <Name>sprite5Copy</Name>
+      <Name>Electricity</Name>
       <SpriteType>IconEnergy</SpriteType>
       <Position>
-        <X>192</X>
-        <Y>212</Y>
+        <X>-400</X>
+        <Y>210</Y>
       </Position>
       <Size>
         <X>35</X>
@@ -97,8 +79,8 @@ Power:</SpriteType>
       <Name>HydrogenBarForeground</Name>
       <SpriteType>SquareSimple</SpriteType>
       <Position>
-        <X>126</X>
-        <Y>46</Y>
+        <X>-450</X>
+        <Y>40</Y>
       </Position>
       <Size>
         <X>30</X>
@@ -118,8 +100,8 @@ Power:</SpriteType>
       <Name>HydrogenBarBackground</Name>
       <SpriteType>SquareSimple</SpriteType>
       <Position>
-        <X>126</X>
-        <Y>46</Y>
+        <X>-450</X>
+        <Y>40</Y>
       </Position>
       <Size>
         <X>30</X>
@@ -139,8 +121,8 @@ Power:</SpriteType>
       <Name>PowerBarForeground</Name>
       <SpriteType>SquareSimple</SpriteType>
       <Position>
-        <X>192</X>
-        <Y>46</Y>
+        <X>-400</X>
+        <Y>40</Y>
       </Position>
       <Size>
         <X>30</X>
@@ -160,8 +142,8 @@ Power:</SpriteType>
       <Name>PowerBarBackground</Name>
       <SpriteType>SquareSimple</SpriteType>
       <Position>
-        <X>192</X>
-        <Y>46</Y>
+        <X>-400</X>
+        <Y>40</Y>
       </Position>
       <Size>
         <X>30</X>
@@ -181,8 +163,8 @@ Power:</SpriteType>
       <Name>text1</Name>
       <SpriteType>LIGMA MK-I</SpriteType>
       <Position>
-        <X>-480</X>
-        <Y>-232</Y>
+        <X>-472</X>
+        <Y>-234</Y>
       </Position>
       <Size>
         <X>289.951752</X>

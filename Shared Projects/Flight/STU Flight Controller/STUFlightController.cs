@@ -62,6 +62,8 @@ namespace IngameScript {
                 VelocityMagnitude = VelocityComponents.Length();
             }
 
+            // TODO: Create acceleration metrics
+
             public void MeasureCurrentPositionAndOrientation() {
                 CurrentWorldMatrix = RemoteControl.WorldMatrix;
                 CurrentPosition = RemoteControl.GetPosition();
