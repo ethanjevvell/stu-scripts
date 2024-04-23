@@ -18,7 +18,6 @@ namespace IngameScript {
         STUMasterLogBroadcaster Broadcaster;
         IMyBroadcastListener Listener;
 
-        Phase MainPhase;
         MissileMode Mode;
 
         LIGMA.ILaunchPlan MainLaunchPlan;
@@ -50,7 +49,6 @@ namespace IngameScript {
             Listener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER);
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
-            MainPhase = Phase.Idle;
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
 
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
@@ -70,35 +68,35 @@ namespace IngameScript {
             LIGMA.UpdateMeasurements();
             LIGMA.SendTelemetry();
 
-            switch (MainPhase) {
+            switch (LIGMA.CurrentPhase) {
 
-                case Phase.Idle:
+                case LIGMA.Phase.Idle:
                     break;
 
-                case Phase.Launch:
+                case LIGMA.Phase.Launch:
                     var finishedLaunch = MainLaunchPlan.Run();
                     if (finishedLaunch) {
-                        MainPhase = Phase.Flight;
+                        LIGMA.CurrentPhase = LIGMA.Phase.Flight;
                         LIGMA.CreateWarningBroadcast("Entering flight phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
                     };
                     break;
 
-                case Phase.Flight:
+                case LIGMA.Phase.Flight:
                     var finishedFlight = MainFlightPlan.Run();
                     if (finishedFlight) {
-                        MainPhase = Phase.Descent;
+                        LIGMA.CurrentPhase = LIGMA.Phase.Descent;
                         LIGMA.CreateWarningBroadcast("Entering descent phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
                     };
                     break;
 
-                case Phase.Descent:
+                case LIGMA.Phase.Descent:
                     var finishedDescent = MainDescentPlan.Run();
                     if (finishedDescent) {
-                        MainPhase = Phase.Terminal;
+                        LIGMA.CurrentPhase = LIGMA.Phase.Terminal;
                         LIGMA.CreateWarningBroadcast("Entering terminal phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
@@ -106,7 +104,7 @@ namespace IngameScript {
                     //
                     break;
 
-                case Phase.Terminal:
+                case LIGMA.Phase.Terminal:
                     var finishedTerminal = MainTerminalPlan.Run();
                     // Detonation is handled purely by the DetonationSensor
                     break;
@@ -314,7 +312,7 @@ namespace IngameScript {
             try {
                 ALREADY_RAN_FIRST_COMMAND = true;
                 FirstRunTasks();
-                MainPhase = Phase.Launch;
+                LIGMA.CurrentPhase = LIGMA.Phase.Launch;
                 // Insurance in case LIGMA was modified on launch pad
                 LIGMA.FlightController.UpdateShipMass();
                 LIGMA.CreateOkBroadcast($"Launching in {GetModeString()}");
@@ -324,7 +322,7 @@ namespace IngameScript {
         }
 
         public void Test() {
-            MainPhase = Phase.Launch;
+            LIGMA.CurrentPhase = LIGMA.Phase.Launch;
             MainLaunchPlan = new LIGMA.TestSuite();
         }
 

@@ -37,6 +37,7 @@ namespace IngameScript {
                 public static float ShipMass { get; set; }
 
                 IMyRemoteControl RemoteControl { get; set; }
+                Vector3D LocalGravityVector;
 
                 IMyThrust[] ForwardThrusters { get; set; }
                 IMyThrust[] ReverseThrusters { get; set; }
@@ -71,7 +72,6 @@ namespace IngameScript {
                 VelocityController UpController { get; set; }
 
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
-
                 private NTable NTable { get; set; }
 
                 public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
@@ -79,6 +79,7 @@ namespace IngameScript {
                     RemoteControl = remoteControl;
 
                     ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
+                    LocalGravityVector = RemoteControl.GetNaturalGravity();
                     dt = timeStep;
                     NTable = Ntable == null ? new NTable() : Ntable;
 
@@ -90,6 +91,7 @@ namespace IngameScript {
                     ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust);
                     RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust);
                     UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust);
+
                 }
 
                 /// <summary>
@@ -165,21 +167,26 @@ namespace IngameScript {
 
                 public bool ControlVx(double currentVelocity, double desiredVelocity) {
                     var gravityVector = RemoteControl.GetNaturalGravity();
-                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).X, 2);
-                    return RightController.SetVelocity(currentVelocity, desiredVelocity, localGravityVector);
+                    return RightController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.X);
                 }
 
                 public bool ControlVy(double currentVelocity, double desiredVelocity) {
                     var gravityVector = RemoteControl.GetNaturalGravity();
-                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).Y, 2);
-                    return UpController.SetVelocity(currentVelocity, desiredVelocity, localGravityVector);
+                    return UpController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.Y);
                 }
 
                 public bool ControlVz(double currentVelocity, double desiredVelocity) {
                     var gravityVector = RemoteControl.GetNaturalGravity();
-                    var localGravityVector = Math.Round(Vector3D.TransformNormal(gravityVector, MatrixD.Transpose(RemoteControl.WorldMatrix)).Z, 2);
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
-                    return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -localGravityVector);
+                    return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
+                }
+
+                public void Update() {
+                    var localGravity = RemoteControl.GetNaturalGravity();
+                    LocalGravityVector = Vector3D.TransformNormal(localGravity, MatrixD.Transpose(RemoteControl.WorldMatrix));
+                    LocalGravityVector.X = Math.Round(LocalGravityVector.X, 2);
+                    LocalGravityVector.Y = Math.Round(LocalGravityVector.Y, 2);
+                    LocalGravityVector.Z = Math.Round(LocalGravityVector.Z, 2);
                 }
 
                 private void AssignThrustersByOrientation(IMyThrust[] allThrusters) {
@@ -299,6 +306,26 @@ namespace IngameScript {
                     DownBufferVelocity = MaximumDownAcceleration * dt * NTable.Down;
                 }
 
+                public Vector3D CalculateAccelerationVectors() {
+                    Vector3D accelerationVecor;
+                    accelerationVecor.X = CalculateAccelerationVector(RightThrusters, LeftThrusters) / ShipMass + LocalGravityVector.X;
+                    accelerationVecor.Y = CalculateAccelerationVector(UpThrusters, DownThrusters) / ShipMass + LocalGravityVector.Y;
+                    accelerationVecor.Z = CalculateAccelerationVector(ForwardThrusters, ReverseThrusters) / ShipMass - LocalGravityVector.Z;
+                    return accelerationVecor;
+                }
+
+                private float CalculateAccelerationVector(IMyThrust[] posDirThrusters, IMyThrust[] negDirThrusters) {
+                    float posThrust = 0;
+                    float negThrust = 0;
+                    foreach (IMyThrust thrust in posDirThrusters) {
+                        posThrust += thrust.ThrustOverride;
+                    }
+                    foreach (IMyThrust thrust in negDirThrusters) {
+                        negThrust += thrust.ThrustOverride;
+                    }
+                    return posThrust - negThrust;
+                }
+
                 private void CalculateThrustCoefficients() {
                     // Array of the the thruster groups
                     IMyThrust[][] thrusterGroups = new IMyThrust[][] { ForwardThrusters, ReverseThrusters, LeftThrusters, RightThrusters, UpThrusters, DownThrusters };
@@ -324,10 +351,6 @@ namespace IngameScript {
                         }
                         thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)thrust * (float)thrustCoefficient);
                     }
-                }
-
-                private static void ToggleThrusters(IMyThrust[] thrusters, bool enabled) {
-                    Array.ForEach(thrusters, thruster => thruster.Enabled = enabled);
                 }
 
             }

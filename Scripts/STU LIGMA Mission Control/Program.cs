@@ -1,6 +1,8 @@
 ﻿
 using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using System.Text;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -9,6 +11,8 @@ namespace IngameScript {
         private const string LIGMA_MISSION_CONTROL_LOG_LCDS_GROUP = "LIGMA_MISSION_CONTROL_LOG_LCDS";
         private const string LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_MAIN_LCD:";
         private const string LIGMA_MISSION_CONTROL_AUX_LOG_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_LOG_LCD:";
+
+        private const string telemetryRecordHeader = "Timestamp, Phase, V_x, V_y, V_z, A_x, A_y, A_z, Fuel, Power\n";
 
         IMyBroadcastListener LIGMAListener;
         IMyBroadcastListener ReconListener;
@@ -25,10 +29,12 @@ namespace IngameScript {
         List<IMyTerminalBlock> logSubscribers = new List<IMyTerminalBlock>();
         List<IMyTerminalBlock> auxLogSubscribers = new List<IMyTerminalBlock>();
         LogLCDPublisher logPublisher;
+        StringBuilder telemetryRecords = new StringBuilder();
 
         // Holds log data temporarily for each run
         STULog IncomingLog;
         STULog OutgoingLog;
+        Dictionary<string, string> tempMetadata;
 
         public Program() {
 
@@ -69,6 +75,7 @@ namespace IngameScript {
             }
 
             HandleIncomingBroadcasts();
+            Me.CustomData = telemetryRecords.ToString();
         }
 
         public void HandleIncomingBroadcasts() {
@@ -89,6 +96,9 @@ namespace IngameScript {
                     };
                 }
                 PublishData();
+                if (IncomingLog.Metadata != null && IncomingLog.Metadata["Phase"] != "Idle") {
+                    WriteTelemetry();
+                }
             }
 
         }
@@ -123,6 +133,16 @@ namespace IngameScript {
         public void PublishData() {
             mainPublisher.UpdateDisplays(IncomingLog);
             logPublisher.UpdateDisplays(IncomingLog);
+        }
+
+        //private const string telemetryRecordHeader = "Timestamp, Phase, V_x, V_y, V_z, A_x, A_y, A_z, Fuel, Power\n";
+        public void WriteTelemetry() {
+            tempMetadata = IncomingLog.Metadata;
+            Vector3D parsedVelocity;
+            Vector3D parsedAcceleration;
+            parsedVelocity = Vector3D.TryParse(tempMetadata["VelocityComponents"], out parsedVelocity) ? parsedVelocity : Vector3D.Zero;
+            parsedAcceleration = Vector3D.TryParse(tempMetadata["AccelerationComponents"], out parsedAcceleration) ? parsedAcceleration : Vector3D.Zero;
+            telemetryRecords.Append($"{tempMetadata["Timestamp"]}, {tempMetadata["Phase"]}, {parsedVelocity.X}, {parsedVelocity.Y}, {parsedVelocity.Z}, {parsedAcceleration.X}, {parsedAcceleration.Y}, {parsedAcceleration.Z}, {tempMetadata["CurrentFuel"]}, {tempMetadata["CurrentPower"]}\n");
         }
     }
 }

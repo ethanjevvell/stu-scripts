@@ -16,6 +16,8 @@ namespace IngameScript {
             public static LIGMA_VARIABLES.Planet? LaunchPlanet { get; set; }
 
             public const float TimeStep = 1.0f / 6.0f;
+            public static float Timestamp = 0;
+            public static Phase CurrentPhase = Phase.Idle;
 
             public static STUFlightController FlightController { get; set; }
             public static IMySensorBlock DetonationSensor { get; set; }
@@ -50,6 +52,14 @@ namespace IngameScript {
             /// Missile's total power capacity in kilowatt-hours
             /// </summary>
             public static double PowerCapacity { get; set; }
+
+            public enum Phase {
+                Idle,
+                Launch,
+                Flight,
+                Descent,
+                Terminal,
+            }
 
             public LIGMA(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
@@ -244,6 +254,9 @@ namespace IngameScript {
                 FlightController.Update();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
+                if (CurrentPhase != Phase.Idle) {
+                    Timestamp += Runtime.TimeSinceLastRun.Milliseconds;
+                }
             }
 
             public static void SendTelemetry() {
@@ -298,8 +311,11 @@ namespace IngameScript {
 
             public static Dictionary<string, string> GetTelemetryDictionary() {
                 return new Dictionary<string, string> {
+                    { "Timestamp", Timestamp.ToString() },
+                    { "Phase", CurrentPhase.ToString() },
                     { "VelocityMagnitude", FlightController.VelocityMagnitude.ToString() },
                     { "VelocityComponents", FlightController.VelocityComponents.ToString() },
+                    { "AccelerationComponents", FlightController.AccelerationComponents.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
                     { "CurrentPower", CurrentPower.ToString() },
                     { "FuelCapacity", FuelCapacity.ToString() },

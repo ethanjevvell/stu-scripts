@@ -9,6 +9,7 @@ namespace IngameScript {
 
             public static double VelocityMagnitude { get; set; }
             public static Vector3D VelocityComponents { get; set; }
+            public static Vector3D AccelerationComponents { get; set; }
             public static double CurrentFuel { get; set; }
             public static double CurrentPower { get; set; }
             public static double FuelCapacity { get; set; }
@@ -40,12 +41,9 @@ namespace IngameScript {
 
                 try {
                     Vector3D parsedVelocity;
-                    Vector3D.TryParse(log.Metadata["VelocityComponents"], out parsedVelocity);
-                    if (parsedVelocity != null) {
-                        VelocityComponents = parsedVelocity;
-                    } else {
-                        VelocityComponents = Vector3D.Zero;
-                    }
+                    Vector3D parsedAcceleration;
+                    VelocityComponents = Vector3D.TryParse(log.Metadata["VelocityComponents"], out parsedVelocity) ? parsedVelocity : Vector3D.Zero;
+                    AccelerationComponents = Vector3D.TryParse(log.Metadata["AccelerationComponents"], out parsedAcceleration) ? parsedAcceleration : Vector3D.Zero;
                     VelocityMagnitude = double.Parse(log.Metadata["VelocityMagnitude"]);
                     CurrentFuel = double.Parse(log.Metadata["CurrentFuel"]);
                     CurrentPower = double.Parse(log.Metadata["CurrentPower"]);
@@ -53,11 +51,14 @@ namespace IngameScript {
                     PowerCapacity = double.Parse(log.Metadata["PowerCapacity"]);
                 } catch {
                     VelocityComponents = Vector3D.Zero;
+                    AccelerationComponents = Vector3D.Zero;
+                    VelocityMagnitude = 69;
                     CurrentFuel = 69;
                     CurrentPower = 100;
                     FuelCapacity = 100;
                     PowerCapacity = 100;
                 }
+
             }
 
             private void DrawTelemetryData() {

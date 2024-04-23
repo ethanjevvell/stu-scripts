@@ -14,6 +14,7 @@ namespace IngameScript {
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
             public Vector3D VelocityComponents { get; set; }
+            public Vector3D AccelerationComponents { get; set; }
 
             public float CurrentStoppingDistance { get; set; }
 
@@ -62,7 +63,9 @@ namespace IngameScript {
                 VelocityMagnitude = VelocityComponents.Length();
             }
 
-            // TODO: Create acceleration metrics
+            public void MeasureCurrentAcceleration() {
+                AccelerationComponents = VelocityController.CalculateAccelerationVectors();
+            }
 
             public void MeasureCurrentPositionAndOrientation() {
                 CurrentWorldMatrix = RemoteControl.WorldMatrix;
@@ -78,8 +81,11 @@ namespace IngameScript {
             }
 
             public void Update() {
+                // Updates local gravity vector
+                VelocityController.Update();
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
+                MeasureCurrentAcceleration();
                 PreviousWorldMatrix = CurrentWorldMatrix;
                 PreviousPosition = CurrentPosition;
                 CurrentStoppingDistance = GetForwardStoppingDistance();
@@ -196,7 +202,6 @@ namespace IngameScript {
             /// Calculates a normal vector for the plane containing the ship's inertia vector and the vector from the ship to the target.
             /// </summary>
             /// <param name="targetPos"></param>
-            /// <param name="MOCK_INERTIA_VECTOR"></param>
             /// <returns></returns>
             private Vector3D GetInertiaHeadingNormal(Vector3D targetPos) {
                 // ship inertia vector
