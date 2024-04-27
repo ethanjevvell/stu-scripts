@@ -36,11 +36,12 @@ namespace IngameScript {
         STULog OutgoingLog;
         Dictionary<string, string> tempMetadata;
 
-        public Program() {
+        int TELEMETRY_WRITE_COUNTER = 0;
+        int TELEMETRY_WRITE_INTERVAL = 15;
 
+        public Program() {
             LIGMAListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_VEHICLE_BROADCASTER);
             ReconListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_RECONNOITERER_BROADCASTER);
-
             try {
                 mainLCDGroup = GridTerminalSystem.GetBlockGroupWithName(LIGMA_MISSION_CONTROL_MAIN_LCDS_GROUP);
                 mainLCDGroup.GetBlocks(mainSubscribers);
@@ -49,17 +50,14 @@ namespace IngameScript {
             } catch {
                 Echo($"Error getting main or log lcds");
             }
-
             try {
                 GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(auxMainSubscribers, block => block.CustomData.Contains(LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG));
                 GridTerminalSystem.GetBlocksOfType<IMyTextSurfaceProvider>(auxLogSubscribers, block => block.CustomData.Contains(LIGMA_MISSION_CONTROL_AUX_LOG_LCD_TAG));
             } catch {
                 Echo($"Error gettings main or log aux lcds");
             }
-
             mainPublisher = new MainLCDPublisher(mainSubscribers, auxMainSubscribers);
             logPublisher = new LogLCDPublisher(logSubscribers, auxLogSubscribers);
-
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -75,7 +73,14 @@ namespace IngameScript {
             }
 
             HandleIncomingBroadcasts();
-            Me.CustomData = telemetryRecords.ToString();
+
+            // Write telemetry to CustomData every TELEMETRY_WRITE_INTERVAL runs
+            if (TELEMETRY_WRITE_COUNTER >= TELEMETRY_WRITE_INTERVAL) {
+                Me.CustomData = telemetryRecords.ToString();
+                TELEMETRY_WRITE_COUNTER = 0;
+            } else {
+                TELEMETRY_WRITE_COUNTER++;
+            }
         }
 
         public void HandleIncomingBroadcasts() {

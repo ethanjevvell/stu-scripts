@@ -13,7 +13,8 @@ namespace IngameScript {
 
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
-            public Vector3D VelocityComponents { get; set; }
+            public Vector3D CurrentVelocity { get; set; }
+            public Vector3D PreviousVelocity { get; set; }
             public Vector3D AccelerationComponents { get; set; }
 
             public float CurrentStoppingDistance { get; set; }
@@ -55,12 +56,13 @@ namespace IngameScript {
             }
 
             public void MeasureCurrentVelocity() {
+                PreviousVelocity = CurrentVelocity;
                 Vector3D worldVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
                 Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(CurrentWorldMatrix));
                 // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
                 // We reverse that by convention because it's easier to think about
-                VelocityComponents = localVelocity *= new Vector3D(1, 1, -1);
-                VelocityMagnitude = VelocityComponents.Length();
+                CurrentVelocity = localVelocity *= new Vector3D(1, 1, -1);
+                VelocityMagnitude = CurrentVelocity.Length();
             }
 
             public void MeasureCurrentAcceleration() {
@@ -80,7 +82,7 @@ namespace IngameScript {
                 return dx;
             }
 
-            public void Update() {
+            public void Update(float dt = (float)(1.0 / 6.0)) {
                 // Updates local gravity vector
                 VelocityController.Update();
                 MeasureCurrentPositionAndOrientation();
@@ -97,7 +99,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVx(double desiredVelocity) {
-                return VelocityController.ControlVx(VelocityComponents.X, desiredVelocity);
+                return VelocityController.ControlVx(CurrentVelocity.X, desiredVelocity);
             }
 
             /// <summary>
@@ -106,7 +108,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVy(double desiredVelocity) {
-                return VelocityController.ControlVy(VelocityComponents.Y, desiredVelocity);
+                return VelocityController.ControlVy(CurrentVelocity.Y, desiredVelocity);
             }
 
             /// <summary>
@@ -115,7 +117,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVz(double desiredVelocity) {
-                return VelocityController.ControlVz(VelocityComponents.Z, desiredVelocity);
+                return VelocityController.ControlVz(CurrentVelocity.Z, desiredVelocity);
             }
 
             /// <summary>
@@ -205,7 +207,7 @@ namespace IngameScript {
             /// <returns></returns>
             private Vector3D GetInertiaHeadingNormal(Vector3D targetPos) {
                 // ship inertia vector
-                Vector3D worldVelocity = Vector3D.Normalize(Vector3D.TransformNormal(VelocityComponents, CurrentWorldMatrix));
+                Vector3D worldVelocity = Vector3D.Normalize(Vector3D.TransformNormal(CurrentVelocity, CurrentWorldMatrix));
                 // ship-to-target vector
                 Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
                 // normal vector of plane containing SI and ST

@@ -251,7 +251,7 @@ namespace IngameScript {
             }
 
             public static void UpdateMeasurements() {
-                FlightController.Update();
+                FlightController.Update(Runtime.TimeSinceLastRun.Milliseconds);
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
                 if (CurrentPhase != Phase.Idle) {
@@ -314,7 +314,7 @@ namespace IngameScript {
                     { "Timestamp", Timestamp.ToString() },
                     { "Phase", CurrentPhase.ToString() },
                     { "VelocityMagnitude", FlightController.VelocityMagnitude.ToString() },
-                    { "VelocityComponents", FlightController.VelocityComponents.ToString() },
+                    { "VelocityComponents", FlightController.CurrentVelocity.ToString() },
                     { "AccelerationComponents", FlightController.AccelerationComponents.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
                     { "CurrentPower", CurrentPower.ToString() },
