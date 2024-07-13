@@ -7,8 +7,6 @@ namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
 
-            public static bool TargetLocked { get; set; }
-
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
 
@@ -65,7 +63,6 @@ namespace IngameScript {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
-                TargetLocked = false;
 
                 LoadRemoteController(grid);
                 LoadThrusters(grid);
