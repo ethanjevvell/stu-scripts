@@ -99,7 +99,10 @@ namespace IngameScript {
                 /// </summary>
                 private class VelocityController {
 
+                    // Tolerance for velocity error; if the error is less than this, we're done
                     private const double VELOCITY_ERROR_TOLERANCE = 0.02;
+                    // Extremely small gravity levels are neglible; if the gravity vector component is less than this, we don't need to counteract it,
+                    // otherwise we're just wasting computation
                     private const double GRAVITY_ERROR_TOLERANCE = 0.02;
 
                     private bool ALREADY_COUNTERING_GRAVITY = false;
@@ -156,32 +159,28 @@ namespace IngameScript {
                     private void ApplyThrust(double force) {
                         SetThrusterOverrides(PosDirThrusters, 0.0f);
                         SetThrusterOverrides(NegDirThrusters, 0.0f);
-                        //int thrustersLength = force < 0 ? NegDirThrusters.Length : PosDirThrusters.Length;
                         if (force < 0) {
                             SetThrusterOverrides(NegDirThrusters, Math.Abs(force));
-                        } else if (force > 0) {
+                        } else {
                             SetThrusterOverrides(PosDirThrusters, Math.Abs(force));
                         }
                     }
                 }
 
                 public bool ControlVx(double currentVelocity, double desiredVelocity) {
-                    var gravityVector = RemoteControl.GetNaturalGravity();
                     return RightController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.X);
                 }
 
                 public bool ControlVy(double currentVelocity, double desiredVelocity) {
-                    var gravityVector = RemoteControl.GetNaturalGravity();
                     return UpController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.Y);
                 }
 
                 public bool ControlVz(double currentVelocity, double desiredVelocity) {
-                    var gravityVector = RemoteControl.GetNaturalGravity();
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
                     return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
                 }
 
-                public void Update() {
+                public void GetLocalGravityVector() {
                     var localGravity = RemoteControl.GetNaturalGravity();
                     LocalGravityVector = Vector3D.TransformNormal(localGravity, MatrixD.Transpose(RemoteControl.WorldMatrix));
                     LocalGravityVector.X = Math.Round(LocalGravityVector.X, 2);
@@ -308,13 +307,13 @@ namespace IngameScript {
 
                 public Vector3D CalculateAccelerationVectors() {
                     Vector3D accelerationVecor;
-                    accelerationVecor.X = CalculateAccelerationVector(RightThrusters, LeftThrusters) / ShipMass + LocalGravityVector.X;
-                    accelerationVecor.Y = CalculateAccelerationVector(UpThrusters, DownThrusters) / ShipMass + LocalGravityVector.Y;
-                    accelerationVecor.Z = CalculateAccelerationVector(ForwardThrusters, ReverseThrusters) / ShipMass - LocalGravityVector.Z;
+                    accelerationVecor.X = CalculateNetThrust(RightThrusters, LeftThrusters) / ShipMass + LocalGravityVector.X;
+                    accelerationVecor.Y = CalculateNetThrust(UpThrusters, DownThrusters) / ShipMass + LocalGravityVector.Y;
+                    accelerationVecor.Z = CalculateNetThrust(ForwardThrusters, ReverseThrusters) / ShipMass - LocalGravityVector.Z;
                     return accelerationVecor;
                 }
 
-                private float CalculateAccelerationVector(IMyThrust[] posDirThrusters, IMyThrust[] negDirThrusters) {
+                private float CalculateNetThrust(IMyThrust[] posDirThrusters, IMyThrust[] negDirThrusters) {
                     float posThrust = 0;
                     float negThrust = 0;
                     foreach (IMyThrust thrust in posDirThrusters) {

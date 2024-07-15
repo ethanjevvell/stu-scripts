@@ -84,6 +84,9 @@ namespace IngameScript {
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
 
+                // Keep dampeners on while LIGMA is still on the launch pad; these will be disabled on launch
+                RemoteControl.DampenersOverride = true;
+
             }
 
             private static void LoadRemoteController(IMyGridTerminalSystem grid) {

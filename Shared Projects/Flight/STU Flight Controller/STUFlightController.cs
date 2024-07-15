@@ -49,9 +49,6 @@ namespace IngameScript {
                 VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
 
-                // Keep dampeners on while on launch pad; these are turned off at launch 
-                RemoteControl.DampenersOverride = true;
-
                 Update();
             }
 
@@ -78,13 +75,13 @@ namespace IngameScript {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)VelocityMagnitude;
                 float force = (float)VelocityController.MaximumReverseAcceleration;
-                float dx = ((-velocity * velocity) * mass) / (2 * force); //kinematic equation for "how far would I travel if I slammed on the brakes right now?"
+                float dx = ((-velocity * velocity) * mass) / (2 * force); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
             }
 
-            public void Update(float dt = (float)(1.0 / 6.0)) {
+            public void Update() {
                 // Updates local gravity vector
-                VelocityController.Update();
+                VelocityController.GetLocalGravityVector();
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
