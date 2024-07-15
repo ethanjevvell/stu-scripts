@@ -1,4 +1,5 @@
 ﻿using Sandbox.Game.EntityComponents;
+using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -15,6 +16,7 @@ using VRage.Game.Components;
 using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
+using VRage.Game.ObjectBuilders;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 
@@ -25,20 +27,21 @@ namespace IngameScript
         
         public List<IMyRefinery> refineries = new List<IMyRefinery>();
         public List<IMyAssembler> assemblers = new List<IMyAssembler>();
+        public List<IMyTerminalBlock> inventories = new List<IMyTerminalBlock>();
 
-        public GridTerminalSystem.GetBlocksOfType(refineries);
-        public GridTerminalSystem.GetBlocksOfType(assemblers);
-        public GridTerminalSystem.GetBlocksOfType(inventories, inventory => inventory.HasInventory);
+        public IMyProjector projector;
 
-        public IMyProjector projector = GridTerminalSystem.GetBlockWithName("Build Dock Projector") as IMyProjector;
+
 
         public Program()
         {
-            
+
+            GridTerminalSystem.GetBlocksOfType(refineries);
+            GridTerminalSystem.GetBlocksOfType(assemblers);
+            GridTerminalSystem.GetBlocksOfType(inventories, inventory => inventory.HasInventory);
+            projector = GridTerminalSystem.GetBlockWithName("Build Dock Projector") as IMyProjector;
             List<IMyTerminalBlock> inventories = new List<IMyTerminalBlock>();
 
-        
-            Dictionary<MyDefinitionBase, int> RemainingBlocksPerType = new Dictionary<MyDefinitionBase, int>();
         }
 
 

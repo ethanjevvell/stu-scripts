@@ -31,7 +31,16 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            
+            /// at first, I'm going to write a framework to interact directly with the FC
+            /// then I'll flesh something out like the LIGMA phases so I can abstract more flight plans
+            /// 
+
+            argument = argument.Trim().ToLower();
+            switch (argument) {
+                case "stop":
+                    ;
+                    break;
+            }
         }
     }
 }
