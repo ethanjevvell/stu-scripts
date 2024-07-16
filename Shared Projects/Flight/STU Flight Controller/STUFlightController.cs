@@ -21,7 +21,6 @@ namespace IngameScript {
 
             public Vector3D CurrentPosition { get; set; }
             public Vector3D PreviousPosition { get; set; }
-            public NTable VelocityNTable { get; set; }
 
             public MatrixD CurrentWorldMatrix { get; set; }
             public MatrixD PreviousWorldMatrix { get; set; }
@@ -43,10 +42,9 @@ namespace IngameScript {
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
-                VelocityNTable = Ntable;
                 TargetVelocity = 0;
 
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters, VelocityNTable);
+                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
 
                 Update();
@@ -74,8 +72,8 @@ namespace IngameScript {
             public float GetForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)VelocityMagnitude;
-                float force = (float)VelocityController.MaximumReverseAcceleration;
-                float dx = ((-velocity * velocity) * mass) / (2 * force); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
+                float maxReverseAcceleration = VelocityController.GetMaximumReverseAcceleration();
+                float dx = ((-velocity * velocity) * mass) / (2 * maxReverseAcceleration); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
             }
 

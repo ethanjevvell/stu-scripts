@@ -1,29 +1,12 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
 namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
-
-            /// <summary>
-            /// A coefficient for the dt between each script run. `N` should be at the very minimum greater than 1.
-            /// Higher values of `N` will result in smoother deceleration, but LIGMA will cover more ground before achieving the desired velocity.
-            /// Lower values of `N` will result in more abrupt deceleration.
-            /// </summary>
-            public class NTable {
-
-                public double Forward = 6;
-                public double Reverse = 6;
-                public double Left = 6;
-                public double Right = 6;
-                public double Up = 6;
-                public double Down = 6;
-
-                public NTable() { }
-
-            }
 
             public partial class STUVelocityController {
 
@@ -46,51 +29,26 @@ namespace IngameScript {
                 IMyThrust[] UpThrusters { get; set; }
                 IMyThrust[] DownThrusters { get; set; }
 
-                double MaximumForwardThrust { get; set; }
-                double MaximumReverseThrust { get; set; }
-                double MaximumLeftThrust { get; set; }
-                double MaximumRightThrust { get; set; }
-                double MaximumUpThrust { get; set; }
-                double MaximumDownThrust { get; set; }
-
-                double MaximumForwardAcceleration { get; set; }
-                public double MaximumReverseAcceleration { get; set; }
-                double MaximumLeftAcceleration { get; set; }
-                double MaximumRightAcceleration { get; set; }
-                double MaximumUpAcceleration { get; set; }
-                double MaximumDownAcceleration { get; set; }
-
-                double ForwardBufferVelocity { get; set; }
-                double ReverseBufferVelocity { get; set; }
-                double LeftBufferVelocity { get; set; }
-                double RightBufferVelocity { get; set; }
-                double UpBufferVelocity { get; set; }
-                double DownBufferVelocity { get; set; }
-
                 VelocityController ForwardController { get; set; }
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
-                private NTable NTable { get; set; }
 
-                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters, NTable Ntable = null) {
+                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters) {
 
                     RemoteControl = remoteControl;
 
                     ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
                     LocalGravityVector = RemoteControl.GetNaturalGravity();
                     dt = timeStep;
-                    NTable = Ntable == null ? new NTable() : Ntable;
 
                     AssignThrustersByOrientation(allThrusters);
-                    CalculateMaximumAccelerations();
-                    CalculateBufferVelocities();
                     CalculateThrustCoefficients();
 
-                    ForwardController = new VelocityController(ForwardBufferVelocity, NTable.Forward, ForwardThrusters, MaximumForwardThrust, ReverseThrusters, MaximumReverseThrust);
-                    RightController = new VelocityController(RightBufferVelocity, NTable.Right, RightThrusters, MaximumRightThrust, LeftThrusters, MaximumLeftThrust);
-                    UpController = new VelocityController(UpBufferVelocity, NTable.Up, UpThrusters, MaximumUpThrust, DownThrusters, MaximumDownThrust);
+                    ForwardController = new VelocityController(ForwardThrusters, ReverseThrusters);
+                    RightController = new VelocityController(RightThrusters, LeftThrusters);
+                    UpController = new VelocityController(UpThrusters, DownThrusters);
 
                 }
 
@@ -107,23 +65,14 @@ namespace IngameScript {
 
                     private bool ALREADY_COUNTERING_GRAVITY = false;
 
-                    private double v_buffer;
-                    private double N;
                     private double decelerationInterval;
 
                     private IMyThrust[] PosDirThrusters;
                     private IMyThrust[] NegDirThrusters;
-                    private double MaxPosThrust;
-                    private double MaxNegThrust;
 
-                    public VelocityController(double buffer, double n, IMyThrust[] posDirThrusters, double maxPosThrust, IMyThrust[] negDirThrusters, double maxNegThrust) {
-                        v_buffer = buffer;
-                        N = n;
-                        decelerationInterval = dt * N;
+                    public VelocityController(IMyThrust[] posDirThrusters, IMyThrust[] negDirThrusters) {
                         PosDirThrusters = posDirThrusters;
-                        MaxPosThrust = maxPosThrust;
                         NegDirThrusters = negDirThrusters;
-                        MaxNegThrust = maxNegThrust;
                     }
 
                     public bool SetVelocity(double currentVelocity, double desiredVelocity, double gravityVectorComponent) {
@@ -178,6 +127,10 @@ namespace IngameScript {
                 public bool ControlVz(double currentVelocity, double desiredVelocity) {
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
                     return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
+                }
+
+                public float GetMaximumReverseAcceleration() {
+                    return ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust) / ShipMass;
                 }
 
                 public void GetLocalGravityVector() {
@@ -249,60 +202,36 @@ namespace IngameScript {
 
                         if (thrusterDirection == Base6Directions.Direction.Backward) {
                             ForwardThrusters[forwardCount] = thruster;
-                            MaximumForwardThrust += ForwardThrusters[forwardCount].MaxThrust;
                             forwardCount++;
                         }
 
                         if (thrusterDirection == Base6Directions.Direction.Forward) {
                             ReverseThrusters[reverseCount] = thruster;
-                            MaximumReverseThrust += ReverseThrusters[reverseCount].MaxThrust;
                             reverseCount++;
                         }
 
                         if (thrusterDirection == Base6Directions.Direction.Right) {
                             LeftThrusters[leftCount] = thruster;
-                            MaximumLeftThrust += LeftThrusters[leftCount].MaxThrust;
                             leftCount++;
                         }
 
                         if (thrusterDirection == Base6Directions.Direction.Left) {
                             RightThrusters[rightCount] = thruster;
-                            MaximumRightThrust += RightThrusters[rightCount].MaxThrust;
                             rightCount++;
                         }
 
                         if (thrusterDirection == Base6Directions.Direction.Down) {
                             UpThrusters[upCount] = thruster;
-                            MaximumUpThrust += UpThrusters[upCount].MaxThrust;
                             upCount++;
                         }
 
                         if (thrusterDirection == Base6Directions.Direction.Up) {
                             DownThrusters[downCount] = thruster;
-                            MaximumDownThrust += DownThrusters[downCount].MaxThrust;
                             downCount++;
                         }
 
                     }
 
-                }
-
-                private void CalculateMaximumAccelerations() {
-                    MaximumForwardAcceleration = MaximumForwardThrust / ShipMass;
-                    MaximumReverseAcceleration = MaximumReverseThrust / ShipMass;
-                    MaximumLeftAcceleration = MaximumLeftThrust / ShipMass;
-                    MaximumRightAcceleration = MaximumRightThrust / ShipMass;
-                    MaximumUpAcceleration = MaximumUpThrust / ShipMass;
-                    MaximumDownAcceleration = MaximumDownThrust / ShipMass;
-                }
-
-                private void CalculateBufferVelocities() {
-                    ForwardBufferVelocity = MaximumForwardAcceleration * dt * NTable.Forward;
-                    ReverseBufferVelocity = MaximumReverseAcceleration * dt * NTable.Reverse;
-                    LeftBufferVelocity = MaximumLeftAcceleration * dt * NTable.Left;
-                    RightBufferVelocity = MaximumRightAcceleration * dt * NTable.Right;
-                    UpBufferVelocity = MaximumUpAcceleration * dt * NTable.Up;
-                    DownBufferVelocity = MaximumDownAcceleration * dt * NTable.Down;
                 }
 
                 public Vector3D CalculateAccelerationVectors() {
