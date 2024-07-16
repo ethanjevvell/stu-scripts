@@ -29,7 +29,6 @@ namespace IngameScript {
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
             /// Be sure to orient the Remote Control block so that its forward direction is the direction you want to be considered the "forward" direction of your ship.
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
-            /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
             public STUFlightController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
                 RemoteControl = remoteControl;
@@ -61,7 +60,7 @@ namespace IngameScript {
 
             public float GetForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
-                float velocity = (float)VelocityMagnitude;
+                float velocity = (float)CurrentVelocity.Z;
                 float maxReverseAcceleration = VelocityController.GetMaximumReverseAcceleration();
                 float dx = ((-velocity * velocity) * mass) / (2 * maxReverseAcceleration); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
@@ -75,12 +74,12 @@ namespace IngameScript {
             }
 
             /// <summary>
-            /// Sets the ship's velocity in the forward direction. Returns true if the ship's velocity is stable.
+            /// Sets the ship's forward velocity. Returns true if the ship's velocity is stable.
             /// </summary>
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVx(double desiredVelocity) {
-                return VelocityController.ControlVx(CurrentVelocity.X, desiredVelocity);
+                return VelocityController.SetVx(CurrentVelocity.X, desiredVelocity);
             }
 
             /// <summary>
@@ -89,7 +88,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVy(double desiredVelocity) {
-                return VelocityController.ControlVy(CurrentVelocity.Y, desiredVelocity);
+                return VelocityController.SetVy(CurrentVelocity.Y, desiredVelocity);
             }
 
             /// <summary>
@@ -98,7 +97,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVz(double desiredVelocity) {
-                return VelocityController.ControlVz(CurrentVelocity.Z, desiredVelocity);
+                return VelocityController.SetVz(CurrentVelocity.Z, desiredVelocity);
             }
 
             /// <summary>
@@ -106,7 +105,7 @@ namespace IngameScript {
             /// </summary>
             /// <param name="roll"></param>
             public void SetVr(double roll) {
-                OrientationController.SetRoll(roll);
+                OrientationController.SetVr(roll);
             }
 
             /// <summary>
@@ -174,9 +173,9 @@ namespace IngameScript {
 
                 // If close enough, stop the roll
                 if (Math.Abs(rollAdjustment) < 0.003) {
-                    OrientationController.SetRoll(0);
+                    OrientationController.SetVr(0);
                 } else {
-                    OrientationController.SetRoll(rollAdjustment);
+                    OrientationController.SetVr(rollAdjustment);
                 }
             }
 

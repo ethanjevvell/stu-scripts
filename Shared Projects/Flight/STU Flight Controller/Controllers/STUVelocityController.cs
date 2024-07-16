@@ -111,15 +111,15 @@ namespace IngameScript {
                     }
                 }
 
-                public bool ControlVx(double currentVelocity, double desiredVelocity) {
+                public bool SetVx(double currentVelocity, double desiredVelocity) {
                     return RightController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.X);
                 }
 
-                public bool ControlVy(double currentVelocity, double desiredVelocity) {
+                public bool SetVy(double currentVelocity, double desiredVelocity) {
                     return UpController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.Y);
                 }
 
-                public bool ControlVz(double currentVelocity, double desiredVelocity) {
+                public bool SetVz(double currentVelocity, double desiredVelocity) {
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
                     return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
                 }
