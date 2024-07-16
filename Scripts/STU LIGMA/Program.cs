@@ -50,7 +50,6 @@ namespace IngameScript {
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
             Display = new MissileReadout(Me, 0, Missile);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
-
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
