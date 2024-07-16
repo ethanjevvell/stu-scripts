@@ -19,6 +19,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Master Log Broadcaster"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Raycaster", "..\..\Shared Projects\Raycasting\STU Raycaster\STU Raycaster.shproj", "{B77AA568-7B92-49E3-B6C3-61FA11E47EC0}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CBT_VARIABLES", "..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,11 +39,14 @@ Global
 		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{23e2d3a8-97cd-4e45-889c-1798f06f4240}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
+		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{b77aa568-7b92-49e3-b6c3-61fa11e47ec0}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13
+		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal
