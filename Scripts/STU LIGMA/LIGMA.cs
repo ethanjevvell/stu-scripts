@@ -80,7 +80,7 @@ namespace IngameScript {
 
                 CreateOkBroadcast("ALL SYSTEMS GO");
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
+                FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
 
@@ -250,8 +250,11 @@ namespace IngameScript {
                 CurrentPower = currentPower;
             }
 
+            public static void UpdateState() {
+                FlightController.UpdateState();
+            }
+
             public static void UpdateMeasurements() {
-                FlightController.Update(Runtime.TimeSinceLastRun.Milliseconds);
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
                 if (CurrentPhase != Phase.Idle) {

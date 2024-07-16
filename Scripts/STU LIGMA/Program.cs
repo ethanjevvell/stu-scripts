@@ -65,6 +65,7 @@ namespace IngameScript {
                 ParseIncomingCommand(command);
             }
 
+            LIGMA.UpdateState();
             LIGMA.UpdateMeasurements();
             LIGMA.SendTelemetry();
 

@@ -11,10 +11,6 @@ namespace IngameScript {
             public partial class STUVelocityController {
 
                 /// <summary>
-                /// Timestep shared by all velocity controllers; it's impossible to have multiple timesteps in a single script.
-                /// </summary>
-                static double dt { get; set; }
-                /// <summary>
                 /// All velocity controllers deal with the same grid mass, so it's shared.
                 /// </summary>
                 public static float ShipMass { get; set; }
@@ -35,13 +31,12 @@ namespace IngameScript {
 
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
 
-                public STUVelocityController(IMyRemoteControl remoteControl, double timeStep, IMyThrust[] allThrusters) {
+                public STUVelocityController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters) {
 
                     RemoteControl = remoteControl;
 
                     ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
                     LocalGravityVector = RemoteControl.GetNaturalGravity();
-                    dt = timeStep;
 
                     AssignThrustersByOrientation(allThrusters);
                     CalculateThrustCoefficients();
@@ -133,7 +128,10 @@ namespace IngameScript {
                     return ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust) / ShipMass;
                 }
 
-                public void GetLocalGravityVector() {
+                /// <summary>
+                /// Updates state variables relevant to the velocity controller. For now, just the local gravity vector.
+                /// </summary>
+                public void UpdateState() {
                     var localGravity = RemoteControl.GetNaturalGravity();
                     LocalGravityVector = Vector3D.TransformNormal(localGravity, MatrixD.Transpose(RemoteControl.WorldMatrix));
                     LocalGravityVector.X = Math.Round(LocalGravityVector.X, 2);

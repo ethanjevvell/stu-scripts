@@ -7,20 +7,14 @@ namespace IngameScript {
 
         public partial class STUFlightController {
 
-            float TimeStep { get; set; }
-
             IMyRemoteControl RemoteControl { get; set; }
 
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
             public Vector3D CurrentVelocity { get; set; }
-            public Vector3D PreviousVelocity { get; set; }
             public Vector3D AccelerationComponents { get; set; }
 
-            public float CurrentStoppingDistance { get; set; }
-
             public Vector3D CurrentPosition { get; set; }
-            public Vector3D PreviousPosition { get; set; }
 
             public MatrixD CurrentWorldMatrix { get; set; }
             public MatrixD PreviousWorldMatrix { get; set; }
@@ -37,21 +31,17 @@ namespace IngameScript {
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// You can also pass in an optional NTable if you'd like to adjust how the ship's velocity is controlled. Higher values will result in more aggressive deceleration.
             /// </summary>
-            public STUFlightController(IMyRemoteControl remoteControl, float timeStep, IMyThrust[] allThrusters, IMyGyro[] allGyros, NTable Ntable = null) {
-                TimeStep = timeStep;
+            public STUFlightController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 AllThrusters = allThrusters;
                 TargetVelocity = 0;
-
-                VelocityController = new STUVelocityController(RemoteControl, TimeStep, AllThrusters);
+                VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
-
-                Update();
+                UpdateState();
             }
 
             public void MeasureCurrentVelocity() {
-                PreviousVelocity = CurrentVelocity;
                 Vector3D worldVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
                 Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(CurrentWorldMatrix));
                 // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
@@ -77,15 +67,11 @@ namespace IngameScript {
                 return dx;
             }
 
-            public void Update() {
-                // Updates local gravity vector
-                VelocityController.GetLocalGravityVector();
+            public void UpdateState() {
+                VelocityController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
-                PreviousWorldMatrix = CurrentWorldMatrix;
-                PreviousPosition = CurrentPosition;
-                CurrentStoppingDistance = GetForwardStoppingDistance();
             }
 
             /// <summary>
@@ -159,7 +145,6 @@ namespace IngameScript {
             /// Rolls the ship to optimize the ship's inertia vector for a given target position. Effectively allows the ship to turn faster, at the cost of more fuel.
             /// </summary>
             /// <param name="targetPos"></param>
-            /// <param name="MOCK_INERTIA_VECTOR"></param>
             public void OptimizeShipRoll(Vector3D targetPos) {
                 Vector3D inertiaHeadingNormal = GetInertiaHeadingNormal(targetPos);
                 if (inertiaHeadingNormal == Vector3D.Zero) { return; }
