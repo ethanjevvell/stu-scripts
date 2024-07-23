@@ -41,6 +41,13 @@ namespace IngameScript
             public static double FuelCapacity { get; set; }
             public static double PowerCapacity { get; set; }
 
+            // enumerate flight modes for the CBT, similar to how the LIGMA has flight plans / phases
+            public enum Mode
+            {
+                AC130,
+                Hover,
+            }
+
             // instantiate the CBT object for the CBT model in game
             public CBT(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
@@ -48,7 +55,7 @@ namespace IngameScript
                 Broadcaster = broadcaster;
                 Runtime = runtime;
 
-                FlightController = new STUFlightController(RemoteControl, TimeStep, Thrusters, Gyros);
+                FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
             }
 
             // instantiate the broadcaster so that display messages can be sent throughout the ship and world
@@ -172,7 +179,27 @@ namespace IngameScript
                 CreateBroadcast("Connector ... loaded", STULogType.OK);
             }
 
+            /// flight modes will be defined here for now until I figure out how to generalize them for future, generic aircraft
 
+            // "Hover" mode
+            public static void Hover()
+            {
+                FlightController.SetVx(0);
+                FlightController.SetVz(0);
+                FlightController.SetVy(0);
+                FlightController.SetVr(0);
+            }
+
+            // "AC130" mode
+            // radius is the radius from the center point that the CBT should travel in its circle
+            // the next three arguments are the coordinates of the center of the proposed circle
+            // speed is the time it should take the CBT to complete one revolution of the circle, in seconds.
+            public static void AC130(double radius, double xCoord, double yCoord, double zCoord, double seconds)
+            {
+                // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
+                FlightController.SetVy(5);
+                // FlightController.SetVw(5); this would be set yaw velocity, which needs to be built as it was not necessary for LIGMA.
+            }
         }
     }
 }
