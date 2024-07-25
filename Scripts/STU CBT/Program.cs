@@ -24,10 +24,14 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
 
+        CBT CBTShip;
+        STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
 
         public Program()
         {
+            // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
+            CBTShip = new CBT(Broadcaster, GridTerminalSystem, Me, Runtime);
             
         }
 

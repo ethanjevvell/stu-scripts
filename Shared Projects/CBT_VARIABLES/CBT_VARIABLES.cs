@@ -25,6 +25,7 @@ namespace IngameScript
         public static class CBT_VARIABLES
         {
             public const string CBT_VEHICLE_NAME = "CBT";
+            public const string CBT_BROADCAST_CHANNEL = "CBT";
 
             public const double PLANETARY_DETECTION_BUFFER = 2000;
 
