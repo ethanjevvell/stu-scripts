@@ -48,12 +48,19 @@ namespace IngameScript
                 Hover,
             }
 
-            // instantiate the CBT object for the CBT model in game
+            // define the CBT object for the CBT model in game
             public CBT(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
+
+                LoadRemoteController(grid);
+                LoadThrusters(grid);
+                LoadGyros(grid);
+                LoadBatteries(grid);
+                LoadFuelTanks(grid);
+                LoadConnector(grid);
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
             }
