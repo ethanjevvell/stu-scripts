@@ -60,8 +60,6 @@ namespace IngameScript {
 
                     private bool ALREADY_COUNTERING_GRAVITY = false;
 
-                    private double decelerationInterval;
-
                     private IMyThrust[] PosDirThrusters;
                     private IMyThrust[] NegDirThrusters;
 
@@ -94,7 +92,7 @@ namespace IngameScript {
 
                     // https://www.desmos.com/calculator/rsdijct8fq
                     public bool Accelerate(double remainingVelocityToGain, double gravityVectorComponent) {
-                        double newAcceleration = (remainingVelocityToGain / decelerationInterval) - gravityVectorComponent;
+                        double newAcceleration = remainingVelocityToGain - gravityVectorComponent;
                         double force = ShipMass * newAcceleration;
                         ApplyThrust(force);
                         return false;
