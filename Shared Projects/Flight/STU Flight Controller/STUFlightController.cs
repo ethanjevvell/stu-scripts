@@ -66,6 +66,10 @@ namespace IngameScript {
                 return dx;
             }
 
+            /// <summary>
+            /// Updates various aspects of the ship's state, including velocity, acceleration, position, and orientation.
+            /// This must be called on every tick to ensure that the ship's state is up-to-date!
+            /// </summary>
             public void UpdateState() {
                 VelocityController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
