@@ -23,7 +23,8 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        
+
+        MyCommandLine CommandLineParser = new MyCommandLine();
 
         public Program()
         {
@@ -37,7 +38,7 @@ namespace IngameScript
             ///
 
             argument = argument.Trim().ToLower();
-            CBT.CreateBroadcast($"attempting to parse command: {argument}", STULogType.OK);
+            // CBT.CreateBroadcast($"attempting to parse command: {argument}", STULogType.OK);
             if (ParseCommand(argument)) {
                 // code to loop through the parsed list of individual direction requests and make calls to the FC
             };
@@ -57,7 +58,7 @@ namespace IngameScript
                     break;
 
                 default:
-                    CBT.CreateBroadcast($"command {argument} passed to the main switch block could not be found in the cases list of special commands", STULogType.WARNING);
+                    // CBT.CreateBroadcast($"command {argument} passed to the main switch block could not be found in the cases list of special commands", STULogType.WARNING);
                     break;
             }
         }
@@ -81,9 +82,85 @@ namespace IngameScript
             // Y = yaw, positive number = yaw right, negative number = yaw left
             // W = yaw left
 
+            
 
+            // loop through the passed string and act on valid direction qualifiers (listed above)
+            if (CommandLineParser.TryParse(arg))
+            {
+                for (int i = 0; i < CommandLineParser.ArgumentCount; i++)
+                {
+                    string command = CommandLineParser.Argument(i);
+                    if (command.Length < 2)
+                    {
+                        // CBT.CreateBroadcast($"Command: {command} is too short to be valid. Skipping...", STULogType.WARNING);
+                        continue;
+                    }
+                    else
+                    {
+                        // CBT.CreateBroadcast($"Command: {command} is fucked up. Aborting...", STULogType.ERROR);
+                    }
 
-            CBT.CreateBroadcast("could not parse command passed to ParseCommand. Checking whether a special command word was used...", STULogType.WARNING);
+                    char direction = command[0];
+                    string value = command.Substring(1);
+
+                    switch (direction)
+                    {
+                        case 'F':
+                            CBT.FlightController.SetVz(float.Parse(value));
+                            break;
+
+                        case 'B':
+                            CBT.FlightController.SetVz(float.Parse(value)*-1);
+                            break;
+
+                        case 'U':
+                            CBT.FlightController.SetVx(float.Parse(value));
+                            break;
+
+                        case 'D':
+                            CBT.FlightController.SetVx(float.Parse(value)*-1);
+                            break;
+
+                        case 'R':
+                            CBT.FlightController.SetVy(float.Parse(value));
+                            break;
+
+                        case 'L':
+                            CBT.FlightController.SetVy(float.Parse(value)*-1);
+                            break;
+
+                        case 'P':
+                            CBT.FlightController.SetVp(float.Parse(value));
+                            break;
+
+                        case 'H':
+                            CBT.FlightController.SetVp(float.Parse(value)*-1);
+                            break;
+
+                        case 'O':
+                            CBT.FlightController.SetVr(float.Parse(value));
+                            break;
+
+                        case 'Q':
+                            CBT.FlightController.SetVr(-float.Parse(value)*-1);
+                            break;
+
+                        case 'Y':
+                            CBT.FlightController.SetVw(float.Parse(value));
+                            break;
+
+                        case 'W':
+                            CBT.FlightController.SetVw(-float.Parse(value)*-1);
+                            break;
+
+                        default:
+                            // CBT.CreateBroadcast($"Command {command} is not a valid direction qualifier. Skipping...", STULogType.WARNING);
+                            break;
+                    }
+                }   
+            }
+
+            // CBT.CreateBroadcast($"Could not parse command string:\n{arg}\nwhich was passed to ParseCommand(). Checking whether a special command word was used...", STULogType.WARNING);
             return false;
         }
     }

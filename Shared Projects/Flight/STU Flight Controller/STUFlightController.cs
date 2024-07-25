@@ -109,6 +109,26 @@ namespace IngameScript {
             }
 
             /// <summary>
+            /// Sets the ship's pitch. Positive values pitch the ship clockwise, negative values pitch the ship counterclockwise. (probably)
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public void SetVp(double pitch)
+            {
+                OrientationController.SetVp(pitch);
+            }
+
+            /// <summary>
+            /// Sets the ship's yaw. Positive values yaw the ship clockwise, negative values yaw the ship counterclockwise. (probably)
+            /// </summary>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public void SetVw(double yaw)
+            {
+                OrientationController.SetVp(yaw);
+            }
+
+            /// <summary>
             /// Sets the ship into a steady forward flight while controlling lateral thrusters. Good for turning while maintaining a forward velocity.
             /// </summary>
             /// <param name="desiredVelocity"></param>

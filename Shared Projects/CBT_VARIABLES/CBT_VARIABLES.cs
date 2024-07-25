@@ -62,6 +62,7 @@ namespace IngameScript
                     Center = new Vector3D(1031060.3327, 131094.9846, 1631139.8156)
                    }
                 }
+            };  
         }
     }
 }

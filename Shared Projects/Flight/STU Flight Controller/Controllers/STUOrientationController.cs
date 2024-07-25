@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using VRage.Audio;
 using VRageMath;
 
 namespace IngameScript {
@@ -54,6 +55,18 @@ namespace IngameScript {
                 public void SetVr(double rollSpeed) {
                     foreach (var gyro in Gyros) {
                         gyro.Roll = (float)rollSpeed;
+                    }
+                }
+
+                public void SetVp(double pitchSpeed) {
+                    foreach (var gyro in Gyros) {
+                        gyro.Pitch = (float)pitchSpeed;
+                    }
+                }
+
+                public void SetVw(double yawSpeed) {
+                    foreach (var gyro in Gyros) {
+                        gyro.Yaw = (float)yawSpeed;
                     }
                 }
 
