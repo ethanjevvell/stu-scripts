@@ -117,8 +117,7 @@ namespace IngameScript {
             /// </summary>
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
-            public void SetVp(double pitch)
-            {
+            public void SetVp(double pitch) {
                 OrientationController.SetVp(pitch);
             }
 
@@ -127,8 +126,7 @@ namespace IngameScript {
             /// </summary>
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
-            public void SetVw(double yaw)
-            {
+            public void SetVw(double yaw) {
                 OrientationController.SetVp(yaw);
             }
 
@@ -240,6 +238,7 @@ namespace IngameScript {
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
+
         }
     }
 }

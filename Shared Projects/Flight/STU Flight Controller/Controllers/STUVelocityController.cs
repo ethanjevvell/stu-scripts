@@ -16,7 +16,11 @@ namespace IngameScript {
                 public static float ShipMass { get; set; }
 
                 IMyRemoteControl RemoteControl { get; set; }
-                Vector3D LocalGravityVector;
+                public Vector3D LocalGravityVector;
+
+                IMyThrust[] HydrogenThrusters { get; set; }
+                IMyThrust[] AtmosphericThrusters { get; set; }
+                IMyThrust[] IonThrusters { get; set; }
 
                 IMyThrust[] ForwardThrusters { get; set; }
                 IMyThrust[] ReverseThrusters { get; set; }
@@ -146,9 +150,14 @@ namespace IngameScript {
                     int upCount = 0;
                     int downCount = 0;
 
+                    int hydrogenCount = 0;
+                    int atmosphericCount = 0;
+                    int ionCount = 0;
+
                     foreach (IMyThrust thruster in allThrusters) {
 
                         Base6Directions.Direction thrusterDirection = RemoteControl.Orientation.TransformDirectionInverse(thruster.Orientation.Forward);
+                        string thrusterType = GetThrusterType(thruster);
 
                         // All thrusters have the opposite direction of what you'd expect
                         // I.e., a thruster facing forward will have a direction of backward, because a backward-facing thruster will push the ship forward
@@ -176,6 +185,18 @@ namespace IngameScript {
                             downCount++;
                         }
 
+                        if (thrusterType == "Hydrogen") {
+                            hydrogenCount++;
+                        }
+
+                        if (thrusterType == "Atmospheric") {
+                            atmosphericCount++;
+                        }
+
+                        if (thrusterType == "Ion") {
+                            ionCount++;
+                        }
+
                     }
 
                     ForwardThrusters = new IMyThrust[forwardCount];
@@ -185,6 +206,10 @@ namespace IngameScript {
                     UpThrusters = new IMyThrust[upCount];
                     DownThrusters = new IMyThrust[downCount];
 
+                    HydrogenThrusters = new IMyThrust[hydrogenCount];
+                    AtmosphericThrusters = new IMyThrust[atmosphericCount];
+                    IonThrusters = new IMyThrust[ionCount];
+
                     forwardCount = 0;
                     reverseCount = 0;
                     leftCount = 0;
@@ -192,9 +217,14 @@ namespace IngameScript {
                     upCount = 0;
                     downCount = 0;
 
+                    hydrogenCount = 0;
+                    atmosphericCount = 0;
+                    ionCount = 0;
+
                     foreach (IMyThrust thruster in allThrusters) {
 
                         Base6Directions.Direction thrusterDirection = RemoteControl.Orientation.TransformDirectionInverse(thruster.Orientation.Forward);
+                        string thrusterType = GetThrusterType(thruster);
 
                         if (thrusterDirection == Base6Directions.Direction.Backward) {
                             ForwardThrusters[forwardCount] = thruster;
@@ -224,6 +254,21 @@ namespace IngameScript {
                         if (thrusterDirection == Base6Directions.Direction.Up) {
                             DownThrusters[downCount] = thruster;
                             downCount++;
+                        }
+
+                        if (thrusterType == "Hydrogen") {
+                            HydrogenThrusters[hydrogenCount] = thruster;
+                            hydrogenCount++;
+                        }
+
+                        if (thrusterType == "Atmospheric") {
+                            AtmosphericThrusters[atmosphericCount] = thruster;
+                            atmosphericCount++;
+                        }
+
+                        if (thrusterType == "Ion") {
+                            IonThrusters[ionCount] = thruster;
+                            ionCount++;
                         }
 
                     }
@@ -275,6 +320,23 @@ namespace IngameScript {
                         }
                         thruster.ThrustOverride = Math.Min(thruster.MaxEffectiveThrust, (float)thrust * (float)thrustCoefficient);
                     }
+                }
+
+                private string GetThrusterType(IMyThrust thruster) {
+                    string thrusterName = thruster.DefinitionDisplayNameText;
+                    if (thrusterName.Contains("Hydrogen")) {
+                        return "Hydrogen";
+                    } else if (thrusterName.Contains("Atmospheric")) {
+                        return "Atmospheric";
+                    } else if (thrusterName.Contains("Ion")) {
+                        return "Ion";
+                    } else {
+                        throw new Exception("Unknown thruster type: " + thruster.DefinitionDisplayNameText);
+                    }
+                }
+
+                public string GetThrusterTypes() {
+                    return $"Hydrogen: {HydrogenThrusters.Length}, Atmospheric: {AtmosphericThrusters.Length}, Ion: {IonThrusters.Length}";
                 }
 
             }
