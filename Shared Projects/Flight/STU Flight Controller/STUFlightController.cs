@@ -235,6 +235,15 @@ namespace IngameScript {
                 return angle - Math.PI / 4;
             }
 
+            public void MaintainAltitude(double targetAltitude = 100) {
+                double Gx = VelocityController.LocalGravityVector.X;
+                double Gy = VelocityController.LocalGravityVector.Y;
+                double Gz = -VelocityController.LocalGravityVector.Z;
+                VelocityController.SetFx(-Gx * STUVelocityController.ShipMass);
+                VelocityController.SetFy(-Gy * STUVelocityController.ShipMass);
+                VelocityController.SetFz(-Gz * STUVelocityController.ShipMass);
+            }
+
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }

@@ -360,7 +360,8 @@ namespace IngameScript {
 
                 public override bool Run() {
 
-                    FlightController.AlignShipToTarget(TargetData.Position);
+                    FirstRunTasks();
+                    FlightController.MaintainAltitude(100);
                     return false;
 
                     // Use this to execute the test suite

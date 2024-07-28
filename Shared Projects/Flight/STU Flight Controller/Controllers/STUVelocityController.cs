@@ -102,7 +102,7 @@ namespace IngameScript {
                         return false;
                     }
 
-                    private void ApplyThrust(double force) {
+                    public void ApplyThrust(double force) {
                         SetThrusterOverrides(PosDirThrusters, 0.0f);
                         SetThrusterOverrides(NegDirThrusters, 0.0f);
                         if (force < 0) {
@@ -110,6 +110,7 @@ namespace IngameScript {
                         } else {
                             SetThrusterOverrides(PosDirThrusters, Math.Abs(force));
                         }
+                        LIGMA.CreateWarningBroadcast($"Force: {force}");
                     }
                 }
 
@@ -124,6 +125,19 @@ namespace IngameScript {
                 public bool SetVz(double currentVelocity, double desiredVelocity) {
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
                     return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
+                }
+
+
+                public void SetFx(double force) {
+                    RightController.ApplyThrust(force);
+                }
+
+                public void SetFy(double force) {
+                    UpController.ApplyThrust(force);
+                }
+
+                public void SetFz(double force) {
+                    ForwardController.ApplyThrust(force);
                 }
 
                 public float GetMaximumReverseAcceleration() {
