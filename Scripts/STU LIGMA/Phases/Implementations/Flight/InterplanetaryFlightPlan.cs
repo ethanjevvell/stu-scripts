@@ -126,8 +126,8 @@ namespace IngameScript {
                 }
 
                 private bool NeedLaunchPlanetOrbit() {
-                    foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
-                        LIGMA_VARIABLES.Planet planet = kvp.Value;
+                    foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                        STUGalacticMap.Planet planet = kvp.Value;
                         BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
                         bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(ApproximateFlightStart, TargetData.Position, boundingSphere);
                         // If the line intersects the launch planet, we need to orbit it
@@ -139,8 +139,8 @@ namespace IngameScript {
                 }
 
                 private bool NeedTargetPlanetOrbit(Vector3D startPos) {
-                    foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
-                        LIGMA_VARIABLES.Planet planet = kvp.Value;
+                    foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                        STUGalacticMap.Planet planet = kvp.Value;
                         BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
                         bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(startPos, TargetData.Position, boundingSphere);
                         if (lineIntersectsPlanet && planet.Name == TargetPlanet.Value.Name) {

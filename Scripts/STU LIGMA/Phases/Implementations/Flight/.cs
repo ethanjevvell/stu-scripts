@@ -18,7 +18,7 @@ namespace IngameScript {
                 }
 
                 private FlightPhase CurrentPhase = FlightPhase.Start;
-                private LIGMA_VARIABLES.Planet? PlanetToOrbit = null;
+                private STUGalacticMap.Planet? PlanetToOrbit = null;
                 private STUOrbitHelper OrbitHelper;
 
                 public IntraplanetaryFlightPlan() {
@@ -26,8 +26,8 @@ namespace IngameScript {
                     Vector3D forwardVector = FlightController.CurrentWorldMatrix.Forward;
                     Vector3D approximateFlightStart = FlightController.CurrentPosition + forwardVector * IntraplanetaryLaunchPlan.ELEVATION_CUTOFF;
 
-                    foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
-                        LIGMA_VARIABLES.Planet planet = kvp.Value;
+                    foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                        STUGalacticMap.Planet planet = kvp.Value;
                         BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
                         bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(approximateFlightStart, TargetData.Position, boundingSphere);
                         if (lineIntersectsPlanet) {

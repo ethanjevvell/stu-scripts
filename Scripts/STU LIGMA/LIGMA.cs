@@ -10,8 +10,8 @@ namespace IngameScript {
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
 
-            public static LIGMA_VARIABLES.Planet? TargetPlanet { get; set; }
-            public static LIGMA_VARIABLES.Planet? LaunchPlanet { get; set; }
+            public static STUGalacticMap.Planet? TargetPlanet { get; set; }
+            public static STUGalacticMap.Planet? LaunchPlanet { get; set; }
 
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;

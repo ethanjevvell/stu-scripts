@@ -23,7 +23,7 @@ namespace IngameScript {
                 }
 
                 private FlightPhase CurrentPhase = FlightPhase.Start;
-                private LIGMA_VARIABLES.Planet? PlanetToOrbit = null;
+                private STUGalacticMap.Planet? PlanetToOrbit = null;
                 private STUOrbitHelper OrbitHelper;
 
                 public SpaceToPlanetFlightPlan() {
@@ -34,8 +34,8 @@ namespace IngameScript {
                     Vector3D approximateFlightStart = FlightController.CurrentPosition + forwardVector * SpaceToPlanetLaunchPlan.LAUNCH_DISTANCE;
                     CreateOkBroadcast($"Approximate flight start: {approximateFlightStart}");
 
-                    foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
-                        LIGMA_VARIABLES.Planet planet = kvp.Value;
+                    foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                        STUGalacticMap.Planet planet = kvp.Value;
                         BoundingSphere boundingSphere = new BoundingSphere(planet.Center, (float)planet.Radius);
                         bool lineIntersectsPlanet = STUOrbitHelper.LineIntersectsSphere(approximateFlightStart, TargetData.Position, boundingSphere);
                         if (lineIntersectsPlanet) {

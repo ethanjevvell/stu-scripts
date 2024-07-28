@@ -25,6 +25,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU LIGMA Variables", "..\.
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Raycaster", "..\..\Shared Projects\Raycasting\STU Raycaster\STU Raycaster.shproj", "{B77AA568-7B92-49E3-B6C3-61FA11E47EC0}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -55,8 +57,10 @@ Global
 		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{77b2a5bf-4200-45f6-9060-b5803a82e9ec}*SharedItemsImports = 4
+		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{83207d78-9012-4ea3-ac3f-5fea6193e59a}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
+		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4

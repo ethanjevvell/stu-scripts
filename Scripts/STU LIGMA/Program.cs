@@ -205,8 +205,8 @@ namespace IngameScript {
 
         public void DeduceFlightMode() {
 
-            LIGMA_VARIABLES.Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
-            LIGMA_VARIABLES.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
+            STUGalacticMap.Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
+            STUGalacticMap.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
 
             if (OnSamePlanet(launchPos, targetPos)) {
                 Mode = MissileMode.Intraplanetary;
@@ -227,27 +227,27 @@ namespace IngameScript {
 
         }
 
-        public bool OnSamePlanet(LIGMA_VARIABLES.Planet? launchPlanet, LIGMA_VARIABLES.Planet? targetPlanet) {
+        public bool OnSamePlanet(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet) {
             if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
                 return false;
             }
             return launchPlanet.Equals(targetPlanet);
         }
 
-        public bool OnDifferentPlanets(LIGMA_VARIABLES.Planet? launchPlanet, LIGMA_VARIABLES.Planet? targetPlanet) {
+        public bool OnDifferentPlanets(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet) {
             if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
                 return false;
             }
             return !launchPlanet.Equals(targetPlanet);
         }
 
-        public bool InSpace(LIGMA_VARIABLES.Planet? planet) {
+        public bool InSpace(STUGalacticMap.Planet? planet) {
             return planet == null;
         }
 
-        public LIGMA_VARIABLES.Planet? GetPlanetOfPoint(Vector3D point) {
-            foreach (var kvp in LIGMA_VARIABLES.CelestialBodies) {
-                LIGMA_VARIABLES.Planet planet = kvp.Value;
+        public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point) {
+            foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                STUGalacticMap.Planet planet = kvp.Value;
                 BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
                 // if the point is inside the planet's detection sphere or intersects it, it is on the planet
                 if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
