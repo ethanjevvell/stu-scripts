@@ -18,6 +18,7 @@ using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
+// using static VRage.Game.VisualScripting.ScriptBuilder.MyVSAssemblyProvider;
 
 namespace IngameScript
 {
@@ -28,9 +29,11 @@ namespace IngameScript
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
 
+
         public Program()
         {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
+            Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             CBTShip = new CBT(Broadcaster, GridTerminalSystem, Me, Runtime);
             
         }
@@ -41,28 +44,56 @@ namespace IngameScript
             /// then I'll flesh something out like the LIGMA phases so I can abstract more flight plans
             ///
 
+            CBT.FlightController.UpdateState();
+
             argument = argument.Trim().ToLower();
             // CBT.CreateBroadcast($"attempting to parse command: {argument}", STULogType.OK);
-            if (ParseCommand(argument)) {
+            if (ParseCommand(argument))
+            {
                 // code to loop through the parsed list of individual direction requests and make calls to the FC
             };
+
+            Func<bool> maneuver = CBT.GenericManeuver;
 
             switch (argument)
             {
                 case "stop":
-                    CBT.Hover();
+                    CBT.CurrentPhase = CBT.Phase.Executing;
+                    maneuver = CBT.Hover;
                     break;
 
                 case "ac130":
+                    CBT.CurrentPhase = CBT.Phase.Executing;
                     // CBT.AC130(100, CBT.GetCurrentXCoord, CBT.GetCurrentYCoord, CBT.GetCurrentZCoord, 60);
                     break;
 
                 case "forward":
-                    CBT.FlightController.SetStableForwardVelocity(5);
+                    CBT.CurrentPhase = CBT.Phase.Executing;
+                    CBT.UserInputForwardVelocity = 5;
+                    maneuver = CBT.GenericManeuver;
                     break;
 
                 default:
                     // CBT.CreateBroadcast($"command {argument} passed to the main switch block could not be found in the cases list of special commands", STULogType.WARNING);
+                    CBT.CurrentPhase = CBT.Phase.Executing;
+                    break;
+            }
+
+            switch (CBT.CurrentPhase)
+            {
+                case CBT.Phase.Idle:
+                    // CBT.CreateBroadcast("CBT is idle", STULogType.OK);
+                    Echo("CBT is idle");
+                    break;
+                case CBT.Phase.Executing:
+                    Echo($"CBT is executing a flight plan {Runtime.TimeSinceLastRun.Milliseconds}");
+                    // CBT.CreateBroadcast("CBT is executing a flight plan", STULogType.OK);
+                    var finishedExecuting = CBT.Hover();
+                    if (finishedExecuting)
+                    {
+                        Echo("CBT has finished executing the flight plan");
+                        CBT.CurrentPhase = CBT.Phase.Idle;
+                    }
                     break;
             }
         }
@@ -86,8 +117,6 @@ namespace IngameScript
             // Y = yaw, positive number = yaw right, negative number = yaw left
             // W = yaw left
 
-            
-
             // loop through the passed string and act on valid direction qualifiers (listed above)
             if (CommandLineParser.TryParse(arg))
             {
@@ -105,56 +134,57 @@ namespace IngameScript
                     }
 
                     char direction = command[0];
-                    string value = command.Substring(1);
-
+                    float result;
+                    float value = float.TryParse(command.Substring(1), out result) ? result : 0;
+                    
                     switch (direction)
                     {
                         case 'F':
-                            CBT.FlightController.SetVz(float.Parse(value));
+                            CBT.UserInputForwardVelocity = value;
                             break;
 
                         case 'B':
-                            CBT.FlightController.SetVz(float.Parse(value)*-1);
+                            CBT.UserInputForwardVelocity = (value) * -1;
                             break;
 
                         case 'U':
-                            CBT.FlightController.SetVx(float.Parse(value));
+                            CBT.UserInputUpVelocity = value;
                             break;
 
                         case 'D':
-                            CBT.FlightController.SetVx(float.Parse(value)*-1);
+                            CBT.UserInputUpVelocity = (value) * -1;
                             break;
 
                         case 'R':
-                            CBT.FlightController.SetVy(float.Parse(value));
+                            CBT.UserInputRightVelocity = value;
                             break;
 
                         case 'L':
-                            CBT.FlightController.SetVy(float.Parse(value)*-1);
+                            CBT.UserInputRightVelocity = (value) * -1;
                             break;
 
                         case 'P':
-                            CBT.FlightController.SetVp(float.Parse(value));
+                            CBT.UserInputPitchVelocity = value;
                             break;
 
                         case 'H':
-                            CBT.FlightController.SetVp(float.Parse(value)*-1);
+                            CBT.UserInputPitchVelocity = (value) * -1;
                             break;
 
                         case 'O':
-                            CBT.FlightController.SetVr(float.Parse(value));
+                            CBT.UserInputRollVelocity = value;
                             break;
 
                         case 'Q':
-                            CBT.FlightController.SetVr(-float.Parse(value)*-1);
+                            CBT.UserInputRollVelocity = (value) * -1;
                             break;
 
                         case 'Y':
-                            CBT.FlightController.SetVw(float.Parse(value));
+                            CBT.UserInputYawVelocity = value;
                             break;
 
                         case 'W':
-                            CBT.FlightController.SetVw(-float.Parse(value)*-1);
+                            CBT.UserInputYawVelocity = (value) * -1;
                             break;
 
                         default:
@@ -166,6 +196,13 @@ namespace IngameScript
 
             // CBT.CreateBroadcast($"Could not parse command string:\n{arg}\nwhich was passed to ParseCommand(). Checking whether a special command word was used...", STULogType.WARNING);
             return false;
+        }
+
+        public void ExecuteManeuver(string maneuver)
+        {
+            // code to execute a maneuver based on a string passed to the method
+            // e.g. "hover" should call the Hover() method in the CBT class
+           
         }
     }
 }

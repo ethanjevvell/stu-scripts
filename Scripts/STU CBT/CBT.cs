@@ -17,6 +17,14 @@ namespace IngameScript
 
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;
+            public static Phase CurrentPhase = Phase.Idle;
+
+            public static float UserInputForwardVelocity = 0;
+            public static float UserInputRightVelocity = 0;
+            public static float UserInputUpVelocity = 0;
+            public static float UserInputRollVelocity = 0;
+            public static float UserInputPitchVelocity = 0;
+            public static float UserInputYawVelocity = 0;
 
             /// <summary>
             ///  pull in blocks from the grid
@@ -46,6 +54,14 @@ namespace IngameScript
             {
                 AC130,
                 Hover,
+            }
+
+            // define generic phases for executing flight plans, essentially a state machine
+            public enum Phase
+            {
+                Idle,
+                Executing,
+                Complete,
             }
 
             // define the CBT object for the CBT model in game
@@ -186,15 +202,36 @@ namespace IngameScript
                 CreateBroadcast("Connector ... loaded", STULogType.OK);
             }
 
+            /// <summary>
             /// flight modes will be defined here for now until I figure out how to generalize them for future, generic aircraft
+            /// All flight modes must behave as a state machine, returning a boolean value to indicate whether the mode is complete or not.
+            /// </summary>
+            /// <returns></returns>
 
             // "Hover" mode
-            public static void Hover()
+            public static bool Hover()
             {
-                FlightController.SetVx(0);
-                FlightController.SetVz(0);
-                FlightController.SetVy(0);
+                bool VxStable = FlightController.SetVx(0);
+                bool VzStable = FlightController.SetVz(0);
+                bool VyStable = FlightController.SetVy(0);
+                //bool VrStable = FlightController.SetVr(0); not sure whether Vr should return a boolean since controlling the gyros might not work the same as thrusters
+                //bool VpStable = FlightController.SetVp(0);
+                //bool VwStable = FlightController.SetVw(0);
                 FlightController.SetVr(0);
+                FlightController.SetVp(0);
+                FlightController.SetVw(0);
+                return VxStable && VzStable && VyStable;
+            }
+
+            public static bool GenericManeuver()
+            {
+                bool VxStable = FlightController.SetVx(UserInputRightVelocity);
+                bool VzStable = FlightController.SetVz(UserInputUpVelocity);
+                bool VyStable = FlightController.SetVy(UserInputForwardVelocity);
+                FlightController.SetVr(UserInputRollVelocity);
+                FlightController.SetVp(UserInputPitchVelocity);
+                FlightController.SetVw(UserInputYawVelocity);
+                return VxStable && VzStable && VyStable;
             }
 
             // "AC130" mode
@@ -206,7 +243,7 @@ namespace IngameScript
                 // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
                 FlightController.SetVy(5);
                 // FlightController.SetVw(5); this would be set yaw velocity, which needs to be built as it was not necessary for LIGMA.
-            }
+            } 
         }
     }
 }
