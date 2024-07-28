@@ -211,6 +211,13 @@ namespace IngameScript
             // "Hover" mode
             public static bool Hover()
             {
+                UserInputForwardVelocity = 0;
+                UserInputRightVelocity = 0;
+                UserInputUpVelocity = 0;
+                UserInputRollVelocity = 0;
+                UserInputPitchVelocity = 0;
+                UserInputYawVelocity = 0;
+                
                 bool VxStable = FlightController.SetVx(0);
                 bool VzStable = FlightController.SetVz(0);
                 bool VyStable = FlightController.SetVy(0);
