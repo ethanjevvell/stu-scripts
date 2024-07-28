@@ -208,8 +208,6 @@ namespace IngameScript {
                     // Check- Am I moving? Be gracious about exception throwing even though negative
                     // speed is undefined.
                     if (ChaserSpeed <= 0) {
-                        // LIGMA.CreateErrorBroadcast("ChaserSpeed must be greater than zero.");
-                        /// RPH COMMENTED OUT THE LINE ABOVE ON 7/24/2024 BECAUSE IT THREW AN ERROR IN COMPILING "STU CBT.SLN"
                         return; // No interception
                     }
 
