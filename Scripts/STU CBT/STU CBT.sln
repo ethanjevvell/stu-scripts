@@ -45,8 +45,12 @@ Global
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{b77aa568-7b92-49e3-b6c3-61fa11e47ec0}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13
 		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

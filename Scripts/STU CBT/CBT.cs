@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,8 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public static Vector3D LaunchCoordinates { get; set; }
+
+            public static string LastErrorMessage = "";
 
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;
@@ -27,13 +29,17 @@ namespace IngameScript
             public static float UserInputYawVelocity = 0;
 
             /// <summary>
-            ///  pull in blocks from the grid
+            ///  prepare the program by declaring all the different blocks we are going to use
             /// </summary>
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
             public static IMyRemoteControl RemoteControl { get; set; }
+            public static IMyTerminalBlock FlightSeat { get; set; }
+            public static STUDisplay FlightSeatFarLeftScreen { get; set; }
+            public static STUDisplay FlightSeatLeftScreen { get; set; }
+            public static STUDisplay PBMainScreen { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
             public static IMyThrust[] Thrusters { get; set; }
@@ -60,8 +66,7 @@ namespace IngameScript
             public enum Phase
             {
                 Idle,
-                Executing,
-                Complete,
+                Executing
             }
 
             // define the CBT object for the CBT model in game
@@ -72,11 +77,18 @@ namespace IngameScript
                 Runtime = runtime;
 
                 LoadRemoteController(grid);
+                LoadFlightSeat(grid);
                 LoadThrusters(grid);
                 LoadGyros(grid);
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
+
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
+
+                FlightSeatFarLeftScreen = new STUDisplay(FlightSeat, 3);
+                FlightSeatLeftScreen = new STUDisplay(FlightSeat, 1);
+                PBMainScreen = new STUDisplay(Me, 0);
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
             }
@@ -105,6 +117,13 @@ namespace IngameScript
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
                 CreateBroadcast("Remote control ... loaded", STULogType.OK);
+            }
+
+            // load main flight seat BY NAME. Name must be "CBT Flight Seat"
+            private static void LoadFlightSeat(IMyGridTerminalSystem grid)
+            {
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyControlPanel;
+                CreateBroadcast("Main flight seat ... loaded", STULogType.OK);
             }
 
             // load ALL thrusters of ALL types
@@ -221,9 +240,6 @@ namespace IngameScript
                 bool VxStable = FlightController.SetVx(0);
                 bool VzStable = FlightController.SetVz(0);
                 bool VyStable = FlightController.SetVy(0);
-                //bool VrStable = FlightController.SetVr(0); not sure whether Vr should return a boolean since controlling the gyros might not work the same as thrusters
-                //bool VpStable = FlightController.SetVp(0);
-                //bool VwStable = FlightController.SetVw(0);
                 FlightController.SetVr(0);
                 FlightController.SetVp(0);
                 FlightController.SetVw(0);
@@ -232,9 +248,9 @@ namespace IngameScript
 
             public static bool GenericManeuver()
             {
+                bool VzStable = FlightController.SetVz(UserInputForwardVelocity); 
                 bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-                bool VzStable = FlightController.SetVz(UserInputUpVelocity);
-                bool VyStable = FlightController.SetVy(UserInputForwardVelocity);
+                bool VyStable = FlightController.SetVy(UserInputUpVelocity);
                 FlightController.SetVr(UserInputRollVelocity);
                 FlightController.SetVp(UserInputPitchVelocity);
                 FlightController.SetVw(UserInputYawVelocity);
