@@ -41,6 +41,7 @@ namespace IngameScript
             // I moved the logic that controlls the update frequency to the end Main() method so that the ABORT keyword can be passed, the program will do what it needs to do,
             // then it will set the update frequency to none.
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
         }
 
         public void Main(string argument, UpdateType updateSource)
@@ -110,9 +111,11 @@ namespace IngameScript
             }
 
             // bit of code to change the update frequency based on whether the autopilot is enabled (FlightController.HasControl is set to true)
+            // also update the autopilot status screens
             if (CBT.FlightController.HasControl)
             {
                 Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
             }
             else
             {
@@ -120,6 +123,12 @@ namespace IngameScript
                 // stop updating the script automatically
                 Runtime.UpdateFrequency = UpdateFrequency.None;
             }
+
+            // update the log screens
+            CBT.UpdateLogScreens();
+
+            // hacky checks below
+            Echo($"{CBT.LogChannel.Count}");
         }
 
         public bool ParseCommand(string arg)

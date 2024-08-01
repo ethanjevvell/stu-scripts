@@ -31,6 +31,13 @@ namespace IngameScript
             /// <summary>
             ///  prepare the program by declaring all the different blocks we are going to use
             /// </summary>
+            // this may be potentially confusing, but "GridTerminalSystem" as it is commonly used in Program.cs to get blocks from the grid
+            // does not exist in this namespace. Therefore, we are creating a new GridTerminalSystem object here to use in this class.
+            // I could have named it whatever, e.g. "CBTGrid" but I don't want to have too many different names for the same thing.
+            // just understand that when I reference the GridTerminalSystem property of the CBT class, I am referring to this object and NOT the one in Program.cs
+            public static IMyGridTerminalSystem CBTGrid;
+            public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
+            public static List<LogLCDs> LogChannel = new List<LogLCDs>();
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -75,6 +82,7 @@ namespace IngameScript
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
+                CBTGrid = grid;
 
                 LoadRemoteController(grid);
                 LoadFlightSeat(grid);
@@ -83,6 +91,7 @@ namespace IngameScript
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
+                AddSubscribers(grid);
 
                 FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
 
@@ -91,9 +100,14 @@ namespace IngameScript
                 PBMainScreen = new STUDisplay(Me, 0);
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
+
+                AddToLogQueue("CBT initialized", STULogType.OK);
+                AddToLogQueue("CBT initialized for sure", STULogType.OK);
+                UpdateLogScreens();
             }
 
-            // instantiate the broadcaster so that display messages can be sent throughout the ship and world
+            // define the broadcaster method so that display messages can be sent throughout the world
+            // (currently not implemented, just keeping this code here for future use)
             public static void CreateBroadcast(string message, string type)
             {
                 Broadcaster.Log(new STULog
@@ -103,7 +117,54 @@ namespace IngameScript
                     Type = type,
                 });
             }
-            
+
+            // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
+            // actually pulling those messages from the queue and displaying them is done in UpdateLogScreens()
+            public static void AddToLogQueue(string message, string type)
+            {
+                foreach (var screen in LogChannel)
+                {
+                    screen.FlightLogs.Enqueue(new STULog
+                    {
+                        Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
+                        Message = message,
+                        Type = type,
+                    });
+                }
+            }
+
+            // define the method to pull logs from the queue and display them on the screens
+            // this will be called on every loop in Program.cs
+            public static void UpdateLogScreens()
+            {
+                foreach (var screen in LogChannel)
+                {
+                    screen.UpdateDisplay();
+                }
+            }
+
+            // generate a list of the display blocks on the CBT that are subscribed to the flight log
+            // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
+            private static void AddSubscribers(IMyGridTerminalSystem grid)
+            {
+                grid.GetBlocks(AllTerminalBlocks);
+                foreach (var block in AllTerminalBlocks)
+                {
+                    string CustomDataRawText = block.CustomData;
+                    string[] CustomDataLines = CustomDataRawText.Split('\n');
+                    foreach (var line in CustomDataLines)
+                    {
+                        if (line.Contains("CBT_LOG"))
+                        {
+                            string[] kvp = line.Split(':');
+                            LogLCDs screen = new LogLCDs(block, int.Parse(kvp[1]), "Monospace", 0.5f);
+                            screen.DefaultLineHeight += 5;
+                            LogChannel.Add(screen);
+                        }
+                    }
+                }
+            }
+
             // initialize hardware on the CBT
 
             // load remote controller
@@ -266,7 +327,7 @@ namespace IngameScript
                 // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
                 FlightController.SetVy(5);
                 // FlightController.SetVw(5); this would be set yaw velocity, which needs to be built as it was not necessary for LIGMA.
-            } 
+            }
         }
     }
 }

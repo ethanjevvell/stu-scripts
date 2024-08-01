@@ -20,7 +20,7 @@ namespace IngameScript {
             public MySpriteCollection BackgroundSprite { get; set; }
             public float ScreenWidth { get; private set; }
             public float ScreenHeight { get; private set; }
-            public float DefaultLineHeight { get; private set; }
+            public float DefaultLineHeight { get; set; }
             public float CharacterWidth { get; private set; }
             public int Lines { get; set; }
 
