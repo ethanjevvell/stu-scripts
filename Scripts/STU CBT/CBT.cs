@@ -102,7 +102,6 @@ namespace IngameScript
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
-                AddToLogQueue("CBT initialized for sure", STULogType.OK);
                 UpdateLogScreens();
             }
 
@@ -174,17 +173,17 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyRemoteControl>(remoteControlBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (remoteControlBlocks.Count == 0)
                 {
-                    CreateBroadcast("No remote control blocks found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No remote control blocks found on the CBT", STULogType.ERROR);
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
-                CreateBroadcast("Remote control ... loaded", STULogType.OK);
+                AddToLogQueue("Remote control ... loaded", STULogType.OK);
             }
 
             // load main flight seat BY NAME. Name must be "CBT Flight Seat"
             private static void LoadFlightSeat(IMyGridTerminalSystem grid)
             {
                 FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyControlPanel;
-                CreateBroadcast("Main flight seat ... loaded", STULogType.OK);
+                AddToLogQueue("Main flight seat ... loaded", STULogType.OK);
             }
 
             // load ALL thrusters of ALL types
@@ -196,7 +195,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0)
                 {
-                    CreateBroadcast("No thrusters found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No thrusters found on the CBT", STULogType.ERROR);
                 }
 
                 IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
@@ -207,7 +206,7 @@ namespace IngameScript
                 }
 
                 Thrusters = allThrusters;
-                CreateBroadcast("Thrusters ... loaded", STULogType.OK);
+                AddToLogQueue("Thrusters ... loaded", STULogType.OK);
             }
 
             // load gyroscopes
@@ -217,7 +216,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gyroBlocks.Count == 0)
                 {
-                    CreateBroadcast("No gyros found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No gyros found on the CBT", STULogType.ERROR);
                 }
 
                 IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
@@ -227,7 +226,7 @@ namespace IngameScript
                 }
 
                 Gyros = gyros;
-                CreateBroadcast("Gyros ... loaded", STULogType.OK);
+                AddToLogQueue("Gyros ... loaded", STULogType.OK);
             }
 
             // load batteries
@@ -237,7 +236,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyBatteryBlock>(batteryBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (batteryBlocks.Count == 0)
                 {
-                    CreateBroadcast("No batteries found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No batteries found on the CBT", STULogType.ERROR);
                 }
 
                 IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
@@ -247,7 +246,7 @@ namespace IngameScript
                 }
 
                 Batteries = batteries;
-                CreateBroadcast("Batteries ... loaded", STULogType.OK);
+                AddToLogQueue("Batteries ... loaded", STULogType.OK);
             }
 
             // load fuel tanks
@@ -257,7 +256,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gasTankBlocks.Count == 0)
                 {
-                    CreateBroadcast("No fuel tanks found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No fuel tanks found on the CBT", STULogType.ERROR);
                 }
 
                 IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
@@ -267,7 +266,7 @@ namespace IngameScript
                 }
 
                 GasTanks = fuelTanks;
-                CreateBroadcast("Fuel tanks ... loaded", STULogType.OK);
+                AddToLogQueue("Fuel tanks ... loaded", STULogType.OK);
             }
 
             // load connector (stinger)
@@ -276,10 +275,10 @@ namespace IngameScript
                 var connector = grid.GetBlockWithName("CBT Rear Connector");
                 if (connector == null)
                 {
-                    CreateBroadcast("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
+                    AddToLogQueue("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
                 }
                 Connector = connector as IMyShipConnector;
-                CreateBroadcast("Connector ... loaded", STULogType.OK);
+                AddToLogQueue("Connector ... loaded", STULogType.OK);
             }
 
             /// <summary>
