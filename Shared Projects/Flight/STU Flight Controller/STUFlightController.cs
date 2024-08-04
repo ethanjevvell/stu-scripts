@@ -242,6 +242,22 @@ namespace IngameScript {
                 VelocityController.SetFx(-Gx * STUVelocityController.ShipMass);
                 VelocityController.SetFy(-Gy * STUVelocityController.ShipMass);
                 VelocityController.SetFz(-Gz * STUVelocityController.ShipMass);
+
+                double elevation;
+                if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out elevation)) {
+                    double elevationError = Math.Abs(elevation - targetAltitude);
+
+                    // if we're close enough, don't do anything
+                    if (elevationError < 10) {
+                        return;
+                    }
+
+                    if (elevation > targetAltitude) {
+                        // we need to lose altitude
+                    } else {
+                        // we need to gain altitude
+                    }
+                }
             }
 
             public void UpdateShipMass() {

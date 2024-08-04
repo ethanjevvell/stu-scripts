@@ -29,12 +29,13 @@ namespace IngameScript
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
 
-
         public Program()
         {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             CBTShip = new CBT(Broadcaster, GridTerminalSystem, Me, Runtime);
+
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             
         }
 
@@ -46,7 +47,7 @@ namespace IngameScript
 
             CBT.FlightController.UpdateState();
 
-            argument = argument.Trim().ToLower();
+            argument = argument.Trim().ToUpper();
             // CBT.CreateBroadcast($"attempting to parse command: {argument}", STULogType.OK);
             if (ParseCommand(argument))
             {
@@ -57,38 +58,41 @@ namespace IngameScript
 
             switch (argument)
             {
-                case "stop":
+                case "STOP":
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     maneuver = CBT.Hover;
                     break;
 
-                case "ac130":
+                case "AC130":
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     // CBT.AC130(100, CBT.GetCurrentXCoord, CBT.GetCurrentYCoord, CBT.GetCurrentZCoord, 60);
                     break;
 
-                case "forward":
+                case "FORWARD":
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     CBT.UserInputForwardVelocity = 5;
+                    CBT.UserInputRightVelocity = 0;
+                    CBT.UserInputUpVelocity = 0;
                     maneuver = CBT.GenericManeuver;
                     break;
 
                 default:
                     // CBT.CreateBroadcast($"command {argument} passed to the main switch block could not be found in the cases list of special commands", STULogType.WARNING);
                     CBT.CurrentPhase = CBT.Phase.Executing;
+                    maneuver = CBT.GenericManeuver;
                     break;
             }
 
             switch (CBT.CurrentPhase)
             {
                 case CBT.Phase.Idle:
-                    // CBT.CreateBroadcast("CBT is idle", STULogType.OK);
+                    CBT.CreateBroadcast("CBT is idle", STULogType.OK);
                     Echo("CBT is idle");
                     break;
                 case CBT.Phase.Executing:
                     Echo($"CBT is executing a flight plan {Runtime.TimeSinceLastRun.Milliseconds}");
-                    // CBT.CreateBroadcast("CBT is executing a flight plan", STULogType.OK);
-                    var finishedExecuting = CBT.Hover();
+                    CBT.CreateBroadcast("CBT is executing a flight plan", STULogType.OK);
+                    var finishedExecuting = maneuver();
                     if (finishedExecuting)
                     {
                         Echo("CBT has finished executing the flight plan");
@@ -118,6 +122,7 @@ namespace IngameScript
             // W = yaw left
 
             // loop through the passed string and act on valid direction qualifiers (listed above)
+            Echo($"Attempting to parse command: {arg}");
             if (CommandLineParser.TryParse(arg))
             {
                 for (int i = 0; i < CommandLineParser.ArgumentCount; i++)
@@ -191,18 +196,14 @@ namespace IngameScript
                             // CBT.CreateBroadcast($"Command {command} is not a valid direction qualifier. Skipping...", STULogType.WARNING);
                             break;
                     }
-                }   
+                } 
+                return true;
             }
-
-            // CBT.CreateBroadcast($"Could not parse command string:\n{arg}\nwhich was passed to ParseCommand(). Checking whether a special command word was used...", STULogType.WARNING);
-            return false;
-        }
-
-        public void ExecuteManeuver(string maneuver)
-        {
-            // code to execute a maneuver based on a string passed to the method
-            // e.g. "hover" should call the Hover() method in the CBT class
-           
+            else
+            {
+                CBT.CreateBroadcast($"Could not parse command string:\n{arg}\nwhich was passed to ParseCommand(). Checking whether a special command word was used...", STULogType.WARNING);
+                return false;
+            }   
         }
     }
 }
