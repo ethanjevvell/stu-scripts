@@ -16,9 +16,11 @@ namespace IngameScript
         {
             public Queue<STULog> FlightLogs;
             public int MaxCharsPerLine;
+            public static Action<string> echo;
 
-            public LogLCDs(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize)
+            public LogLCDs(Action<string> Echo, IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize)
             {
+                echo = Echo;
                 FlightLogs = new Queue<STULog>();
                 StringBuilder builder = new StringBuilder();
                 MaxCharsPerLine = (int)Math.Floor(Viewport.Width / Surface.MeasureStringInPixels(builder.Append("A"), "Monospace", fontSize).X);
@@ -40,9 +42,10 @@ namespace IngameScript
                 foreach (var log in FlightLogs)
                 {
                     string formattedLog = FormatLog(log);
-                    for (int i = 0; i * MaxCharsPerLine > Viewport.Width; i += MaxCharsPerLine)
+                    for (int i = 0; i * MaxCharsPerLine < formattedLog.Length; i++)
                     {
-                        string output = formattedLog.Substring(i, Math.Min(MaxCharsPerLine,formattedLog.Length - i));
+                        echo($"i = {i}");
+                        string output = formattedLog.Substring(i * MaxCharsPerLine, Math.Min(MaxCharsPerLine,formattedLog.Length - i));
                         DrawLineOfText(output, STULog.GetColor(log.Type));
                     }
                 }

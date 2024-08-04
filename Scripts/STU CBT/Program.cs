@@ -33,7 +33,7 @@ namespace IngameScript
         {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            CBTShip = new CBT(Broadcaster, GridTerminalSystem, Me, Runtime);
+            CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
@@ -128,7 +128,6 @@ namespace IngameScript
             CBT.UpdateLogScreens();
 
             // hacky checks below
-            Echo($"{CBT.LogChannel.Count}");
             Echo($"{CBT.LogChannel[0].MaxCharsPerLine}");
             Echo($"{CBT.LogChannel[1].MaxCharsPerLine}");
         }

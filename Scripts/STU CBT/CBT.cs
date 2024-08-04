@@ -17,6 +17,8 @@ namespace IngameScript
 
             public static string LastErrorMessage = "";
 
+            public static Action<string> echo;
+
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;
             public static Phase CurrentPhase = Phase.Idle;
@@ -77,12 +79,13 @@ namespace IngameScript
             }
 
             // define the CBT object for the CBT model in game
-            public CBT(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
+            public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
                 CBTGrid = grid;
+                echo = Echo;
 
                 LoadRemoteController(grid);
                 LoadFlightSeat(grid);
@@ -101,7 +104,7 @@ namespace IngameScript
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
 
-                AddToLogQueue("CBT initialized", STULogType.OK);
+                AddToLogQueue("CBT initializedabcdefghijklmnopqrstuvwxyz", STULogType.OK);
                 UpdateLogScreens();
             }
 
@@ -159,7 +162,7 @@ namespace IngameScript
                         if (line.Contains("CBT_LOG"))
                         {
                             string[] kvp = line.Split(':');
-                            LogLCDs screen = new LogLCDs(block, int.Parse(kvp[1]), "Monospace", 0.5f);
+                            LogLCDs screen = new LogLCDs(echo, block, int.Parse(kvp[1]), "Monospace", 0.5f);
                             screen.DefaultLineHeight += 5;
                             LogChannel.Add(screen);
                         }
