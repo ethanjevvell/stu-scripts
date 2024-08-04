@@ -340,6 +340,7 @@ namespace IngameScript {
             }
 
             public void WriteWrappableLogs(Queue<STULog> logs, Func<STULog, string> logFormatter = null) {
+                Cursor = TopLeft;
                 if (logFormatter == null) {
                     logFormatter = DefaultLogFormatter;
                 }

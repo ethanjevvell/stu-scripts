@@ -11,7 +11,7 @@ namespace IngameScript {
         LogLCD logLCD;
 
         public Program() {
-            logLCD = new LogLCD(GridTerminalSystem.GetBlockWithName("LOG_LCD"), 1, "Monospace", 0.5f);
+            logLCD = new LogLCD(Me, 0, "Monospace", 0.5f);
         }
 
         public void Main() {
