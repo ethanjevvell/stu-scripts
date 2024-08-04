@@ -130,7 +130,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public void SetVw(double yaw) {
-                OrientationController.SetVp(yaw);
+                OrientationController.SetVw(yaw);
             }
 
             /// <summary>

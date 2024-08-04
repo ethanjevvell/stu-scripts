@@ -10,7 +10,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public partial class LogLCDs
+        public partial class CBTLogLCD
         {
             public class FlightSeat
             {
