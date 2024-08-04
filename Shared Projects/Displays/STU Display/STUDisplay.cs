@@ -339,21 +339,25 @@ namespace IngameScript {
                 NeedToCenterSprite = true;
             }
 
-            public void WriteWrappableLogs(Queue<STULog> logs) {
+            public void WriteWrappableLogs(Queue<STULog> logs, Func<STULog, string> logFormatter = null) {
+                if (logFormatter == null) {
+                    logFormatter = DefaultLogFormatter;
+                }
                 // Count the number of lines the logs will take up
                 int logLines = 0;
                 foreach (STULog log in logs) {
-                    logLines += GetLinesConsumed(log.Message);
+                    logLines += GetLinesConsumed(logFormatter(log));
                 }
 
+                // Dequeue logs until the number of lines is less than the number of lines the display can show
                 while (logLines > Lines) {
                     STULog log = logs.Dequeue();
-                    logLines -= GetLinesConsumed(log.Message);
+                    logLines -= GetLinesConsumed(logFormatter(log));
                 }
 
                 foreach (STULog log in logs) {
                     StringBuilder logSegment = new StringBuilder();
-                    foreach (char c in log.Message) {
+                    foreach (char c in logFormatter(log)) {
                         logSegment.Append(c);
                         if (GetTextWidth(logSegment) >= ScreenWidth) {
                             // Remove the last character from the segment
@@ -361,8 +365,10 @@ namespace IngameScript {
                             CreateLogSprite(log, logSegment);
                             GoToNextLine();
                             logSegment.Clear();
-                            // Be sure to re-add the character that was removed
-                            logSegment.Append(c);
+                            // Be sure to re-add the character that was removed, excepting whitespace
+                            if (c != ' ') {
+                                logSegment.Append(c);
+                            }
                         }
                     }
 
@@ -370,6 +376,10 @@ namespace IngameScript {
                     CreateLogSprite(log, logSegment);
                     GoToNextLine();
                 }
+            }
+
+            private string DefaultLogFormatter(STULog log) {
+                return $" > {log.Sender}: {log.Message}";
             }
 
             private void CreateLogSprite(STULog log, StringBuilder logSegment) {
