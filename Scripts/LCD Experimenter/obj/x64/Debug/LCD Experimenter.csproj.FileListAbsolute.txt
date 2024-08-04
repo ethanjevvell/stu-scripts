@@ -1,7 +1,3 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\MDK\MDK.options.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\MDK\MDK.paths.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\LCD Experimenter.exe.config
@@ -20,6 +16,10 @@ C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\SixLabors.Core.d
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\System.Numerics.Vectors.dll
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\SixLabors.ImageSharp.xml
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.csproj.CopyComplete
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.exe
 C:\Users\Admin\Desktop\stu-scripts\Scripts\LCD Experimenter\obj\x64\Debug\LCD Experimenter.pdb

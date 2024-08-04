@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
@@ -64,8 +65,8 @@ namespace IngameScript {
             /// Line height is calculated by measuring the height of a single character in font you provided in the constructor.
             /// Monospace is the default font.
             /// </summary>
-            public void GoToNextLine() {
-                Cursor = new Vector2(TopLeft.X, Cursor.Y + DefaultLineHeight);
+            public void GoToNextLine(float verticalPadding = 0) {
+                Cursor = new Vector2(TopLeft.X, Cursor.Y + DefaultLineHeight + verticalPadding);
             }
 
             public void StartFrame() {
@@ -338,19 +339,63 @@ namespace IngameScript {
                 NeedToCenterSprite = true;
             }
 
-            public void WriteText(string text) {
-                StartFrame();
+            public void WriteWrappableLogs(Queue<STULog> logs) {
+                // Count the number of lines the logs will take up
+                int logLines = 0;
+                foreach (STULog log in logs) {
+                    logLines += GetLinesConsumed(log.Message);
+                }
+
+                while (logLines > Lines) {
+                    STULog log = logs.Dequeue();
+                    logLines -= GetLinesConsumed(log.Message);
+                }
+
+                foreach (STULog log in logs) {
+                    StringBuilder logSegment = new StringBuilder();
+                    foreach (char c in log.Message) {
+                        logSegment.Append(c);
+                        if (GetTextWidth(logSegment) >= ScreenWidth) {
+                            // Remove the last character from the segment
+                            logSegment.Remove(logSegment.Length - 1, 1);
+                            CreateLogSprite(log, logSegment);
+                            GoToNextLine();
+                            logSegment.Clear();
+                            // Be sure to re-add the character that was removed
+                            logSegment.Append(c);
+                        }
+                    }
+
+                    // Add the last segment
+                    CreateLogSprite(log, logSegment);
+                    GoToNextLine();
+                }
+            }
+
+            private void CreateLogSprite(STULog log, StringBuilder logSegment) {
                 CurrentFrame.Add(new MySprite() {
                     Type = SpriteType.TEXT,
-                    Data = text,
+                    Data = logSegment.ToString(),
                     Position = Cursor,
                     RotationOrScale = Surface.FontSize,
-                    Color = Color.White,
-                    Alignment = TextAlignment.LEFT,
-                    FontId = Surface.Font
+                    Color = STULog.GetColor(log.Type),
+                    FontId = Surface.Font,
                 });
-                EndAndPaintFrame();
+
             }
+
+            private float GetTextWidth(StringBuilder segment) {
+                return Surface.MeasureStringInPixels(segment, Surface.Font, Surface.FontSize).X;
+            }
+
+            private float GetTextWidth(string s) {
+                return GetTextWidth(new StringBuilder().Append(s));
+            }
+
+            private int GetLinesConsumed(string text) {
+                return (int)Math.Ceiling(GetTextWidth(text) / ScreenWidth);
+            }
+
         }
     }
 }
