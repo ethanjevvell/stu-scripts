@@ -142,6 +142,9 @@ namespace IngameScript
                 }
             }
 
+            /// initialize hardware on the CBT
+
+
             // generate a list of the display blocks on the CBT that are subscribed to the flight log
             // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
             private static void AddSubscribers(IMyGridTerminalSystem grid)
@@ -163,8 +166,6 @@ namespace IngameScript
                     }
                 }
             }
-
-            // initialize hardware on the CBT
 
             // load remote controller
             private static void LoadRemoteController(IMyGridTerminalSystem grid)

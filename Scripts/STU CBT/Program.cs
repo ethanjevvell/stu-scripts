@@ -129,6 +129,8 @@ namespace IngameScript
 
             // hacky checks below
             Echo($"{CBT.LogChannel.Count}");
+            Echo($"{CBT.LogChannel[0].MaxCharsPerLine}");
+            Echo($"{CBT.LogChannel[1].MaxCharsPerLine}");
         }
 
         public bool ParseCommand(string arg)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Sandbox.ModAPI.Ingame;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
@@ -14,10 +15,13 @@ namespace IngameScript
         public partial class LogLCDs : STUDisplay
         {
             public Queue<STULog> FlightLogs;
+            public int MaxCharsPerLine;
 
             public LogLCDs(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize)
             {
                 FlightLogs = new Queue<STULog>();
+                StringBuilder builder = new StringBuilder();
+                MaxCharsPerLine = (int)Math.Floor(Viewport.Width / Surface.MeasureStringInPixels(builder.Append("A"), "Monospace", fontSize).X);
             }
 
             public string FormatLog(STULog log) => $" > {log.Sender}: {log.Message} ";
@@ -32,22 +36,27 @@ namespace IngameScript
                     FlightLogs.Dequeue();
                 }
 
-                // Draw the logs
+                // Draw the logs, splitting them into multiple lines if necessary
                 foreach (var log in FlightLogs)
                 {
-                    DrawLineOfText(log);
+                    string formattedLog = FormatLog(log);
+                    for (int i = 0; i * MaxCharsPerLine > Viewport.Width; i += MaxCharsPerLine)
+                    {
+                        string output = formattedLog.Substring(i, Math.Min(MaxCharsPerLine,formattedLog.Length - i));
+                        DrawLineOfText(output, STULog.GetColor(log.Type));
+                    }
                 }
             }
 
-            public void DrawLineOfText(STULog log)
+            public void DrawLineOfText(string text, Color color)
             {
                 var sprite = new MySprite()
                 {
                     Type = SpriteType.TEXT,
-                    Data = FormatLog(log),
+                    Data = text,
                     Position = Cursor,
                     RotationOrScale = Surface.FontSize * 0.75f,
-                    Color = STULog.GetColor(log.Type),
+                    Color = color,
                     FontId = Surface.Font,
                 };
 
