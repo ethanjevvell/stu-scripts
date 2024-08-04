@@ -17,7 +17,9 @@ namespace IngameScript {
         public void Main() {
             Echo("Writing...");
             logLCD.StartFrame();
-            logLCD.WriteWrappableLogs(logLCD.Logs);
+            logLCD.WriteWrappableLogs(logLCD.Logs, (log) => {
+                return $"{log.Sender}:: {log.Message}";
+            });
             logLCD.EndAndPaintFrame();
             Echo("Wrote.");
         }
