@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,10 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public static Vector3D LaunchCoordinates { get; set; }
+
+            public static string LastErrorMessage = "";
+
+            public static Action<string> echo;
 
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;
@@ -27,13 +31,24 @@ namespace IngameScript
             public static float UserInputYawVelocity = 0;
 
             /// <summary>
-            ///  pull in blocks from the grid
+            ///  prepare the program by declaring all the different blocks we are going to use
             /// </summary>
+            // this may be potentially confusing, but "GridTerminalSystem" as it is commonly used in Program.cs to get blocks from the grid
+            // does not exist in this namespace. Therefore, we are creating a new GridTerminalSystem object here to use in this class.
+            // I could have named it whatever, e.g. "CBTGrid" but I don't want to have too many different names for the same thing.
+            // just understand that when I reference the GridTerminalSystem property of the CBT class, I am referring to this object and NOT the one in Program.cs
+            public static IMyGridTerminalSystem CBTGrid;
+            public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
+            public static List<LogLCDs> LogChannel = new List<LogLCDs>();
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
             public static IMyRemoteControl RemoteControl { get; set; }
+            public static IMyTerminalBlock FlightSeat { get; set; }
+            public static STUDisplay FlightSeatFarLeftScreen { get; set; }
+            public static STUDisplay FlightSeatLeftScreen { get; set; }
+            public static STUDisplay PBMainScreen { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
             public static IMyThrust[] Thrusters { get; set; }
@@ -60,28 +75,41 @@ namespace IngameScript
             public enum Phase
             {
                 Idle,
-                Executing,
-                Complete,
+                Executing
             }
 
             // define the CBT object for the CBT model in game
-            public CBT(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
+            public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
                 Broadcaster = broadcaster;
                 Runtime = runtime;
+                CBTGrid = grid;
+                echo = Echo;
 
                 LoadRemoteController(grid);
+                LoadFlightSeat(grid);
                 LoadThrusters(grid);
                 LoadGyros(grid);
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
+                AddSubscribers(grid);
+
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
+
+                FlightSeatFarLeftScreen = new STUDisplay(FlightSeat, 3);
+                FlightSeatLeftScreen = new STUDisplay(FlightSeat, 1);
+                PBMainScreen = new STUDisplay(Me, 0);
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
+
+                AddToLogQueue("CBT initializedabcdefghijklmnopqrstuvwxyz", STULogType.OK);
+                UpdateLogScreens();
             }
 
-            // instantiate the broadcaster so that display messages can be sent throughout the ship and world
+            // define the broadcaster method so that display messages can be sent throughout the world
+            // (currently not implemented, just keeping this code here for future use)
             public static void CreateBroadcast(string message, string type)
             {
                 Broadcaster.Log(new STULog
@@ -91,8 +119,56 @@ namespace IngameScript
                     Type = type,
                 });
             }
-            
-            // initialize hardware on the CBT
+
+            // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
+            // actually pulling those messages from the queue and displaying them is done in UpdateLogScreens()
+            public static void AddToLogQueue(string message, string type)
+            {
+                foreach (var screen in LogChannel)
+                {
+                    screen.FlightLogs.Enqueue(new STULog
+                    {
+                        Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
+                        Message = message,
+                        Type = type,
+                    });
+                }
+            }
+
+            // define the method to pull logs from the queue and display them on the screens
+            // this will be called on every loop in Program.cs
+            public static void UpdateLogScreens()
+            {
+                foreach (var screen in LogChannel)
+                {
+                    screen.UpdateDisplay();
+                }
+            }
+
+            /// initialize hardware on the CBT
+
+
+            // generate a list of the display blocks on the CBT that are subscribed to the flight log
+            // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
+            private static void AddSubscribers(IMyGridTerminalSystem grid)
+            {
+                grid.GetBlocks(AllTerminalBlocks);
+                foreach (var block in AllTerminalBlocks)
+                {
+                    string CustomDataRawText = block.CustomData;
+                    string[] CustomDataLines = CustomDataRawText.Split('\n');
+                    foreach (var line in CustomDataLines)
+                    {
+                        if (line.Contains("CBT_LOG"))
+                        {
+                            string[] kvp = line.Split(':');
+                            LogLCDs screen = new LogLCDs(echo, block, int.Parse(kvp[1]), "Monospace", 0.5f);
+                            screen.DefaultLineHeight += 5;
+                            LogChannel.Add(screen);
+                        }
+                    }
+                }
+            }
 
             // load remote controller
             private static void LoadRemoteController(IMyGridTerminalSystem grid)
@@ -101,10 +177,17 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyRemoteControl>(remoteControlBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (remoteControlBlocks.Count == 0)
                 {
-                    CreateBroadcast("No remote control blocks found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No remote control blocks found on the CBT", STULogType.ERROR);
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
-                CreateBroadcast("Remote control ... loaded", STULogType.OK);
+                AddToLogQueue("Remote control ... loaded", STULogType.OK);
+            }
+
+            // load main flight seat BY NAME. Name must be "CBT Flight Seat"
+            private static void LoadFlightSeat(IMyGridTerminalSystem grid)
+            {
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyControlPanel;
+                AddToLogQueue("Main flight seat ... loaded", STULogType.OK);
             }
 
             // load ALL thrusters of ALL types
@@ -116,7 +199,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (thrusterBlocks.Count == 0)
                 {
-                    CreateBroadcast("No thrusters found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No thrusters found on the CBT", STULogType.ERROR);
                 }
 
                 IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
@@ -127,7 +210,7 @@ namespace IngameScript
                 }
 
                 Thrusters = allThrusters;
-                CreateBroadcast("Thrusters ... loaded", STULogType.OK);
+                AddToLogQueue("Thrusters ... loaded", STULogType.OK);
             }
 
             // load gyroscopes
@@ -137,7 +220,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gyroBlocks.Count == 0)
                 {
-                    CreateBroadcast("No gyros found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No gyros found on the CBT", STULogType.ERROR);
                 }
 
                 IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
@@ -147,7 +230,7 @@ namespace IngameScript
                 }
 
                 Gyros = gyros;
-                CreateBroadcast("Gyros ... loaded", STULogType.OK);
+                AddToLogQueue("Gyros ... loaded", STULogType.OK);
             }
 
             // load batteries
@@ -157,7 +240,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyBatteryBlock>(batteryBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (batteryBlocks.Count == 0)
                 {
-                    CreateBroadcast("No batteries found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No batteries found on the CBT", STULogType.ERROR);
                 }
 
                 IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
@@ -167,7 +250,7 @@ namespace IngameScript
                 }
 
                 Batteries = batteries;
-                CreateBroadcast("Batteries ... loaded", STULogType.OK);
+                AddToLogQueue("Batteries ... loaded", STULogType.OK);
             }
 
             // load fuel tanks
@@ -177,7 +260,7 @@ namespace IngameScript
                 grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gasTankBlocks.Count == 0)
                 {
-                    CreateBroadcast("No fuel tanks found on the CBT", STULogType.ERROR);
+                    AddToLogQueue("No fuel tanks found on the CBT", STULogType.ERROR);
                 }
 
                 IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
@@ -187,7 +270,7 @@ namespace IngameScript
                 }
 
                 GasTanks = fuelTanks;
-                CreateBroadcast("Fuel tanks ... loaded", STULogType.OK);
+                AddToLogQueue("Fuel tanks ... loaded", STULogType.OK);
             }
 
             // load connector (stinger)
@@ -196,10 +279,10 @@ namespace IngameScript
                 var connector = grid.GetBlockWithName("CBT Rear Connector");
                 if (connector == null)
                 {
-                    CreateBroadcast("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
+                    AddToLogQueue("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
                 }
                 Connector = connector as IMyShipConnector;
-                CreateBroadcast("Connector ... loaded", STULogType.OK);
+                AddToLogQueue("Connector ... loaded", STULogType.OK);
             }
 
             /// <summary>
@@ -221,9 +304,6 @@ namespace IngameScript
                 bool VxStable = FlightController.SetVx(0);
                 bool VzStable = FlightController.SetVz(0);
                 bool VyStable = FlightController.SetVy(0);
-                //bool VrStable = FlightController.SetVr(0); not sure whether Vr should return a boolean since controlling the gyros might not work the same as thrusters
-                //bool VpStable = FlightController.SetVp(0);
-                //bool VwStable = FlightController.SetVw(0);
                 FlightController.SetVr(0);
                 FlightController.SetVp(0);
                 FlightController.SetVw(0);
@@ -232,9 +312,9 @@ namespace IngameScript
 
             public static bool GenericManeuver()
             {
+                bool VzStable = FlightController.SetVz(UserInputForwardVelocity); 
                 bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-                bool VzStable = FlightController.SetVz(UserInputUpVelocity);
-                bool VyStable = FlightController.SetVy(UserInputForwardVelocity);
+                bool VyStable = FlightController.SetVy(UserInputUpVelocity);
                 FlightController.SetVr(UserInputRollVelocity);
                 FlightController.SetVp(UserInputPitchVelocity);
                 FlightController.SetVw(UserInputYawVelocity);
@@ -250,7 +330,7 @@ namespace IngameScript
                 // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
                 FlightController.SetVy(5);
                 // FlightController.SetVw(5); this would be set yaw velocity, which needs to be built as it was not necessary for LIGMA.
-            } 
+            }
         }
     }
 }

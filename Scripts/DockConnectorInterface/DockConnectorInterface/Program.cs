@@ -37,36 +37,6 @@ namespace IngameScript
         /// it will prompt the ATC of the error and immediately return.
         /// </summary>
 
-        // v0.0.1 testing passing strings into the program, testing movement logic of
-        // pistons and hinges, etc.
-
-        // v0.0.2 lots of code written, testing user input parser
-
-        // v0.1.0 program will accept an argument for an angle for the test hinge with validation
-        // testing parsing of full argument, "[SHIP],[DOCK]"
-
-        // v0.1.1 messing around with the regex
-
-        // v0.1.2 regex solidified
-
-        // v0.1.3 introduced DockActuatorGroup class
-
-        // v0.1.4 checking to see how the dock distance lights actually get sorted
-        // for future for-loop logic
-
-        // v0.1.5 checking some wonky for-loop stuff
-
-        // v0.1.6 holy shit if this works
-
-        // v0.1.7 adding verbosity
-
-        // v0.1.8 fucky-wucky for-loop works! figuring out DockActuatorGroups sorting methods
-
-        // v0.1.8.1 Clang might be involved here, but everything *should* be working, so far
-
-        // v1.0 it works! Added functionality to reset all docks by passing "reset,all"
-
-
         public STUMasterLogBroadcaster LogBroadcaster;
         public string LogSender = "ATC Computer";
         
@@ -86,8 +56,8 @@ namespace IngameScript
         public Dictionary<string, List<string>> dockDistanceLightsDict_Names = new Dictionary<string, List<string>>();
         public Dictionary<int, List<IMyInteriorLight>> dockDistanceLightsDict_Objects = new Dictionary<int, List<IMyInteriorLight>>();
 
-        public int numRunways = 16;
-        public int numDistanceLightsOfARunway = 17;
+        public const int numRunways = 16;
+        public const int numDistanceLightsOfARunway = 17;
         public List<string> dockNames = new List<string>();
 
         public struct DockActuatorParameters
@@ -218,11 +188,6 @@ namespace IngameScript
             }
 
             DockActuatorGroups.OrderBy(o => o.Name);
-            
-        }
-
-        public void Save()
-        {
             
         }
 

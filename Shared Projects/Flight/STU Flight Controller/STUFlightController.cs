@@ -9,6 +9,8 @@ namespace IngameScript {
 
             IMyRemoteControl RemoteControl { get; set; }
 
+            public bool HasControl { get; set; }
+
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
             public Vector3D CurrentVelocity { get; set; }
@@ -37,6 +39,7 @@ namespace IngameScript {
                 TargetVelocity = 0;
                 VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
+                HasControl = true;
                 UpdateState();
             }
 
@@ -264,6 +267,28 @@ namespace IngameScript {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
 
+            public void RelinquishControl()
+            {
+                foreach (var gyro in AllGyroscopes)
+                {
+                    gyro.GyroOverride = false;
+                }
+                foreach (var thruster in AllThrusters)
+                {
+                    thruster.ThrustOverride = 0;
+                }
+                HasControl = false;
+
+            }
+
+            public void GiveControl()
+            {
+                foreach (var gyro in AllGyroscopes)
+                {
+                    gyro.GyroOverride = true;
+                }
+                HasControl = true;
+            }
         }
     }
 }
