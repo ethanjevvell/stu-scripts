@@ -26,6 +26,7 @@ namespace IngameScript {
 
             STUVelocityController VelocityController { get; set; }
             STUOrientationController OrientationController { get; set; }
+            STUAltitudeController AltitudeController { get; set; }
 
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
@@ -39,6 +40,7 @@ namespace IngameScript {
                 TargetVelocity = 0;
                 VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
+                AltitudeController = new STUAltitudeController(VelocityController, RemoteControl);
                 HasControl = true;
                 UpdateState();
             }
@@ -75,6 +77,7 @@ namespace IngameScript {
             /// </summary>
             public void UpdateState() {
                 VelocityController.UpdateState();
+                AltitudeController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
@@ -239,52 +242,27 @@ namespace IngameScript {
             }
 
             public void MaintainAltitude(double targetAltitude = 100) {
-                double Gx = VelocityController.LocalGravityVector.X;
-                double Gy = VelocityController.LocalGravityVector.Y;
-                double Gz = -VelocityController.LocalGravityVector.Z;
-                VelocityController.SetFx(-Gx * STUVelocityController.ShipMass);
-                VelocityController.SetFy(-Gy * STUVelocityController.ShipMass);
-                VelocityController.SetFz(-Gz * STUVelocityController.ShipMass);
-
-                double elevation;
-                if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out elevation)) {
-                    double elevationError = Math.Abs(elevation - targetAltitude);
-
-                    // if we're close enough, don't do anything
-                    if (elevationError < 10) {
-                        return;
-                    }
-
-                    if (elevation > targetAltitude) {
-                        // we need to lose altitude
-                    } else {
-                        // we need to gain altitude
-                    }
-                }
+                AltitudeController.TargetAltitude = targetAltitude;
+                AltitudeController.Run();
             }
 
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
 
-            public void RelinquishControl()
-            {
-                foreach (var gyro in AllGyroscopes)
-                {
+            public void RelinquishControl() {
+                foreach (var gyro in AllGyroscopes) {
                     gyro.GyroOverride = false;
                 }
-                foreach (var thruster in AllThrusters)
-                {
+                foreach (var thruster in AllThrusters) {
                     thruster.ThrustOverride = 0;
                 }
                 HasControl = false;
 
             }
 
-            public void GiveControl()
-            {
-                foreach (var gyro in AllGyroscopes)
-                {
+            public void GiveControl() {
+                foreach (var gyro in AllGyroscopes) {
                     gyro.GyroOverride = true;
                 }
                 HasControl = true;

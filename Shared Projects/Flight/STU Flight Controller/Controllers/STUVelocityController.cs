@@ -110,7 +110,6 @@ namespace IngameScript {
                         } else {
                             SetThrusterOverrides(PosDirThrusters, Math.Abs(force));
                         }
-                        LIGMA.CreateWarningBroadcast($"Force: {force}");
                     }
                 }
 

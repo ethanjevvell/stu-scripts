@@ -137,12 +137,7 @@ namespace IngameScript {
 
         public void PublishData() {
             mainPublisher.UpdateDisplays(IncomingLog);
-            try {
-                logPublisher.UpdateDisplays(IncomingLog);
-            } catch {
-                Echo($"Error updating displays");
-                throw new System.Exception("Exception");
-            }
+            logPublisher.UpdateDisplays(IncomingLog);
         }
 
         //private const string telemetryRecordHeader = "Timestamp, Phase, V_x, V_y, V_z, A_x, A_y, A_z, Fuel, Power\n";

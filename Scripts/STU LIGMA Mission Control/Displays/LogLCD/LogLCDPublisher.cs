@@ -34,10 +34,10 @@ namespace IngameScript {
                         // Anything else is just telemetry
                         if (!string.IsNullOrEmpty(newLog.Message)) {
                             display.FlightLogs.Enqueue(newLog);
-                            // display.StartFrame();
-                            // display.WriteWrappableLogs(display.FlightLogs);
-                            // display.EndAndPaintFrame();
-                            display.UpdateDisplay();
+                            display.StartFrame();
+                            display.WriteWrappableLogs(display.FlightLogs);
+                            display.EndAndPaintFrame();
+                            //display.UpdateDisplay();
                         }
                     }
                 } catch (System.Exception e) {

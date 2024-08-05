@@ -361,7 +361,7 @@ namespace IngameScript {
                 public override bool Run() {
 
                     FirstRunTasks();
-                    FlightController.MaintainAltitude(100);
+                    FlightController.MaintainAltitude(250);
                     return false;
 
                     // Use this to execute the test suite
