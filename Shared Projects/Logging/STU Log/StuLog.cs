@@ -82,6 +82,8 @@ namespace IngameScript {
                         return Color.Red;
                     case STULogType.WARNING:
                         return Color.Yellow;
+                    case STULogType.INFO:
+                        return Color.White;
                     default:
                         return Color.White;
                 }

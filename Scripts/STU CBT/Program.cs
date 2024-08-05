@@ -51,13 +51,13 @@ namespace IngameScript
             Func<bool> maneuver = CBT.GenericManeuver;
 
             argument = argument.Trim().ToUpper();
-            CBT.CreateBroadcast($"attempting to parse command: {argument}", STULogType.OK);
             
             // check whether the passed argument is a special command word, if it's not, default to parsing what the user passed
             switch (argument)
                 {
                 case "STOP":
                     CBT.CurrentPhase = CBT.Phase.Executing;
+                    CBT.AddToLogQueue("STOPPING...");
                     maneuver = CBT.Hover;
                     break;
 
@@ -79,16 +79,20 @@ namespace IngameScript
 
                 case "ABORT":
                     CBT.CurrentPhase = CBT.Phase.Idle;
-                    Echo("attempting to relinquish control of the ship");
+                    CBT.AddToLogQueue("Attempting to relinquish control of the ship", STULogType.INFO);
                     CBT.FlightController.RelinquishControl();
 
                     break;
 
+                case "": // if the user passes nothing, do nothing
+                    break;
+
                 default:
-                    CBT.CreateBroadcast($"command {argument} passed to the main switch block could not be found in the list of special commands.", STULogType.WARNING);
+                    CBT.AddToLogQueue($"User input: {argument}"); 
                     if (ParseCommand(argument))
                     {
                         CBT.CurrentPhase = CBT.Phase.Executing;
+                        CBT.AddToLogQueue($"executing GenericManeuver");
                         maneuver = CBT.GenericManeuver;
                     }
                     break;
@@ -100,11 +104,10 @@ namespace IngameScript
                 case CBT.Phase.Idle:
                     break;
                 case CBT.Phase.Executing:
-                    CBT.CreateBroadcast("CBT is executing a command", STULogType.OK);
                     var finishedExecuting = maneuver();
                     if (finishedExecuting)
                     {
-                        CBT.CreateBroadcast("CBT has finished executing the command", STULogType.OK);
+                        // CBT.CreateBroadcast("CBT has finished executing the command", STULogType.OK);
                         CBT.CurrentPhase = CBT.Phase.Idle;
                     }
                     break;
@@ -127,9 +130,8 @@ namespace IngameScript
             // update the log screens
             CBT.UpdateLogScreens();
 
-            // hacky checks below
-            Echo($"{CBT.LogChannel[0].MaxCharsPerLine}");
-            Echo($"{CBT.LogChannel[1].MaxCharsPerLine}");
+            // hacky checks below (Echo to the PB terminal)
+            
         }
 
         public bool ParseCommand(string arg)
@@ -152,7 +154,6 @@ namespace IngameScript
             /// W = yaw left
 
             // loop through the passed string and act on valid direction qualifiers (listed above)
-            Echo($"Attempting to parse command: {arg}");
             if (CommandLineParser.TryParse(arg))
             {
                 for (int i = 0; i < CommandLineParser.ArgumentCount; i++)
@@ -160,12 +161,8 @@ namespace IngameScript
                     string command = CommandLineParser.Argument(i);
                     if (command.Length < 2)
                     {
-                        CBT.CreateBroadcast($"Command: {command} is too short to be valid. Skipping...", STULogType.WARNING);
+                        CBT.AddToLogQueue($"Command: {command} is too short to be valid. Skipping...", STULogType.WARNING);
                         continue;
-                    }
-                    else
-                    {
-                        CBT.CreateBroadcast($"Command: {command} is fucked up. Aborting...", STULogType.ERROR);
                     }
 
                     char direction = command[0];
@@ -199,60 +196,54 @@ namespace IngameScript
                             break;
 
                         case 'P':
-                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f; }
                             else {
-                                CBT.CreateBroadcast($"Pitch value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputPitchVelocity = 0;
+                                CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'H':
-                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f * -1; }
                             else
                             {
-                                CBT.CreateBroadcast($"Pitch value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputPitchVelocity = 0;
+                                CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'O':
-                            if (-1 <= value && value <= 1) { CBT.UserInputRollVelocity = value; }
+                            if (-1 <= value && value <= Math.PI) { CBT.UserInputRollVelocity = value * 3.14f; }
                             else
                             {
-                                CBT.CreateBroadcast($"Roll value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputRollVelocity = 0;
+                                CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'Q':
-                            if (-1 <= value && value <= 1) { CBT.UserInputRollVelocity = value; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputRollVelocity = value * 3.14f * -1; }
                             else
                             {
-                                CBT.CreateBroadcast($"Roll value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputRollVelocity = 0;
+                                CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'Y':
-                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f; }
                             else
                             {
-                                CBT.CreateBroadcast($"Yaw value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputYawVelocity = 0;
+                                CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'W':
-                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f * -1; }
                             else
                             {
-                                CBT.CreateBroadcast($"Yaw value {value} is out of range. Must be between -1 and 1. Setting to 0...", STULogType.WARNING);
-                                CBT.UserInputYawVelocity = 0;
+                                CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         default:
-                            CBT.CreateBroadcast($"Command {command} is not a valid direction qualifier. Skipping...", STULogType.WARNING);
+                            CBT.AddToLogQueue($"Command {command} is not a valid direction qualifier. Skipping...", STULogType.WARNING);
                             break;
                     }
                 } 
@@ -260,9 +251,9 @@ namespace IngameScript
             }
             else
             {
-                CBT.CreateBroadcast($"Could not parse command string:\n{arg}\nwhich was passed to ParseCommand(). Checking whether a special command word was used...", STULogType.WARNING);
+                CBT.AddToLogQueue($"Could not parse command string \"{arg}\" which was passed to ParseCommand()", STULogType.WARNING);
                 return false;
-            }   
+            }
         }
     }
 }

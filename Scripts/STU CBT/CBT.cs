@@ -39,7 +39,7 @@ namespace IngameScript
             // just understand that when I reference the GridTerminalSystem property of the CBT class, I am referring to this object and NOT the one in Program.cs
             public static IMyGridTerminalSystem CBTGrid;
             public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
-            public static List<LogLCDs> LogChannel = new List<LogLCDs>();
+            public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -98,13 +98,9 @@ namespace IngameScript
 
                 FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
 
-                FlightSeatFarLeftScreen = new STUDisplay(FlightSeat, 3);
-                FlightSeatLeftScreen = new STUDisplay(FlightSeat, 1);
-                PBMainScreen = new STUDisplay(Me, 0);
-
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
 
-                AddToLogQueue("CBT initializedabcdefghijklmnopqrstuvwxyz", STULogType.OK);
+                AddToLogQueue("CBT initialized", STULogType.OK);
                 UpdateLogScreens();
             }
 
@@ -122,7 +118,7 @@ namespace IngameScript
 
             // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
             // actually pulling those messages from the queue and displaying them is done in UpdateLogScreens()
-            public static void AddToLogQueue(string message, string type)
+            public static void AddToLogQueue(string message, string type = STULogType.INFO)
             {
                 foreach (var screen in LogChannel)
                 {
@@ -141,7 +137,9 @@ namespace IngameScript
             {
                 foreach (var screen in LogChannel)
                 {
-                    screen.UpdateDisplay();
+                    screen.StartFrame();
+                    screen.WriteWrappableLogs(screen.FlightLogs);
+                    screen.EndAndPaintFrame();
                 }
             }
 
@@ -162,8 +160,23 @@ namespace IngameScript
                         if (line.Contains("CBT_LOG"))
                         {
                             string[] kvp = line.Split(':');
-                            LogLCDs screen = new LogLCDs(echo, block, int.Parse(kvp[1]), "Monospace", 0.5f);
-                            screen.DefaultLineHeight += 5;
+                            // adjust font size based on what screen we're trying to initalize
+                            float fontSize;
+                            try
+                            {
+                                fontSize = float.Parse(kvp[2]);
+                                if (fontSize < 0.1f || fontSize > 10f)
+                                {
+                                    throw new Exception("Invalid font size");
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                echo(e.Message);
+                                fontSize = 0.5f;
+                            }
+                            echo($"{fontSize}");
+                            CBTLogLCD screen = new CBTLogLCD(echo, block, int.Parse(kvp[1]), "Monospace", fontSize);
                             LogChannel.Add(screen);
                         }
                     }
@@ -315,7 +328,7 @@ namespace IngameScript
                 bool VzStable = FlightController.SetVz(UserInputForwardVelocity); 
                 bool VxStable = FlightController.SetVx(UserInputRightVelocity);
                 bool VyStable = FlightController.SetVy(UserInputUpVelocity);
-                FlightController.SetVr(UserInputRollVelocity);
+                FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
                 FlightController.SetVp(UserInputPitchVelocity);
                 FlightController.SetVw(UserInputYawVelocity);
                 return VxStable && VzStable && VyStable;
@@ -328,8 +341,6 @@ namespace IngameScript
             public static void AC130(double radius, double xCoord, double yCoord, double zCoord, double seconds)
             {
                 // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
-                FlightController.SetVy(5);
-                // FlightController.SetVw(5); this would be set yaw velocity, which needs to be built as it was not necessary for LIGMA.
             }
         }
     }
