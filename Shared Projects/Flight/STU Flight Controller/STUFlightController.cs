@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using System.Runtime.InteropServices;
 using VRageMath;
 
 namespace IngameScript {

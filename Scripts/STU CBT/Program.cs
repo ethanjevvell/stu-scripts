@@ -28,12 +28,15 @@ namespace IngameScript
         CBT CBTShip;
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
+        Func<bool> maneuver;
         
         public Program()
         {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
+            CBT.FlightController.ReinstateGyroControl();
+            CBT.FlightController.ReinstateThrusterControl();
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
@@ -46,10 +49,9 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            CBT.FlightController.GiveControl();
+            maneuver = CBT.GenericManeuver;
             CBT.FlightController.UpdateState();
-            Func<bool> maneuver = CBT.GenericManeuver;
-
+            
             argument = argument.Trim().ToUpper();
             
             // check whether the passed argument is a special command word, if it's not, default to parsing what the user passed
@@ -80,7 +82,10 @@ namespace IngameScript
                 case "ABORT":
                     CBT.CurrentPhase = CBT.Phase.Idle;
                     CBT.AddToLogQueue("Attempting to relinquish control of the ship", STULogType.INFO);
-                    CBT.FlightController.RelinquishControl();
+                    CBT.FlightController.RelinquishGyroControl();
+                    CBT.FlightController.RelinquishThrusterControl();
+                    CBT.AddToLogQueue($"Gyro control: {CBT.FlightController.HasGyroControl}", STULogType.OK);
+                    CBT.AddToLogQueue($"Thruster control: {CBT.FlightController.HasThrusterControl}", STULogType.OK);
 
                     break;
 
@@ -92,8 +97,7 @@ namespace IngameScript
                     if (ParseCommand(argument))
                     {
                         CBT.CurrentPhase = CBT.Phase.Executing;
-                        CBT.AddToLogQueue($"executing GenericManeuver");
-                        maneuver = CBT.GenericManeuver;
+                        CBT.AddToLogQueue($"Executing {maneuver}");
                     }
                     break;
                 }
@@ -113,22 +117,24 @@ namespace IngameScript
                     break;
             }
 
-            // bit of code to change the update frequency based on whether the autopilot is enabled (FlightController.HasControl is set to true)
-            // also update the autopilot status screens
-            if (CBT.FlightController.HasControl)
+            // bit of code to change the update frequency based on whether the autopilot is enabled.
+            // BOTH gyros and thrusters have to be relinquised to the pilot to disable the autopilot
+            if ((!CBT.FlightController.HasGyroControl) && (!CBT.FlightController.HasThrusterControl))
             {
-                Runtime.UpdateFrequency = UpdateFrequency.Update10;
+                // stop updating the script automatically
+                Runtime.UpdateFrequency = UpdateFrequency.None;
 
             }
             else
             {
-                Echo("setting update frequency to none");
-                // stop updating the script automatically
-                Runtime.UpdateFrequency = UpdateFrequency.None;
+                // if not both gyro and thruster control are enabled, update the script every 10 ticks
+                Runtime.UpdateFrequency = UpdateFrequency.Update10;
             }
 
             // update the log screens
             CBT.UpdateLogScreens();
+
+            // update the autopilot screens
 
             // hacky checks below (Echo to the PB terminal)
             
@@ -173,37 +179,43 @@ namespace IngameScript
                     {
                         case 'F':
                             CBT.UserInputForwardVelocity = value;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'B':
                             CBT.UserInputForwardVelocity = (value) * -1;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'U':
                             CBT.UserInputUpVelocity = value;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'D':
                             CBT.UserInputUpVelocity = (value) * -1;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'R':
                             CBT.UserInputRightVelocity = value;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'L':
                             CBT.UserInputRightVelocity = (value) * -1;
+                            maneuver = CBT.GenericManeuver;
                             break;
 
                         case 'P':
-                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f; maneuver = CBT.GenericManeuver; }
                             else {
                                 CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
                             break;
 
                         case 'H':
-                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f * -1; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputPitchVelocity = value * 3.14f * 0.5f * -1; maneuver = CBT.GenericManeuver; }
                             else
                             {
                                 CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
@@ -211,7 +223,7 @@ namespace IngameScript
                             break;
 
                         case 'O':
-                            if (-1 <= value && value <= Math.PI) { CBT.UserInputRollVelocity = value * 3.14f; }
+                            if (-1 <= value && value <= Math.PI) { CBT.UserInputRollVelocity = value * 3.14f; maneuver = CBT.GenericManeuver; }
                             else
                             {
                                 CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
@@ -219,7 +231,7 @@ namespace IngameScript
                             break;
 
                         case 'Q':
-                            if (-1 <= value && value <= 1) { CBT.UserInputRollVelocity = value * 3.14f * -1; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputRollVelocity = value * 3.14f * -1; maneuver = CBT.GenericManeuver; }
                             else
                             {
                                 CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
@@ -227,7 +239,7 @@ namespace IngameScript
                             break;
 
                         case 'Y':
-                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f; maneuver = CBT.GenericManeuver; }
                             else
                             {
                                 CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
@@ -235,11 +247,24 @@ namespace IngameScript
                             break;
 
                         case 'W':
-                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f * -1; }
+                            if (-1 <= value && value <= 1) { CBT.UserInputYawVelocity = value * 3.14f * -1; maneuver = CBT.GenericManeuver; }
                             else
                             {
                                 CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING);
                             }
+                            break;
+
+                        case 'A':
+                            if (0 <= value) { 
+                                CBT.AddToLogQueue($"Setting cruising altitude to {value}m", STULogType.INFO);
+                                CBT.CruisingAltitude(value); }
+                            else { CBT.AddToLogQueue($"Altitude value {value} is out of range. Must be greater than 0. Skipping...", STULogType.WARNING);                    }
+                            break;
+
+                        case 'C':
+                            CBT.AddToLogQueue($"Setting cruising speed to {value} m/s", STULogType.INFO);
+                            CBT.UserInputForwardVelocity = value;
+                            maneuver = CBT.CruisingSpeed;
                             break;
 
                         default:

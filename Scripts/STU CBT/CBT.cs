@@ -54,7 +54,13 @@ namespace IngameScript
             public static IMyThrust[] Thrusters { get; set; }
             public static IMyGyro[] Gyros { get; set; }
             public static IMyBatteryBlock[] Batteries { get; set; }
-            public static IMyGasTank[] GasTanks { get; set; }
+            public static IMyGasTank[] HydrogenTanks { get; set; }
+            public static IMyGasTank[] OxygenTanks { get; set; }
+
+            public static IMyMedicalRoom MedicalRoom { get; set; }
+            public static IMyGasGenerator[] H2O2Generators { get; set; }
+            public static IMyPowerProducer[] HydrogenEngines { get; set; }
+            public static IMyGravityGenerator[] GravityGenerators { get; set; }
 
             /// <summary>
             /// establish fuel and power levels
@@ -78,6 +84,12 @@ namespace IngameScript
                 Executing
             }
 
+            public enum PowerStates
+            {
+                Normal,
+                Low
+            }
+
             // define the CBT object for the CBT model in game
             public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
@@ -95,6 +107,11 @@ namespace IngameScript
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
                 AddSubscribers(grid);
+                LoadMedicalRoom(grid);
+                LoadH2O2Generators(grid);
+                LoadOxygenTanks(grid);
+                LoadHydrogenEngines(grid);
+                LoadGravityGenerators(grid);
 
                 FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
 
@@ -141,6 +158,11 @@ namespace IngameScript
                     screen.WriteWrappableLogs(screen.FlightLogs);
                     screen.EndAndPaintFrame();
                 }
+            }
+
+            public static void UpdateAutopilotScreens()
+            {
+
             }
 
             /// initialize hardware on the CBT
@@ -191,16 +213,22 @@ namespace IngameScript
                 if (remoteControlBlocks.Count == 0)
                 {
                     AddToLogQueue("No remote control blocks found on the CBT", STULogType.ERROR);
+                    return;
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
-                AddToLogQueue("Remote control ... loaded", STULogType.OK);
+                AddToLogQueue("Remote control ... loaded", STULogType.INFO);
             }
 
             // load main flight seat BY NAME. Name must be "CBT Flight Seat"
             private static void LoadFlightSeat(IMyGridTerminalSystem grid)
             {
                 FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyControlPanel;
-                AddToLogQueue("Main flight seat ... loaded", STULogType.OK);
+                if (FlightSeat == null)
+                {
+                    AddToLogQueue("Could not locate \"CBT Flight Seat\"; ensure flight seat is named appropriately", STULogType.ERROR);
+                    return;
+                }
+                AddToLogQueue("Main flight seat ... loaded", STULogType.INFO);
             }
 
             // load ALL thrusters of ALL types
@@ -213,6 +241,7 @@ namespace IngameScript
                 if (thrusterBlocks.Count == 0)
                 {
                     AddToLogQueue("No thrusters found on the CBT", STULogType.ERROR);
+                    return;
                 }
 
                 IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
@@ -223,7 +252,7 @@ namespace IngameScript
                 }
 
                 Thrusters = allThrusters;
-                AddToLogQueue("Thrusters ... loaded", STULogType.OK);
+                AddToLogQueue("Thrusters ... loaded", STULogType.INFO);
             }
 
             // load gyroscopes
@@ -234,6 +263,7 @@ namespace IngameScript
                 if (gyroBlocks.Count == 0)
                 {
                     AddToLogQueue("No gyros found on the CBT", STULogType.ERROR);
+                    return;
                 }
 
                 IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
@@ -243,7 +273,7 @@ namespace IngameScript
                 }
 
                 Gyros = gyros;
-                AddToLogQueue("Gyros ... loaded", STULogType.OK);
+                AddToLogQueue("Gyros ... loaded", STULogType.INFO);
             }
 
             // load batteries
@@ -254,6 +284,7 @@ namespace IngameScript
                 if (batteryBlocks.Count == 0)
                 {
                     AddToLogQueue("No batteries found on the CBT", STULogType.ERROR);
+                    return;
                 }
 
                 IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
@@ -263,17 +294,18 @@ namespace IngameScript
                 }
 
                 Batteries = batteries;
-                AddToLogQueue("Batteries ... loaded", STULogType.OK);
+                AddToLogQueue("Batteries ... loaded", STULogType.INFO);
             }
 
             // load fuel tanks
             private static void LoadFuelTanks(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
+                grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid && block.BlockDefinition.SubtypeName.Contains("Hydrogen"));
                 if (gasTankBlocks.Count == 0)
                 {
                     AddToLogQueue("No fuel tanks found on the CBT", STULogType.ERROR);
+                    return;
                 }
 
                 IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
@@ -282,8 +314,8 @@ namespace IngameScript
                     fuelTanks[i] = gasTankBlocks[i] as IMyGasTank;
                 }
 
-                GasTanks = fuelTanks;
-                AddToLogQueue("Fuel tanks ... loaded", STULogType.OK);
+                HydrogenTanks = fuelTanks;
+                AddToLogQueue("Fuel tanks ... loaded", STULogType.INFO);
             }
 
             // load connector (stinger)
@@ -293,20 +325,135 @@ namespace IngameScript
                 if (connector == null)
                 {
                     AddToLogQueue("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
+                    return;
                 }
                 Connector = connector as IMyShipConnector;
-                AddToLogQueue("Connector ... loaded", STULogType.OK);
+                AddToLogQueue("Connector ... loaded", STULogType.INFO);
             }
 
+            // load med bay
+            private static void LoadMedicalRoom(IMyGridTerminalSystem grid)
+            {
+                MedicalRoom = grid.GetBlockWithName("CBT Medical Room") as IMyMedicalRoom;
+                if (MedicalRoom == null)
+                {
+                    AddToLogQueue("Could not locate \"CBT Medical Room\"; ensure medical room is named appropriately", STULogType.ERROR);
+                    return;
+                }
+                AddToLogQueue("Medical Room ... loaded", STULogType.INFO);
+            }
+
+            // load H2O2 generators
+            private static void LoadH2O2Generators(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> generatorBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyGasGenerator>(generatorBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (generatorBlocks.Count == 0)
+                {
+                    AddToLogQueue("No H2O2 generators found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyGasGenerator[] generators = new IMyGasGenerator[generatorBlocks.Count];
+                for (int i = 0; i < generatorBlocks.Count; i++)
+                {
+                    generators[i] = generatorBlocks[i] as IMyGasGenerator;
+                }
+
+                H2O2Generators = generators;
+                AddToLogQueue("H2O2 generators ... loaded", STULogType.INFO);
+            }
+
+            // load oxygen tanks
+            private static void LoadOxygenTanks(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid && block.BlockDefinition.SubtypeName.Contains("Oxygen"));
+                if (gasTankBlocks.Count == 0)
+                {
+                    AddToLogQueue("No oxygen tanks found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyGasTank[] oxygenTanks = new IMyGasTank[gasTankBlocks.Count];
+                for (int i = 0; i < gasTankBlocks.Count; ++i)
+                {
+                    oxygenTanks[i] = gasTankBlocks[i] as IMyGasTank;
+                }
+
+                OxygenTanks = oxygenTanks;
+                AddToLogQueue("Oxygen tanks ... loaded", STULogType.INFO);
+            }
+
+            // load hydrogen engines
+            private static void LoadHydrogenEngines(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> hydrogenEngineBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyPowerProducer>(hydrogenEngineBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (hydrogenEngineBlocks.Count == 0)
+                {
+                    AddToLogQueue("No hydrogen engines found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyPowerProducer[] hydrogenEngines = new IMyPowerProducer[hydrogenEngineBlocks.Count];
+                for (int i = 0; i < hydrogenEngineBlocks.Count; ++i)
+                {
+                    hydrogenEngines[i] = hydrogenEngineBlocks[i] as IMyPowerProducer;
+                }
+
+                HydrogenEngines = hydrogenEngines;
+                AddToLogQueue("Hydrogen engines ... loaded", STULogType.INFO);
+            }
+
+            // load gravity generators
+            private static void LoadGravityGenerators(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> gravityGeneratorBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyGravityGenerator>(gravityGeneratorBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (gravityGeneratorBlocks.Count == 0)
+                {
+                    AddToLogQueue("No gravity generators found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyGravityGenerator[] gravityGenerators = new IMyGravityGenerator[gravityGeneratorBlocks.Count];
+                for (int i = 0; i < gravityGeneratorBlocks.Count; ++i)
+                {
+                    gravityGenerators[i] = gravityGeneratorBlocks[i] as IMyGravityGenerator;
+                }
+
+                GravityGenerators = gravityGenerators;
+                AddToLogQueue("Gravity generators ... loaded", STULogType.INFO);
+            }
+
+            
             /// <summary>
-            /// flight modes will be defined here for now until I figure out how to generalize them for future, generic aircraft
+            /// flight modes and power management modes will be defined here for now until I figure out how to generalize them for future, generic aircraft
             /// All flight modes must behave as a state machine, returning a boolean value to indicate whether the mode is complete or not.
             /// </summary>
             /// <returns></returns>
+            /// 
+
+            // power modes
+            //public static void PowerMode(Enum state)
+            //{
+            //    switch (state)
+            //    {
+            //        case PowerStates.Normal:
+            //            // check power levels and adjust accordingly
+            //            break;
+            //        case PowerStates.Low:
+            //            // check power levels and adjust accordingly
+            //            break;
+            //    }
+            //}
 
             // "Hover" mode
             public static bool Hover()
             {
+                FlightController.ReinstateGyroControl();
+                FlightController.ReinstateThrusterControl();
                 UserInputForwardVelocity = 0;
                 UserInputRightVelocity = 0;
                 UserInputUpVelocity = 0;
@@ -323,8 +470,27 @@ namespace IngameScript
                 return VxStable && VzStable && VyStable;
             }
 
+            public static bool CruisingSpeed()
+            {
+                FlightController.RelinquishGyroControl();
+                FlightController.ReinstateThrusterControl();
+                bool stable = FlightController.SetVz(UserInputForwardVelocity);
+                bool VxStable = FlightController.SetVx(0);
+                bool VyStable = FlightController.SetVy(0);
+                return stable;
+            }
+
+            public static void CruisingAltitude(double altitude)
+            {
+                FlightController.RelinquishGyroControl();
+                FlightController.ReinstateThrusterControl();
+                FlightController.MaintainAltitude(altitude);
+            }
+
             public static bool GenericManeuver()
             {
+                FlightController.ReinstateGyroControl();
+                FlightController.ReinstateThrusterControl();
                 bool VzStable = FlightController.SetVz(UserInputForwardVelocity); 
                 bool VxStable = FlightController.SetVx(UserInputRightVelocity);
                 bool VyStable = FlightController.SetVy(UserInputUpVelocity);
