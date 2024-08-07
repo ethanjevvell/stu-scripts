@@ -1,6 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
-using System.Runtime.InteropServices;
 using VRageMath;
 
 namespace IngameScript {
@@ -254,7 +253,7 @@ namespace IngameScript {
                 double velocitySquared = velocity * velocity;
                 double radius = Vector3D.Distance(targetPos, CurrentPosition);
                 // if velocity is really close to zero, we need to kickstart an orbit
-                if (velocity < 1) {
+                if (velocity < 2.5) {
                     Vector3D radiusVector = targetPos - CurrentPosition;
                     Vector3D nonColinearVector = new Vector3D(0, 0, 1);
                     Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
@@ -270,6 +269,7 @@ namespace IngameScript {
                     LIGMA.CreateOkBroadcast($"F_c_v = {centriptalForceVector}");
                     LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
                     LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
+                    AltitudeController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(CurrentWorldMatrix)));
                     AltitudeController.ExertVectorForce(centriptalForceVector);
                 }
             }

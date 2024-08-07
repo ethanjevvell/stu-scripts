@@ -123,7 +123,7 @@ namespace IngameScript {
 
                 public bool SetVz(double currentVelocity, double desiredVelocity) {
                     // Flip Gz to account for flipped forward-back orientation of Remote Control
-                    return ForwardController.SetVelocity(currentVelocity, desiredVelocity, -LocalGravityVector.Z);
+                    return ForwardController.SetVelocity(currentVelocity, desiredVelocity, LocalGravityVector.Z);
                 }
 
 
@@ -151,7 +151,8 @@ namespace IngameScript {
                     LocalGravityVector = Vector3D.TransformNormal(localGravity, MatrixD.Transpose(RemoteControl.WorldMatrix));
                     LocalGravityVector.X = Math.Round(LocalGravityVector.X, 2);
                     LocalGravityVector.Y = Math.Round(LocalGravityVector.Y, 2);
-                    LocalGravityVector.Z = Math.Round(LocalGravityVector.Z, 2);
+                    // flip Z to account for flipped forward-back orientation of Remote Control
+                    LocalGravityVector.Z = -Math.Round(LocalGravityVector.Z, 2);
                 }
 
                 private void AssignThrustersByOrientation(IMyThrust[] allThrusters) {
@@ -292,7 +293,7 @@ namespace IngameScript {
                     Vector3D accelerationVecor;
                     accelerationVecor.X = CalculateNetThrust(RightThrusters, LeftThrusters) / ShipMass + LocalGravityVector.X;
                     accelerationVecor.Y = CalculateNetThrust(UpThrusters, DownThrusters) / ShipMass + LocalGravityVector.Y;
-                    accelerationVecor.Z = CalculateNetThrust(ForwardThrusters, ReverseThrusters) / ShipMass - LocalGravityVector.Z;
+                    accelerationVecor.Z = CalculateNetThrust(ForwardThrusters, ReverseThrusters) / ShipMass + LocalGravityVector.Z;
                     return accelerationVecor;
                 }
 

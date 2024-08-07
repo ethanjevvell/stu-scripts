@@ -85,7 +85,7 @@ namespace IngameScript {
                     Vector3D localGravityVector = new Vector3D(
                         VelocityController.LocalGravityVector.X,
                         VelocityController.LocalGravityVector.Y,
-                        -VelocityController.LocalGravityVector.Z
+                        VelocityController.LocalGravityVector.Z
                     );
 
                     // Calculate the magnitude of the gravitational force
