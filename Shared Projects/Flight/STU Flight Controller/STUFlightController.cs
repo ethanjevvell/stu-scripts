@@ -9,7 +9,8 @@ namespace IngameScript {
 
             IMyRemoteControl RemoteControl { get; set; }
 
-            public bool HasControl { get; set; }
+            public bool HasGyroControl { get; set; }
+            public bool HasThrusterControl { get; set; }
 
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
@@ -41,7 +42,7 @@ namespace IngameScript {
                 VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
                 AltitudeController = new STUAltitudeController(VelocityController, RemoteControl);
-                HasControl = true;
+                HasGyroControl = true;
                 UpdateState();
             }
 
@@ -250,22 +251,32 @@ namespace IngameScript {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
 
-            public void RelinquishControl() {
-                foreach (var gyro in AllGyroscopes) {
-                    gyro.GyroOverride = false;
-                }
+            public void RelinquishThrusterControl() {
                 foreach (var thruster in AllThrusters) {
                     thruster.ThrustOverride = 0;
                 }
-                HasControl = false;
-
+                HasThrusterControl = false;
             }
 
-            public void GiveControl() {
+            public void RelinquishGyroControl() {
+                foreach (var gyro in AllGyroscopes) {
+                    gyro.GyroOverride = false;
+                }
+                HasGyroControl = false;
+            }
+
+            public void ReinstateGyroControl() {
                 foreach (var gyro in AllGyroscopes) {
                     gyro.GyroOverride = true;
                 }
-                HasControl = true;
+                HasGyroControl = true;
+            }
+
+            public void ReinstateThrusterControl() {
+                foreach (var thruster in AllThrusters) {
+                    thruster.ThrustOverride = 0;
+                }
+                HasThrusterControl = true;
             }
         }
     }
