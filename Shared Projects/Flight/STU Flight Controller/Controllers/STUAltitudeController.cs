@@ -29,43 +29,40 @@ namespace IngameScript {
                     CurrentAltitude = PreviousAltitude = GetAltitude();
                 }
 
-                public void Run() {
+                public bool Run() {
                     switch (CurrentState) {
                         case AltitudeState.Idle:
-                            MaintainAltitude();
-                            break;
+                            return MaintainAltitude();
                         case AltitudeState.Ascending:
                             if (SetVa(5)) {
                                 CurrentState = AltitudeState.Idle;
-                                LIGMA.CreateOkBroadcast("Reached target altitude on ascent");
                             }
                             break;
                         case AltitudeState.Descending:
                             if (SetVa(-5)) {
                                 CurrentState = AltitudeState.Idle;
-                                LIGMA.CreateOkBroadcast("Reached target altitude on descent");
                             }
                             break;
                     }
+                    return false;
                 }
 
                 public void UpdateState() {
                     PreviousAltitude = CurrentAltitude;
                     CurrentAltitude = GetAltitude();
                     AltitudeVelocity = GetAltitudeVelocity();
-                    LIGMA.CreateOkBroadcast($"Va: {AltitudeVelocity}");
                 }
 
                 private double GetAltitudeVelocity() {
                     return (CurrentAltitude - PreviousAltitude) / (1.0 / 6.0);
                 }
 
-                public void MaintainAltitude() {
+                public bool MaintainAltitude() {
                     SetVa(0);
                     double elevationError = GetAltitudeError();
                     // if we're close enough, don't do anything
                     if (elevationError < 10) {
-                        return;
+                        return true;
                     }
 
                     if (GetAltitude() > TargetAltitude) {
@@ -73,6 +70,7 @@ namespace IngameScript {
                     } else {
                         CurrentState = AltitudeState.Ascending;
                     }
+                    return false;
                 }
 
                 public bool SetVa(double desiredVelocity) {
@@ -116,7 +114,6 @@ namespace IngameScript {
                     if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out elevation)) {
                         return elevation;
                     }
-                    LIGMA.CreateWarningBroadcast("Failed to get elevation");
                     return 1;
                 }
 
