@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -361,7 +362,11 @@ namespace IngameScript {
                 public override bool Run() {
 
                     FirstRunTasks();
-                    FlightController.MaintainAltitude(250);
+                    FlightController.ExertCentripitalForce(new Vector3(
+                        -62478,
+                        -88117,
+                       -55007
+                    ));
                     return false;
 
                     // Use this to execute the test suite

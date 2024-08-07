@@ -247,6 +247,32 @@ namespace IngameScript {
                 AltitudeController.Run();
             }
 
+            public void ExertCentripitalForce(Vector3D targetPos) {
+                double mass = STUVelocityController.ShipMass;
+                double velocity = CurrentVelocity.Length();
+                double velocitySquared = velocity * velocity;
+                double radius = Vector3D.Distance(targetPos, CurrentPosition);
+                // if velocity is really close to zero, we need to kickstart an orbit
+                if (velocity < 1) {
+                    Vector3D radiusVector = targetPos - CurrentPosition;
+                    Vector3D nonColinearVector = new Vector3D(0, 0, 1);
+                    Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
+                    Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
+                    LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
+                    AltitudeController.ExertVectorForce(kickstartThrust);
+                } else {
+                    double centripetalForce = (mass * velocitySquared) / radius;
+                    Vector3D centriptalForceVector = Vector3D.Normalize(targetPos - CurrentPosition) * centripetalForce;
+                    LIGMA.CreateOkBroadcast($"F_c = {centripetalForce}");
+                    LIGMA.CreateOkBroadcast($"V_c = {CurrentVelocity.Length()}");
+                    LIGMA.CreateOkBroadcast($"r = {radius}");
+                    LIGMA.CreateOkBroadcast($"F_c_v = {centriptalForceVector}");
+                    LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
+                    LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
+                    AltitudeController.ExertVectorForce(centriptalForceVector);
+                }
+            }
+
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
