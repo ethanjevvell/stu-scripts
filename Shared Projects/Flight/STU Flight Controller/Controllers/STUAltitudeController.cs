@@ -82,11 +82,7 @@ namespace IngameScript {
 
                 public bool SetVa(double desiredVelocity) {
 
-                    Vector3D localGravityVector = new Vector3D(
-                        VelocityController.LocalGravityVector.X,
-                        VelocityController.LocalGravityVector.Y,
-                        VelocityController.LocalGravityVector.Z
-                    );
+                    Vector3D localGravityVector = VelocityController.LocalGravityVector;
 
                     // Calculate the magnitude of the gravitational force
                     double gravityForceMagnitude = localGravityVector.Length();

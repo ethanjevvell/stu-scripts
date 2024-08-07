@@ -270,7 +270,6 @@ namespace IngameScript {
                     LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
                     LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
                     AltitudeController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(CurrentWorldMatrix)));
-                    AltitudeController.ExertVectorForce(centriptalForceVector);
                 }
             }
 
