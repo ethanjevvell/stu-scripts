@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -73,35 +74,38 @@ namespace IngameScript {
                     return false;
                 }
 
+                public void ExertVectorForce(Vector3D forceVector) {
+                    VelocityController.SetFx(forceVector.X);
+                    VelocityController.SetFy(forceVector.Y);
+                    VelocityController.SetFz(forceVector.Z);
+                }
+
                 public bool SetVa(double desiredVelocity) {
-                    // Extract the components of the local gravity vector
-                    double Gx = VelocityController.LocalGravityVector.X;
-                    double Gy = VelocityController.LocalGravityVector.Y;
-                    double Gz = -VelocityController.LocalGravityVector.Z;
+
+                    Vector3D localGravityVector = new Vector3D(
+                        VelocityController.LocalGravityVector.X,
+                        VelocityController.LocalGravityVector.Y,
+                        -VelocityController.LocalGravityVector.Z
+                    );
 
                     // Calculate the magnitude of the gravitational force
-                    double gravityForceMagnitude = VelocityController.LocalGravityVector.Length();
+                    double gravityForceMagnitude = localGravityVector.Length();
 
                     // Total mass of the ship
                     double mass = STUVelocityController.ShipMass;
 
-                    // Total force needed: F = ma for gravity + ma for additional acceleration
+                    // Total force needed: F = ma; a acts as basic proportional controlller here
                     double totalForceNeeded = mass * (gravityForceMagnitude + desiredVelocity - AltitudeVelocity);
 
                     // Normalize the gravity vector to get the direction
-                    double unitGx = Gx / gravityForceMagnitude;
-                    double unitGy = Gy / gravityForceMagnitude;
-                    double unitGz = Gz / gravityForceMagnitude;
+                    Vector3D unitGravityVector = localGravityVector / gravityForceMagnitude;
 
                     // Calculate the force vector needed (opposite to gravity and scaled by totalForceNeeded)
-                    double Fx = -unitGx * totalForceNeeded;
-                    double Fy = -unitGy * totalForceNeeded;
-                    double Fz = -unitGz * totalForceNeeded;
+                    Vector3D outputForce = -unitGravityVector * totalForceNeeded;
 
                     // Set the force components on the velocity controller
-                    VelocityController.SetFx(Fx);
-                    VelocityController.SetFy(Fy);
-                    VelocityController.SetFz(Fz);
+                    ExertVectorForce(outputForce);
+
                     return GetAltitudeError() < 10;
                 }
 
