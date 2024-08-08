@@ -258,17 +258,17 @@ namespace IngameScript {
                     Vector3D nonColinearVector = new Vector3D(0, 0, 1);
                     Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                     Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                    LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
+                    // LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
                     AltitudeController.ExertVectorForce(kickstartThrust);
                 } else {
                     double centripetalForce = (mass * velocitySquared) / radius;
                     Vector3D centriptalForceVector = Vector3D.Normalize(targetPos - CurrentPosition) * centripetalForce;
-                    LIGMA.CreateOkBroadcast($"F_c = {centripetalForce}");
-                    LIGMA.CreateOkBroadcast($"V_c = {CurrentVelocity.Length()}");
-                    LIGMA.CreateOkBroadcast($"r = {radius}");
-                    LIGMA.CreateOkBroadcast($"F_c_v = {centriptalForceVector}");
-                    LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
-                    LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
+                    //LIGMA.CreateOkBroadcast($"F_c = {centripetalForce}");
+                    //LIGMA.CreateOkBroadcast($"V_c = {CurrentVelocity.Length()}");
+                    //LIGMA.CreateOkBroadcast($"r = {radius}");
+                    //LIGMA.CreateOkBroadcast($"F_c_v = {centriptalForceVector}");
+                    //LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
+                    //LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
                     AltitudeController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(CurrentWorldMatrix)));
                 }
             }

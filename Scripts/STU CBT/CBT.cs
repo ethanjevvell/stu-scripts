@@ -40,6 +40,7 @@ namespace IngameScript
             public static IMyGridTerminalSystem CBTGrid;
             public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
             public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
+            public static List<CBTAutopilotLCD> AutopilotChannel = new List<CBTAutopilotLCD>();
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -106,7 +107,8 @@ namespace IngameScript
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
-                AddSubscribers(grid);
+                AddLogSubscribers(grid);
+                AddAutopilotIndicatorSubscribers(grid);
                 LoadMedicalRoom(grid);
                 LoadH2O2Generators(grid);
                 LoadOxygenTanks(grid);
@@ -170,7 +172,7 @@ namespace IngameScript
 
             // generate a list of the display blocks on the CBT that are subscribed to the flight log
             // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
-            private static void AddSubscribers(IMyGridTerminalSystem grid)
+            private static void AddLogSubscribers(IMyGridTerminalSystem grid)
             {
                 grid.GetBlocks(AllTerminalBlocks);
                 foreach (var block in AllTerminalBlocks)
@@ -197,9 +199,27 @@ namespace IngameScript
                                 echo(e.Message);
                                 fontSize = 0.5f;
                             }
-                            echo($"{fontSize}");
                             CBTLogLCD screen = new CBTLogLCD(echo, block, int.Parse(kvp[1]), "Monospace", fontSize);
                             LogChannel.Add(screen);
+                        }
+                    }
+                }
+            }
+
+            private static void AddAutopilotIndicatorSubscribers(IMyGridTerminalSystem grid)
+            {
+                grid.GetBlocks(AllTerminalBlocks);
+                foreach (var block in AllTerminalBlocks)
+                {
+                    string CustomDataRawText = block.CustomData;
+                    string[] CustomDataLines = CustomDataRawText.Split('\n');
+                    foreach (var line in CustomDataLines)
+                    {
+                        if (line.Contains("CBT_AUTOPILOT_STATUS"))
+                        {
+                            string[] kvp = line.Split(':');
+                            CBTAutopilotLCD screen = new CBTAutopilotLCD(echo, block, int.Parse(kvp[1]));
+                            AutopilotChannel.Add(screen);
                         }
                     }
                 }
@@ -485,6 +505,14 @@ namespace IngameScript
                 FlightController.RelinquishGyroControl();
                 FlightController.ReinstateThrusterControl();
                 FlightController.MaintainAltitude(altitude);
+            }
+
+            public static bool FastStop()
+            {
+                // get current velocity
+                Vector3D currentVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
+
+                return true;
             }
 
             public static bool GenericManeuver()

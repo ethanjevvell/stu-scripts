@@ -29,6 +29,7 @@ namespace IngameScript
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
         Func<bool> maneuver;
+        bool RECALL;
         
         public Program()
         {
@@ -41,9 +42,11 @@ namespace IngameScript
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
             // i.e. it's only when you hit "run" does the program pull whatever is in the user input buffer and run it.
-            // I moved the logic that controlls the update frequency to the end Main() method so that the ABORT keyword can be passed, the program will do what it needs to do,
+            // I moved the logic that controlls the update frequency to the end Main() method so that when the ABORT keyword can be passed,
+            // the program will do what it needs to do,
             // then it will set the update frequency to none.
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            RECALL = false;
 
         }
 
@@ -57,15 +60,30 @@ namespace IngameScript
             // check whether the passed argument is a special command word, if it's not, default to parsing what the user passed
             switch (argument)
                 {
+                case "HALT":
+                    CBT.CurrentPhase = CBT.Phase.Executing;
+                    CBT.AddToLogQueue("Halting ship locomotion...", STULogType.WARNING);
+                    maneuver = CBT.Hover;
+                    RECALL = false;
+                    CBT.RemoteControl.DampenersOverride = true;
+                    break;
+
                 case "STOP":
                     CBT.CurrentPhase = CBT.Phase.Executing;
-                    CBT.AddToLogQueue("STOPPING...");
-                    maneuver = CBT.Hover;
+                    CBT.AddToLogQueue("Slamming on the brakes...", STULogType.WARNING);
+                    maneuver = CBT.FastStop;
+                    RECALL = false;
+                    CBT.RemoteControl.DampenersOverride = true;
+                    break;
+
+                case "CANCEL":
+                    CBT.CurrentPhase = CBT.Phase.Idle;
+                    CBT.AddToLogQueue("Cancelling last command recallability...", STULogType.WARNING);
+                    RECALL = false;
                     break;
 
                 case "AC130":
-                    CBT.CurrentPhase = CBT.Phase.Executing;
-                    // CBT.AC130(100, CBT.GetCurrentXCoord, CBT.GetCurrentYCoord, CBT.GetCurrentZCoord, 60);
+                    // CBT.CurrentPhase = CBT.Phase.Executing;
                     break;
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff here
@@ -77,19 +95,35 @@ namespace IngameScript
                     CBT.UserInputRollVelocity = 0;
                     CBT.UserInputYawVelocity = 1;
                     maneuver = CBT.GenericManeuver;
+                    RECALL = false;
                     break;
 
                 case "ABORT":
                     CBT.CurrentPhase = CBT.Phase.Idle;
-                    CBT.AddToLogQueue("Attempting to relinquish control of the ship", STULogType.INFO);
+                    RECALL = false;
+                    CBT.RemoteControl.DampenersOverride = true;
+                    CBT.AddToLogQueue("Attempting to relinquish control of the ship", STULogType.WARNING);
                     CBT.FlightController.RelinquishGyroControl();
                     CBT.FlightController.RelinquishThrusterControl();
                     CBT.AddToLogQueue($"Gyro control: {CBT.FlightController.HasGyroControl}", STULogType.OK);
                     CBT.AddToLogQueue($"Thruster control: {CBT.FlightController.HasThrusterControl}", STULogType.OK);
+                    CBT.AddToLogQueue($"Dampeners: {CBT.RemoteControl.DampenersOverride}", STULogType.OK);
+                    CBT.AddToLogQueue($"Recall: {RECALL}", STULogType.OK);
 
                     break;
 
                 case "": // if the user passes nothing, do nothing
+                    break;
+
+                case "HELP":
+                    CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
+                    CBT.AddToLogQueue("HALT - Executes a hover maneuver and then idles.", STULogType.OK);
+                    CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation to best counterract the current trajectory.", STULogType.OK);
+                    CBT.AddToLogQueue("CANCEL - Cancels the last command recallability.", STULogType.OK);
+                    CBT.AddToLogQueue("ABORT - Relinquishes control of the gyroscopes and thrusters, turns dampener override ON, and idles.", STULogType.OK);
+                    CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
+                    CBT.AddToLogQueue("TEST - Executes hard-coded maneuver parameters. FOR TESTING PURPOSES ONLY.", STULogType.OK);
+                    CBT.AddToLogQueue("F5 - Move forward at 5m/s. \"B5 R4 Y0.5\" is the command to move backwards 5m/s, right 4m/s, and yaw 0.5 RPS", STULogType.OK);
                     break;
 
                 default:
@@ -101,6 +135,10 @@ namespace IngameScript
                     }
                     break;
                 }
+
+            // check whether RECALL variable is set.
+            // if true, then the last command will be executed again, essentially keeping the state machine in the same state.
+            if (RECALL) { CBT.CurrentPhase = CBT.Phase.Executing; CBT.RemoteControl.DampenersOverride = false; }
 
             /// main state machine
             switch (CBT.CurrentPhase)
@@ -264,6 +302,7 @@ namespace IngameScript
                         case 'C':
                             CBT.AddToLogQueue($"Setting cruising speed to {value} m/s", STULogType.INFO);
                             CBT.UserInputForwardVelocity = value;
+                            CBT.FlightController.RelinquishGyroControl();
                             maneuver = CBT.CruisingSpeed;
                             break;
 
@@ -272,6 +311,7 @@ namespace IngameScript
                             break;
                     }
                 } 
+                RECALL = true;
                 return true;
             }
             else
