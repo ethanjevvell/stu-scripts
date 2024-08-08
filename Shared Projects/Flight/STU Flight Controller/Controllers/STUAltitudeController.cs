@@ -17,6 +17,7 @@ namespace IngameScript {
 
                 AltitudeState CurrentState = AltitudeState.Idle;
                 STUVelocityController VelocityController { get; set; }
+                STUFlightController FlightController { get; set; }
                 IMyRemoteControl RemoteControl { get; set; }
 
                 public double TargetAltitude { get; set; }
@@ -24,7 +25,8 @@ namespace IngameScript {
                 public double PreviousAltitude { get; set; }
                 public double AltitudeVelocity { get; set; }
 
-                public STUAltitudeController(STUVelocityController velocityController, IMyRemoteControl remoteControl) {
+                public STUAltitudeController(STUFlightController flightController, STUVelocityController velocityController, IMyRemoteControl remoteControl) {
+                    FlightController = flightController;
                     VelocityController = velocityController;
                     RemoteControl = remoteControl;
                     CurrentAltitude = PreviousAltitude = GetAltitude();
@@ -74,12 +76,6 @@ namespace IngameScript {
                     return false;
                 }
 
-                public void ExertVectorForce(Vector3D forceVector) {
-                    VelocityController.SetFx(forceVector.X);
-                    VelocityController.SetFy(forceVector.Y);
-                    VelocityController.SetFz(forceVector.Z);
-                }
-
                 public bool SetVa(double desiredVelocity) {
 
                     Vector3D localGravityVector = VelocityController.LocalGravityVector;
@@ -100,7 +96,7 @@ namespace IngameScript {
                     Vector3D outputForce = -unitGravityVector * totalForceNeeded;
 
                     // Set the force components on the velocity controller
-                    ExertVectorForce(outputForce);
+                    FlightController.ExertVectorForce(outputForce);
 
                     return GetAltitudeError() < 10;
                 }

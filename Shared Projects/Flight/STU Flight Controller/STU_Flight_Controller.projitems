@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUAltitudeController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUOrientationController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUPointOrbitController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUVelocityController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\STUInterceptCalculator.cs" />
