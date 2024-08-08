@@ -61,7 +61,7 @@ namespace IngameScript {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                        LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
+                        //LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
                         FlightController.ExertVectorForce(kickstartThrust);
                         return false;
                     }
@@ -80,12 +80,12 @@ namespace IngameScript {
                     // if velocity is really close to zero, we need to kickstart an orbit
                     double centripetalForce = ((mass * velocitySquared) / radius) + 100 * radiusError;
                     Vector3D centriptalForceVector = Vector3D.Normalize(targetPos - RemoteControl.CenterOfMass) * centripetalForce;
-                    LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
-                    LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
-                    LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
-                    LIGMA.CreateOkBroadcast($"r = {radius}");
-                    LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
-                    LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
+                    //LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
+                    //LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
+                    //LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
+                    //LIGMA.CreateOkBroadcast($"r = {radius}");
+                    //LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
+                    //LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
                     FlightController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1));
                 }
             }
