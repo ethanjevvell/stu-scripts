@@ -45,16 +45,27 @@ namespace IngameScript {
                 }
 
                 private bool EnterOrbit(Vector3D targetPos) {
+
                     double velocity = FlightController.CurrentVelocity.Length();
-                    if (velocity < 10) {
+                    Vector3D nonColinearVector;
+
+                    // if we have a gravity vector, use that as the non-colinear vector
+                    // This ensure the orbit path is parallel with the surface of the planet
+                    if (FlightController.VelocityController.LocalGravityVector != Vector3D.Zero) {
+                        nonColinearVector = FlightController.VelocityController.LocalGravityVector;
+                    } else {
+                        nonColinearVector = new Vector3D(0, 0, 1);
+                    }
+
+                    if (velocity < 2.5) {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
-                        Vector3D nonColinearVector = new Vector3D(0, 0, 1);
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
                         LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
                         FlightController.ExertVectorForce(kickstartThrust);
                         return false;
                     }
+
                     return true;
                 }
 
