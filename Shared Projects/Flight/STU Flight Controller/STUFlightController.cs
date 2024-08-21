@@ -244,6 +244,32 @@ namespace IngameScript {
                 return angle - Math.PI / 4;
             }
 
+            public Vector3D GetCounterGravityForceVector(double desiredVelocity, double altitudeVelocity) {
+                Vector3D localGravityVector = VelocityController.LocalGravityVector;
+
+                // Calculate the magnitude of the gravitational force
+                double gravityForceMagnitude = localGravityVector.Length();
+
+                if (gravityForceMagnitude == 0) {
+                    return Vector3D.Zero;
+                }
+
+                // Total mass of the ship
+                double mass = STUVelocityController.ShipMass;
+
+                // Total force needed: F = ma; a acts as basic proportional controlller here
+                double totalForceNeeded = mass * (gravityForceMagnitude + desiredVelocity - altitudeVelocity);
+
+                // Normalize the gravity vector to get the direction
+                Vector3D unitGravityVector = localGravityVector / gravityForceMagnitude;
+
+                // Calculate the force vector needed (opposite to gravity and scaled by totalForceNeeded)
+                Vector3D outputForce = -unitGravityVector * totalForceNeeded;
+
+                return outputForce;
+            }
+
+
             public void ExertVectorForce(Vector3D forceVector) {
                 VelocityController.SetFx(forceVector.X);
                 VelocityController.SetFy(forceVector.Y);
@@ -255,8 +281,8 @@ namespace IngameScript {
             }
 
             public void MaintainAltitude(double targetAltitude = 100) {
-                AltitudeController.TargetAltitude = targetAltitude;
-                AltitudeController.Run();
+                AltitudeController.TargetSurfaceAltitude = targetAltitude;
+                AltitudeController.MaintainSurfaceAltitude();
             }
 
             public void UpdateShipMass() {

@@ -362,16 +362,18 @@ namespace IngameScript {
                 public override bool Run() {
 
                     FirstRunTasks();
-                    //FlightController.OrbitPoint(new Vector3(
-                    //    -38027,
-                    //    -39186,
-                    //    -28549
-                    //));
-                    FlightController.OrbitPoint(new Vector3D(
-                        -62478,
-                        -88117,
-                        -55007
-                        ));
+                    // Planetary orbit point
+                    FlightController.OrbitPoint(new Vector3(
+                        -38027,
+                        -39186,
+                        -28549
+                    ));
+                    // Space orbit point
+                    //FlightController.OrbitPoint(new Vector3D(
+                    //    -62478,
+                    //    -88117,
+                    //    -55007
+                    //    ));
                     return false;
 
                     // Use this to execute the test suite

@@ -18,10 +18,13 @@ namespace IngameScript {
                 IMyRemoteControl RemoteControl { get; set; }
 
                 private double TargetRadius { get; set; }
+                private double TargetAltitude { get; set; }
+                public double KickstartVelocity { get; set; }
 
                 public STUPointOrbitController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
                     RemoteControl = remoteControl;
+                    KickstartVelocity = 2.5;
                 }
 
                 public bool Run(Vector3D targetPos) {
@@ -35,10 +38,11 @@ namespace IngameScript {
                                 CurrentState = PointOrbitState.Orbiting;
                                 // Lock-in the current radius for PID purposes
                                 TargetRadius = Vector3D.Distance(targetPos, RemoteControl.CenterOfMass);
+                                TargetAltitude = FlightController.AltitudeController.CurrentSeaLevelAltitude;
                             }
                             break;
                         case PointOrbitState.Orbiting:
-                            ExertCentripitalForce(targetPos);
+                            ExertCentripetalForce(targetPos);
                             break;
                     }
                     return false;
@@ -57,12 +61,12 @@ namespace IngameScript {
                         nonColinearVector = new Vector3D(0, 0, 1);
                     }
 
-                    if (velocity < 2.5) {
+                    if (velocity < KickstartVelocity) {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                        //LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
-                        FlightController.ExertVectorForce(kickstartThrust);
+                        Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
+                        FlightController.ExertVectorForce(kickstartThrust + counterGravityForceVector);
                         return false;
                     }
 
@@ -70,7 +74,7 @@ namespace IngameScript {
                 }
 
 
-                public void ExertCentripitalForce(Vector3D targetPos) {
+                public void ExertCentripetalForce(Vector3D targetPos) {
                     double mass = STUVelocityController.ShipMass;
                     double velocity = FlightController.CurrentVelocity.Length();
                     double velocitySquared = velocity * velocity;
@@ -79,14 +83,15 @@ namespace IngameScript {
                     // create a vector that points from the ship to the target
                     // if velocity is really close to zero, we need to kickstart an orbit
                     double centripetalForce = ((mass * velocitySquared) / radius) + 100 * radiusError;
-                    Vector3D centriptalForceVector = Vector3D.Normalize(targetPos - RemoteControl.CenterOfMass) * centripetalForce;
-                    //LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
-                    //LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
-                    //LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
-                    //LIGMA.CreateOkBroadcast($"r = {radius}");
-                    //LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
-                    //LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
-                    FlightController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1));
+                    Vector3D centripetal = Vector3D.Normalize(targetPos - RemoteControl.CenterOfMass) * centripetalForce;
+                    LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
+                    LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
+                    LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
+                    LIGMA.CreateOkBroadcast($"r = {radius}");
+                    LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
+                    LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
+                    Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
+                    FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetal, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
                 }
             }
         }
