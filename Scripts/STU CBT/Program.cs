@@ -139,6 +139,7 @@ namespace IngameScript
             // check whether RECALL variable is set.
             // if true, then the last command will be executed again, essentially keeping the state machine in the same state.
             if (RECALL) { CBT.CurrentPhase = CBT.Phase.Executing; CBT.RemoteControl.DampenersOverride = false; }
+            CBT.UpdateAutopilotScreens(RECALL);
 
             /// main state machine
             switch (CBT.CurrentPhase)

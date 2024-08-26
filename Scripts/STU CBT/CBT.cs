@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
 namespace IngameScript
@@ -40,7 +41,7 @@ namespace IngameScript
             public static IMyGridTerminalSystem CBTGrid;
             public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
             public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
-            public static List<CBTAutopilotLCD> AutopilotChannel = new List<CBTAutopilotLCD>();
+            public static List<CBTAutopilotLCD> AutopilotStatusChannel = new List<CBTAutopilotLCD>();
             public static STUFlightController FlightController { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -162,9 +163,21 @@ namespace IngameScript
                 }
             }
 
-            public static void UpdateAutopilotScreens()
+            public static void UpdateAutopilotScreens(bool status)
             {
-
+                foreach (var screen in AutopilotStatusChannel)
+                {
+                    screen.StartFrame();
+                    if (status) { 
+                        screen.SetupDrawSurface(screen.Surface, status); 
+                        screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, new Vector2(screen.ScreenWidth / 2, screen.ScreenHeight / 2)); 
+                    }
+                    else { 
+                        screen.SetupDrawSurface(screen.Surface, status); 
+                        screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, new Vector2(screen.ScreenWidth / 2, screen.ScreenHeight / 2)); 
+                    }
+                    screen.EndAndPaintFrame();
+                }
             }
 
             /// initialize hardware on the CBT
@@ -219,7 +232,7 @@ namespace IngameScript
                         {
                             string[] kvp = line.Split(':');
                             CBTAutopilotLCD screen = new CBTAutopilotLCD(echo, block, int.Parse(kvp[1]));
-                            AutopilotChannel.Add(screen);
+                            AutopilotStatusChannel.Add(screen);
                         }
                     }
                 }

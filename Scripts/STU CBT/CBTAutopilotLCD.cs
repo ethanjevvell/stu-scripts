@@ -26,7 +26,7 @@ namespace IngameScript
             {
                 if (enabled) {
                     // Draw background color
-                    surface.ScriptBackgroundColor = new Color(0, 121, 0, 255);
+                    //  surface.ScriptBackgroundColor = new Color(0, 121, 0, 255);
                     // Set content type
                     surface.ContentType = ContentType.SCRIPT;
                     // Set script to none
@@ -34,7 +34,7 @@ namespace IngameScript
                 }
                 else {
                     // Draw background color
-                    surface.ScriptBackgroundColor = new Color(106, 0, 0, 255);
+                    //  surface.ScriptBackgroundColor = new Color(106, 0, 0, 255);
                     // Set content type
                     surface.ContentType = ContentType.SCRIPT;
                     // Set script to none
@@ -44,7 +44,17 @@ namespace IngameScript
 
             public void DrawAutopilotEnabledSprite(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
             {
-                frame.Add(new MySprite()
+                MySprite background_sprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Alignment = TextAlignment.CENTER,
+                    Data = "SquareSimple",
+                    Position = TopLeft,
+                    Size = new Vector2(ScreenWidth, ScreenHeight),
+                    Color = new Color(0, 128, 0, 255),
+                    RotationOrScale = 0f
+                };
+                MySprite circle = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
@@ -53,8 +63,8 @@ namespace IngameScript
                     Size = new Vector2(180f, 180f) * scale,
                     Color = new Color(0, 255, 0, 255),
                     RotationOrScale = 0f
-                }); // circle
-                frame.Add(new MySprite()
+                }; 
+                MySprite letter_A = new MySprite()
                 {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
@@ -63,13 +73,30 @@ namespace IngameScript
                     Color = new Color(0, 255, 0, 255),
                     FontId = "Debug",
                     RotationOrScale = 6f * scale
-                }); // textA
+                }; 
+
+                AlignCenterWithinParent(background_sprite, ref circle);
+                AlignCenterWithinParent(background_sprite, ref letter_A);
+
+                frame.Add(background_sprite);
+                frame.Add(circle);
+                frame.Add(letter_A);
             }
 
 
             public void DrawAutopilotDisabledSprite(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
             {
-                frame.Add(new MySprite()
+                MySprite background_sprite = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Alignment = TextAlignment.CENTER,
+                    Data = "SquareSimple",
+                    Position = TopLeft,
+                    Size = new Vector2(ScreenWidth, ScreenHeight) * scale,
+                    Color = new Color(106, 0, 0, 255),
+                    RotationOrScale = 0f
+                };
+                MySprite circle = new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
@@ -78,8 +105,8 @@ namespace IngameScript
                     Size = new Vector2(180f, 180f) * scale,
                     Color = new Color(255, 0, 0, 255),
                     RotationOrScale = 0f
-                }); // circle
-                frame.Add(new MySprite()
+                }; // circle
+                MySprite letter_M = new MySprite()
                 {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
@@ -88,7 +115,14 @@ namespace IngameScript
                     Color = new Color(255, 0, 0, 255),
                     FontId = "Debug",
                     RotationOrScale = 5f * scale
-                }); // textM
+                }; // textM
+
+                AlignCenterWithinParent(background_sprite, ref circle);
+                AlignCenterWithinParent(background_sprite, ref letter_M);
+
+                frame.Add(background_sprite);
+                frame.Add(circle);
+                frame.Add(letter_M);
             }
 
         }
