@@ -80,6 +80,38 @@ namespace IngameScript {
                         LIGMA.CreateWarningBroadcast("Entering flight phase");
                         // Stop any roll created during this phase
                         LIGMA.FlightController.SetVr(0);
+
+                        // Stage separation
+                        LIGMA.LaunchStage.ToggleForwardThrusters(false);
+                        LIGMA.LaunchStage.ToggleLateralThrusters(false);
+                        LIGMA.LaunchStage.ToggleReverseThrusters(true);
+                        LIGMA.LaunchStage.TriggerDisenageBurn(true);
+                        LIGMA.LaunchStage.DisconnectMergeBlock();
+
+                        // Remove launch stage thrusters from Flight Controller
+                        LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.ForwardThrusters);
+                        LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.LateralThrusters);
+                        LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.ReverseThrusters);
+
+                        // Turn on flight stage thrusters
+                        LIGMA.FlightStage.ToggleForwardThrusters(true);
+                        LIGMA.FlightStage.ToggleLateralThrusters(true);
+                        LIGMA.FlightStage.ToggleReverseThrusters(true);
+
+                        // Turn on terminal stage lateral thrusters only
+                        LIGMA.TerminalStage.ToggleForwardThrusters(false);
+
+                        List<IMyThrust> newActiveThrusters = new List<IMyThrust>();
+
+                        foreach (IMyThrust thruster in LIGMA.FlightController.Thrusters) {
+                            if (thruster.Enabled) {
+                                newActiveThrusters.Add(thruster);
+                            }
+                        }
+
+                        LIGMA.FlightController.UpdateThrustersAfterGridChange(newActiveThrusters.ToArray());
+                        LIGMA.FlightController.UpdateShipMass();
+
                     };
                     break;
 

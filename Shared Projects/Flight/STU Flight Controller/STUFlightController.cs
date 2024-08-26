@@ -22,7 +22,7 @@ namespace IngameScript {
             public MatrixD CurrentWorldMatrix { get; set; }
             public MatrixD PreviousWorldMatrix { get; set; }
 
-            public IMyThrust[] AllThrusters { get; set; }
+            public IMyThrust[] Thrusters { get; set; }
             public IMyGyro[] AllGyroscopes { get; set; }
 
             STUVelocityController VelocityController { get; set; }
@@ -38,14 +38,19 @@ namespace IngameScript {
             public STUFlightController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
-                AllThrusters = allThrusters;
+                Thrusters = allThrusters;
                 TargetVelocity = 0;
-                VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
+                VelocityController = new STUVelocityController(RemoteControl, Thrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
                 AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
                 PointOrbitController = new STUPointOrbitController(this, RemoteControl);
                 HasGyroControl = true;
                 UpdateState();
+            }
+
+            public void UpdateThrustersAfterGridChange(IMyThrust[] newActiveThrusters) {
+                VelocityController = new STUVelocityController(RemoteControl, newActiveThrusters);
+                AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
             }
 
             public void MeasureCurrentVelocity() {
@@ -290,7 +295,7 @@ namespace IngameScript {
             }
 
             public void RelinquishThrusterControl() {
-                foreach (var thruster in AllThrusters) {
+                foreach (var thruster in Thrusters) {
                     thruster.ThrustOverride = 0;
                 }
                 HasThrusterControl = false;
@@ -311,7 +316,7 @@ namespace IngameScript {
             }
 
             public void ReinstateThrusterControl() {
-                foreach (var thruster in AllThrusters) {
+                foreach (var thruster in Thrusters) {
                     thruster.ThrustOverride = 0;
                 }
                 HasThrusterControl = true;

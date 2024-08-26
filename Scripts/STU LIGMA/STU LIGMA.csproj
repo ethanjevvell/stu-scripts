@@ -77,6 +77,7 @@
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
+    <Compile Include="Stage.cs" />
   </ItemGroup>
   <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />
