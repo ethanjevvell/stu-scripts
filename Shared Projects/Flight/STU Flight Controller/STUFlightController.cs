@@ -28,6 +28,7 @@ namespace IngameScript {
             STUVelocityController VelocityController { get; set; }
             STUOrientationController OrientationController { get; set; }
             STUAltitudeController AltitudeController { get; set; }
+            STUPointOrbitController PointOrbitController { get; set; }
 
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
@@ -41,7 +42,8 @@ namespace IngameScript {
                 TargetVelocity = 0;
                 VelocityController = new STUVelocityController(RemoteControl, AllThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
-                AltitudeController = new STUAltitudeController(VelocityController, RemoteControl);
+                AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
+                PointOrbitController = new STUPointOrbitController(this, RemoteControl);
                 HasGyroControl = true;
                 UpdateState();
             }
@@ -242,35 +244,45 @@ namespace IngameScript {
                 return angle - Math.PI / 4;
             }
 
-            public void MaintainAltitude(double targetAltitude = 100) {
-                AltitudeController.TargetAltitude = targetAltitude;
-                AltitudeController.Run();
+            public Vector3D GetCounterGravityForceVector(double desiredVelocity, double altitudeVelocity) {
+                Vector3D localGravityVector = VelocityController.LocalGravityVector;
+
+                // Calculate the magnitude of the gravitational force
+                double gravityForceMagnitude = localGravityVector.Length();
+
+                if (gravityForceMagnitude == 0) {
+                    return Vector3D.Zero;
+                }
+
+                // Total mass of the ship
+                double mass = STUVelocityController.ShipMass;
+
+                // Total force needed: F = ma; a acts as basic proportional controlller here
+                double totalForceNeeded = mass * (gravityForceMagnitude + desiredVelocity - altitudeVelocity);
+
+                // Normalize the gravity vector to get the direction
+                Vector3D unitGravityVector = localGravityVector / gravityForceMagnitude;
+
+                // Calculate the force vector needed (opposite to gravity and scaled by totalForceNeeded)
+                Vector3D outputForce = -unitGravityVector * totalForceNeeded;
+
+                return outputForce;
             }
 
-            public void ExertCentripitalForce(Vector3D targetPos) {
-                double mass = STUVelocityController.ShipMass;
-                double velocity = CurrentVelocity.Length();
-                double velocitySquared = velocity * velocity;
-                double radius = Vector3D.Distance(targetPos, CurrentPosition);
-                // if velocity is really close to zero, we need to kickstart an orbit
-                if (velocity < 2.5) {
-                    Vector3D radiusVector = targetPos - CurrentPosition;
-                    Vector3D nonColinearVector = new Vector3D(0, 0, 1);
-                    Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
-                    Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                    // LIGMA.CreateOkBroadcast($"kickstart: {kickstartThrust}");
-                    AltitudeController.ExertVectorForce(kickstartThrust);
-                } else {
-                    double centripetalForce = (mass * velocitySquared) / radius;
-                    Vector3D centriptalForceVector = Vector3D.Normalize(targetPos - CurrentPosition) * centripetalForce;
-                    //LIGMA.CreateOkBroadcast($"F_c = {centripetalForce}");
-                    //LIGMA.CreateOkBroadcast($"V_c = {CurrentVelocity.Length()}");
-                    //LIGMA.CreateOkBroadcast($"r = {radius}");
-                    //LIGMA.CreateOkBroadcast($"F_c_v = {centriptalForceVector}");
-                    //LIGMA.CreateOkBroadcast($"A_calc = {centripetalForce / mass}");
-                    //LIGMA.CreateOkBroadcast($"A_act = {AccelerationComponents.Length()}");
-                    AltitudeController.ExertVectorForce(Vector3D.TransformNormal(centriptalForceVector, MatrixD.Transpose(CurrentWorldMatrix)));
-                }
+
+            public void ExertVectorForce(Vector3D forceVector) {
+                VelocityController.SetFx(forceVector.X);
+                VelocityController.SetFy(forceVector.Y);
+                VelocityController.SetFz(forceVector.Z);
+            }
+
+            public void OrbitPoint(Vector3D targetPos) {
+                PointOrbitController.Run(targetPos);
+            }
+
+            public void MaintainAltitude(double targetAltitude = 100) {
+                AltitudeController.TargetSurfaceAltitude = targetAltitude;
+                AltitudeController.MaintainSurfaceAltitude();
             }
 
             public void UpdateShipMass() {
