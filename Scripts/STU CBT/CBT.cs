@@ -101,6 +101,7 @@ namespace IngameScript
                 CBTGrid = grid;
                 echo = Echo;
 
+                AddLogSubscribers(grid);
                 LoadRemoteController(grid);
                 LoadFlightSeat(grid);
                 LoadThrusters(grid);
@@ -108,7 +109,6 @@ namespace IngameScript
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadConnector(grid);
-                AddLogSubscribers(grid);
                 AddAutopilotIndicatorSubscribers(grid);
                 LoadMedicalRoom(grid);
                 LoadH2O2Generators(grid);

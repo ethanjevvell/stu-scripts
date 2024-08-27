@@ -15,7 +15,6 @@ namespace IngameScript
         public partial class CBTAutopilotLCD : STUDisplay
         {
             public static Action<string> echo;
-            public static bool AutopilotEnabled;
 
             public CBTAutopilotLCD(Action<string> Echo, IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize)
             {
@@ -49,7 +48,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "SquareSimple",
-                    Position = TopLeft,
+                    Position = new Vector2(0f, 0f),
                     Size = new Vector2(ScreenWidth, ScreenHeight),
                     Color = new Color(0, 128, 0, 255),
                     RotationOrScale = 0f
@@ -73,7 +72,7 @@ namespace IngameScript
                     Color = new Color(0, 255, 0, 255),
                     FontId = "Debug",
                     RotationOrScale = 6f * scale
-                }; 
+                };
 
                 AlignCenterWithinParent(background_sprite, ref circle);
                 AlignCenterWithinParent(background_sprite, ref letter_A);
@@ -91,7 +90,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "SquareSimple",
-                    Position = TopLeft,
+                    Position = new Vector2(0f + ScreenWidth / 2, 0f + ScreenHeight / 2 + 20),
                     Size = new Vector2(ScreenWidth, ScreenHeight) * scale,
                     Color = new Color(106, 0, 0, 255),
                     RotationOrScale = 0f

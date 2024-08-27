@@ -48,6 +48,7 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             RECALL = false;
 
+
         }
 
         public void Main(string argument, UpdateType updateSource)
@@ -84,6 +85,7 @@ namespace IngameScript
 
                 case "AC130":
                     // CBT.CurrentPhase = CBT.Phase.Executing;
+                    CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     break;
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff here
@@ -140,6 +142,7 @@ namespace IngameScript
             // if true, then the last command will be executed again, essentially keeping the state machine in the same state.
             if (RECALL) { CBT.CurrentPhase = CBT.Phase.Executing; CBT.RemoteControl.DampenersOverride = false; }
             CBT.UpdateAutopilotScreens(RECALL);
+            
 
             /// main state machine
             switch (CBT.CurrentPhase)
