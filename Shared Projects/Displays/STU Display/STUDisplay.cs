@@ -392,7 +392,6 @@ namespace IngameScript {
                     Color = STULog.GetColor(log.Type),
                     FontId = Surface.Font,
                 });
-
             }
 
             private float GetTextWidth(StringBuilder segment) {

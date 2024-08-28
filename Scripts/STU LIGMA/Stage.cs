@@ -14,11 +14,14 @@ namespace IngameScript {
 
             public IMyShipMergeBlock MergeBlock;
 
+            public IMyWarhead[] Warheads;
+
             public Stage(IMyGridTerminalSystem grid, string stageKey) {
                 LIGMA.CreateOkBroadcast($"Initializing {stageKey.ToUpper()} stage thrusters and merge block");
                 ForwardThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "FORWARD");
                 ReverseThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "REVERSE");
                 LateralThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "LATERAL");
+                Warheads = FindStageWarheads(grid, stageKey.ToUpper());
                 MergeBlock = FindStageMergeBlock(grid, stageKey);
             }
 
@@ -50,6 +53,14 @@ namespace IngameScript {
                 MergeBlock.Enabled = false;
             }
 
+            public void TriggerDetonationCountdown() {
+                for (var i = 0; i < Warheads.Length; i++) {
+                    Warheads[i].IsArmed = true;
+                    Warheads[i].DetonationTime = 5;
+                    Warheads[i].StartCountdown();
+                }
+            }
+
             private IMyThrust[] FindThrusterBlockGroup(IMyGridTerminalSystem grid, string stageKey, string direction) {
 
                 List<IMyTerminalBlock> thrusters = new List<IMyTerminalBlock>();
@@ -73,6 +84,31 @@ namespace IngameScript {
                 LIGMA.CreateWarningBroadcast($"{thrusters.Count} {direction} thrusters found for {stageKey.ToUpper()} stage!");
 
                 return thrustArray;
+            }
+
+            private IMyWarhead[] FindStageWarheads(IMyGridTerminalSystem grid, string stageKey) {
+
+                List<IMyTerminalBlock> warheads = new List<IMyTerminalBlock>();
+                LIGMA.CreateOkBroadcast($"Finding warheads for {stageKey.ToUpper()} stage");
+                try {
+                    grid.GetBlockGroupWithName($"{stageKey}_STAGE_WARHEADS").GetBlocks(warheads);
+                } catch (Exception e) {
+                    if (warheads.Count == 0) {
+                        LIGMA.CreateFatalErrorBroadcast($"No warheads found for {stageKey.ToUpper()} stage!");
+                    } else {
+                        LIGMA.CreateFatalErrorBroadcast($"Error finding warheads for {stageKey.ToUpper()} stage: {e}");
+                    }
+                }
+
+                IMyWarhead[] warheadArray = new IMyWarhead[warheads.Count];
+
+                for (var i = 0; i < warheads.Count; i++) {
+                    warheadArray[i] = (IMyWarhead)warheads[i];
+                }
+
+                LIGMA.CreateWarningBroadcast($"{warheads.Count} warheads found for {stageKey.ToUpper()} stage!");
+
+                return warheadArray;
             }
 
             private IMyShipMergeBlock FindStageMergeBlock(IMyGridTerminalSystem grid, string stageKey) {

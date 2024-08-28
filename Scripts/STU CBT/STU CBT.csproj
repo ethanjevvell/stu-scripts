@@ -41,6 +41,7 @@
     <Compile Include="CBT Displays\Log LCDs\Adapters\FlightSeat.cs" />
     <Compile Include="CBT.cs" />
     <Compile Include="CBT Displays\Log LCDs\CBTLogLCD.cs" />
+    <Compile Include="CBTAutopilotLCD.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

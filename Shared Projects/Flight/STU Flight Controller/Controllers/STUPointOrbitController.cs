@@ -84,12 +84,12 @@ namespace IngameScript {
                     // if velocity is really close to zero, we need to kickstart an orbit
                     double centripetalForce = ((mass * velocitySquared) / radius) + 100 * radiusError;
                     Vector3D centripetal = Vector3D.Normalize(targetPos - RemoteControl.CenterOfMass) * centripetalForce;
-                    LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
-                    LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
-                    LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
-                    LIGMA.CreateOkBroadcast($"r = {radius}");
-                    LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
-                    LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
+                    //LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
+                    //LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
+                    //LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
+                    //LIGMA.CreateOkBroadcast($"r = {radius}");
+                    //LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
+                    //LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
                     Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
                     FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetal, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
                 }

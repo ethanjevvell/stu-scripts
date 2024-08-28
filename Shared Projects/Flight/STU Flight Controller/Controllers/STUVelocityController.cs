@@ -37,6 +37,7 @@ namespace IngameScript {
 
                 public STUVelocityController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters) {
 
+                    ThrustCoefficients.Clear();
                     RemoteControl = remoteControl;
 
                     ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
