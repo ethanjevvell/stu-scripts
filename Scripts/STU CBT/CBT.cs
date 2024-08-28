@@ -124,6 +124,11 @@ namespace IngameScript
                 UpdateLogScreens();
             }
 
+            public static void EchoPassthru(string text)
+            {
+                echo(text);
+            }
+
             // define the broadcaster method so that display messages can be sent throughout the world
             // (currently not implemented, just keeping this code here for future use)
             public static void CreateBroadcast(string message, string type)

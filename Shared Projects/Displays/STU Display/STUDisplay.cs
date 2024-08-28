@@ -23,8 +23,8 @@ namespace IngameScript {
             public float ScreenHeight { get; private set; }
             public float DefaultLineHeight { get; set; }
             public float CharacterWidth { get; private set; }
-            public int Lines { get; set; }
-
+            public int Lines { get; set; }            
+            
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.
             /// Flag intended for internal use; do not modify unless you know what you're doing.
@@ -92,7 +92,9 @@ namespace IngameScript {
             }
 
             public void ResetViewport() {
+                CBT.AddToLogQueue($"Resetting viewport on screen {Surface.DisplayName}");
                 Viewport = GetViewport();
+
             }
 
             private IMyTextSurface TryGetSurface(IMyTextSurfaceProvider tempBlock, int displayIndex) {
@@ -105,15 +107,27 @@ namespace IngameScript {
 
             private RectangleF GetViewport() {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                switch (Surface.DisplayName) {
-                    case "Large Display":
-                        float offsetPx = 8f;
-                        return new RectangleF(
-                            new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
-                            new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
-                    default:
-                        return standardViewport;
+                if (ViewportOffsets.ContainsKey(Surface.DisplayName))
+                {
+                    CBT.AddToLogQueue($"Using custom viewport for {Surface.DisplayName}");
+                    CBT.EchoPassthru($"Using custom viewport for {Surface.DisplayName}");
+                    CBT.EchoPassthru("RectangleF being used: " + ViewportOffsets[Surface.DisplayName].ToString());
+                    return ViewportOffsets[Surface.DisplayName];
+                } else
+                {
+                    CBT.AddToLogQueue($"Using standard viewport for {Surface.DisplayName}");
+                    CBT.EchoPassthru($"Using standard viewport for {Surface.DisplayName}");
+                    CBT.EchoPassthru($"RectangleF being used: " + standardViewport);
+                    return standardViewport;
                 }
+                //switch (Surface.DisplayName) {
+                //    case "Large Display":
+                //        //float offsetPx = 8f;
+                //        //return new RectangleF(
+                //        //    new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
+                //        //    new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
+                //    default:
+                //        return standardViewport;
             }
 
             private float GetTextSpriteWidth(MySprite sprite) {
