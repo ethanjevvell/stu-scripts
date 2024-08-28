@@ -9,8 +9,10 @@
                 // All ILaunchPlans should call this method in their Run() method
                 public virtual void FirstRunTasks() {
                     if (IS_FIRST_RUN) {
-                        // Disconnect from launch pad connector
-                        Connector.Disconnect();
+                        // Disconnect all connectors from launch pad
+                        for (var i = 0; i < Connectors.Length; i++) {
+                            Connectors[i].Disconnect();
+                        }
                         // Disable dampeners to prevent Stuxnet
                         RemoteControl.DampenersOverride = false;
                         foreach (var tank in GasTanks) {

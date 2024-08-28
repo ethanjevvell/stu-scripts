@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRageMath;
@@ -6,6 +7,8 @@ using VRageMath;
 namespace IngameScript {
     partial class Program {
         public partial class LIGMA {
+
+            public static bool IS_STAGED_LIGMA = false;
 
             public static MyDetectedEntityInfo TargetData { get; set; }
             public static Vector3D LaunchCoordinates { get; set; }
@@ -15,7 +18,12 @@ namespace IngameScript {
 
             public const float TimeStep = 1.0f / 6.0f;
             public static float Timestamp = 0;
+
             public static Phase CurrentPhase = Phase.Idle;
+
+            public static Stage LaunchStage { get; set; }
+            public static Stage FlightStage { get; set; }
+            public static Stage TerminalStage { get; set; }
 
             public static STUFlightController FlightController { get; set; }
             public static IMySensorBlock DetonationSensor { get; set; }
@@ -24,7 +32,6 @@ namespace IngameScript {
 
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
-            public static IMyShipConnector Connector { get; set; }
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
@@ -33,6 +40,7 @@ namespace IngameScript {
             public static IMyBatteryBlock[] Batteries { get; set; }
             public static IMyGasTank[] GasTanks { get; set; }
             public static IMyWarhead[] Warheads { get; set; }
+            public static IMyShipConnector[] Connectors { get; set; }
 
             /// <summary>
             /// Missile's current fuel level in liters
@@ -70,7 +78,7 @@ namespace IngameScript {
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadWarheads(grid);
-                LoadConnector(grid);
+                LoadConnectors(grid);
                 LoadDetonationSensor(grid);
 
                 MeasureTotalPowerCapacity();
@@ -80,7 +88,39 @@ namespace IngameScript {
 
                 CreateOkBroadcast("ALL SYSTEMS GO");
 
-                FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
+                if (IsStagedLIGMA(grid)) {
+                    IS_STAGED_LIGMA = true;
+                    LaunchStage = new Stage(grid, "LAUNCH");
+                    FlightStage = new Stage(grid, "FLIGHT");
+                    TerminalStage = new Stage(grid, "TERMINAL");
+                    CreateOkBroadcast("Staged LIGMA detected -- All stages nominal");
+                    IS_STAGED_LIGMA = true;
+
+                    // Initial conditions for launch stage
+                    LaunchStage.ToggleForwardThrusters(true);
+                    LaunchStage.ToggleReverseThrusters(true);
+                    LaunchStage.ToggleLateralThrusters(false);
+
+                    // Initial conditions for flight stage
+                    FlightStage.ToggleForwardThrusters(false);
+                    FlightStage.ToggleReverseThrusters(false);
+                    FlightStage.ToggleLateralThrusters(true);
+
+                    // Initial conditions for terminal stage
+                    TerminalStage.ToggleForwardThrusters(false);
+                    TerminalStage.ToggleReverseThrusters(false);
+                    TerminalStage.ToggleLateralThrusters(false);
+                }
+
+                List<IMyThrust> activeThrusters = new List<IMyThrust>();
+
+                foreach (IMyThrust thruster in Thrusters) {
+                    if (thruster.Enabled) {
+                        activeThrusters.Add(thruster);
+                    }
+                }
+
+                FlightController = new STUFlightController(RemoteControl, activeThrusters.ToArray(), Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
 
@@ -173,13 +213,18 @@ namespace IngameScript {
                 Warheads = warheads;
             }
 
-            private static void LoadConnector(IMyGridTerminalSystem grid) {
-                var connector = grid.GetBlockWithName("LIGMA Connector");
-                if (connector == null) {
-                    CreateFatalErrorBroadcast("Either no connectors found, or too many connectors found. Only one allowed.");
+            private static void LoadConnectors(IMyGridTerminalSystem grid) {
+                List<IMyTerminalBlock> connectorBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyShipConnector>(connectorBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (connectorBlocks.Count == 0) {
+                    CreateFatalErrorBroadcast("No connectors found on grid");
                 }
-                CreateOkBroadcast("Connector... nominal");
-                Connector = connector as IMyShipConnector;
+                IMyShipConnector[] connectors = new IMyShipConnector[connectorBlocks.Count];
+                for (int i = 0; i < connectorBlocks.Count; i++) {
+                    connectors[i] = connectorBlocks[i] as IMyShipConnector;
+                }
+                CreateOkBroadcast("Connectors... nominal");
+                Connectors = connectors;
             }
 
             private static void LoadDetonationSensor(IMyGridTerminalSystem grid) {
@@ -350,6 +395,12 @@ namespace IngameScript {
                     Type = type,
                 });
             }
+
+            private static bool IsStagedLIGMA(IMyGridTerminalSystem grid) {
+                IMyShipMergeBlock mergeBlock = grid.GetBlockWithName("TERMINAL_TO_FLIGHT_MERGE_BLOCK") as IMyShipMergeBlock;
+                return mergeBlock != null;
+            }
+
 
         }
     }
