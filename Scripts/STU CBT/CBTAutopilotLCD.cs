@@ -48,7 +48,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "SquareSimple",
-                    Position = new Vector2(ScreenWidth / 2, ScreenHeight / 2),
+                    Position = centerPos,
                     Size = new Vector2(ScreenWidth, ScreenHeight),
                     Color = new Color(0, 128, 0, 255),
                     RotationOrScale = 0f

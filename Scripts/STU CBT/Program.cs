@@ -114,6 +114,15 @@ namespace IngameScript
 
                     break;
 
+                case "PARK":
+                    CBT.CurrentPhase = CBT.Phase.Executing;
+                    RECALL = true;
+                    CBT.RemoteControl.DampenersOverride = true;
+                    CBT.FlightController.ReinstateGyroControl();
+                    CBT.FlightController.ReinstateThrusterControl();
+
+                    break;
+
                 case "": // if the user passes nothing, do nothing
                     break;
 
@@ -123,6 +132,7 @@ namespace IngameScript
                     CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation to best counterract the current trajectory.", STULogType.OK);
                     CBT.AddToLogQueue("CANCEL - Cancels the last command recallability.", STULogType.OK);
                     CBT.AddToLogQueue("ABORT - Relinquishes control of the gyroscopes and thrusters, turns dampener override ON, and idles.", STULogType.OK);
+                    CBT.AddToLogQueue("PARK - Orients the CBT to align with the Dock Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
                     CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
                     CBT.AddToLogQueue("TEST - Executes hard-coded maneuver parameters. FOR TESTING PURPOSES ONLY.", STULogType.OK);
                     CBT.AddToLogQueue("F5 - Move forward at 5m/s. \"B5 R4 Y0.5\" is the command to move backwards 5m/s, right 4m/s, and yaw 0.5 RPS", STULogType.OK);
@@ -153,7 +163,6 @@ namespace IngameScript
                     var finishedExecuting = maneuver();
                     if (finishedExecuting)
                     {
-                        // CBT.CreateBroadcast("CBT has finished executing the command", STULogType.OK);
                         CBT.CurrentPhase = CBT.Phase.Idle;
                     }
                     break;
@@ -175,11 +184,6 @@ namespace IngameScript
 
             // update the log screens
             CBT.UpdateLogScreens();
-
-            // update the autopilot screens
-
-            // hacky checks below (Echo to the PB terminal)
-            
         }
 
         public bool ParseCommand(string arg)

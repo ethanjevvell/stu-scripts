@@ -12,6 +12,9 @@ namespace IngameScript {
             public IMyTextSurface Surface { get; set; }
             public RectangleF Viewport { get; set; }
             public Vector2 TopLeft { get; private set; }
+            public Vector2 Center { get; private set; }
+            public float Center_X { get; private set; }
+            public float Center_Y { get; private set; }
             public Vector2 Cursor { get; set; }
             public MySpriteDrawFrame CurrentFrame { get; set; }
             /// <summary>
@@ -51,6 +54,21 @@ namespace IngameScript {
                 BackgroundSprite = new MySpriteCollection();
                 Viewport = GetViewport();
                 TopLeft = Cursor = Viewport.Position;
+                if(ViewportOffsets.ContainsKey(Surface.DisplayName))
+                {
+                    CBT.EchoPassthru($"{Surface.DisplayName}!");
+                    Center_X = (ViewportOffsets[Surface.DisplayName].Width + ViewportOffsets[Surface.DisplayName].X) / 2;
+                    Center_Y = (ViewportOffsets[Surface.DisplayName].Height + ViewportOffsets[Surface.DisplayName].Y) / 2;
+                }
+                else
+                {
+                    CBT.EchoPassthru($"{Surface.DisplayName}?");
+                    Center_X = Viewport.Width / 2;
+                    Center_Y = Viewport.Height / 2;
+                };
+                CBT.EchoPassthru($"{Surface.DisplayName}");
+                CBT.EchoPassthru($"Center_X: {Center_X}, Center_Y: {Center_Y}");
+                Center = new Vector2(Center_X, Center_Y);
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
                 DefaultLineHeight = GetDefaultLineHeight();
@@ -92,9 +110,7 @@ namespace IngameScript {
             }
 
             public void ResetViewport() {
-                CBT.AddToLogQueue($"Resetting viewport on screen {Surface.DisplayName}");
                 Viewport = GetViewport();
-
             }
 
             private IMyTextSurface TryGetSurface(IMyTextSurfaceProvider tempBlock, int displayIndex) {
@@ -109,15 +125,9 @@ namespace IngameScript {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
                 if (ViewportOffsets.ContainsKey(Surface.DisplayName))
                 {
-                    CBT.AddToLogQueue($"Using custom viewport for {Surface.DisplayName}");
-                    CBT.EchoPassthru($"Using custom viewport for {Surface.DisplayName}");
-                    CBT.EchoPassthru("RectangleF being used: " + ViewportOffsets[Surface.DisplayName].ToString());
                     return ViewportOffsets[Surface.DisplayName];
                 } else
                 {
-                    CBT.AddToLogQueue($"Using standard viewport for {Surface.DisplayName}");
-                    CBT.EchoPassthru($"Using standard viewport for {Surface.DisplayName}");
-                    CBT.EchoPassthru($"RectangleF being used: " + standardViewport);
                     return standardViewport;
                 }
                 //switch (Surface.DisplayName) {

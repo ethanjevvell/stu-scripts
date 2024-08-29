@@ -1,4 +1,5 @@
-﻿using Sandbox.ModAPI.Ingame;
+﻿using Sandbox.Game.Screens.DebugScreens;
+using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
@@ -175,11 +176,11 @@ namespace IngameScript
                     screen.StartFrame();
                     if (status) { 
                         screen.SetupDrawSurface(screen.Surface, status); 
-                        screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, new Vector2(screen.ScreenWidth / 2, screen.ScreenHeight / 2)); 
+                        screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, screen.Center); 
                     }
                     else { 
                         screen.SetupDrawSurface(screen.Surface, status); 
-                        screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, new Vector2(screen.ScreenWidth / 2, screen.ScreenHeight / 2)); 
+                        screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, screen.Center); 
                     }
                     screen.EndAndPaintFrame();
                 }
