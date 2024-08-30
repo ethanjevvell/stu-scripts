@@ -61,6 +61,8 @@ namespace IngameScript {
 
                 public override bool Run() {
 
+                    FirstRunTasks();
+
                     switch (CurrentPhase) {
 
                         case FlightPhase.Start:

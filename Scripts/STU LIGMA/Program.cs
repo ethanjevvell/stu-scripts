@@ -58,102 +58,78 @@ namespace IngameScript {
 
         void Main(string argument) {
 
-            if (Listener.HasPendingMessage) {
-                var message = Listener.AcceptMessage();
-                var command = message.Data.ToString();
-                ParseIncomingCommand(command);
-            }
+            try {
 
-            LIGMA.UpdateState();
-            LIGMA.UpdateMeasurements();
-            LIGMA.SendTelemetry();
+                if (Listener.HasPendingMessage) {
+                    var message = Listener.AcceptMessage();
+                    var command = message.Data.ToString();
+                    ParseIncomingCommand(command);
+                }
 
-            switch (LIGMA.CurrentPhase) {
+                LIGMA.UpdateState();
+                LIGMA.UpdateMeasurements();
+                LIGMA.SendTelemetry();
 
-                case LIGMA.Phase.Idle:
-                    break;
+                switch (LIGMA.CurrentPhase) {
 
-                case LIGMA.Phase.Launch:
+                    case LIGMA.Phase.Idle:
+                        break;
 
-                    var finishedLaunch = MainLaunchPlan.Run();
+                    case LIGMA.Phase.Launch:
 
-                    if (finishedLaunch) {
-                        try {
+                        var finishedLaunch = MainLaunchPlan.Run();
+
+                        if (finishedLaunch) {
                             LIGMA.CurrentPhase = LIGMA.Phase.Flight;
                             LIGMA.CreateWarningBroadcast("Entering flight phase");
+                            LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                             // Stop any roll created during this phase
                             LIGMA.FlightController.SetVr(0);
-
-                            // Prepare jettisoned stage's thrusters
-                            LIGMA.LaunchStage.ToggleForwardThrusters(false);
-                            LIGMA.LaunchStage.ToggleLateralThrusters(false);
-                            LIGMA.LaunchStage.ToggleReverseThrusters(true);
-                            LIGMA.LaunchStage.TriggerDisenageBurn(true);
-
-                            // Arm stage warheads
-                            LIGMA.LaunchStage.TriggerDetonationCountdown();
-
-                            // Stage separation
-                            LIGMA.LaunchStage.DisconnectMergeBlock();
-
-                            // Remove launch stage thrusters from Flight Controller
-                            LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.ForwardThrusters);
-                            LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.LateralThrusters);
-                            LIGMA.FlightController.Thrusters = Stage.RemoveThrusters(LIGMA.FlightController.Thrusters, LIGMA.LaunchStage.ReverseThrusters);
-
-                            // Turn on flight stage thrusters
-                            LIGMA.FlightStage.ToggleForwardThrusters(true);
-                            LIGMA.FlightStage.ToggleLateralThrusters(true);
-                            LIGMA.FlightStage.ToggleReverseThrusters(true);
-
-                            // Turn on terminal stage lateral thrusters only
-                            LIGMA.TerminalStage.ToggleForwardThrusters(false);
-
-                            List<IMyThrust> newActiveThrusters = new List<IMyThrust>();
-
-                            foreach (IMyThrust thruster in LIGMA.FlightController.Thrusters) {
-                                if (thruster.Enabled) {
-                                    newActiveThrusters.Add(thruster);
-                                }
+                            if (LIGMA.IS_STAGED_LIGMA) {
+                                LIGMA.JettisonLaunchStage();
                             }
+                        };
+                        break;
 
-                            LIGMA.FlightController.UpdateThrustersAfterGridChange(newActiveThrusters.ToArray());
-                            LIGMA.FlightController.UpdateShipMass();
+                    case LIGMA.Phase.Flight:
+                        var finishedFlight = MainFlightPlan.Run();
+                        if (finishedFlight) {
+                            try {
 
-                        } catch (Exception e) {
+                                LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
+                                LIGMA.CurrentPhase = LIGMA.Phase.Descent;
+                                LIGMA.CreateWarningBroadcast("Entering descent phase");
+                                // Stop any roll created during this phase
+                                LIGMA.FlightController.SetVr(0);
+                                if (LIGMA.IS_STAGED_LIGMA) {
+                                    LIGMA.JettisonFlightStage();
+                                }
+                            } catch (Exception e) {
+                                LIGMA.CreateErrorBroadcast(e.ToString());
+                            }
+                        };
+                        break;
 
-                            LIGMA.CreateFatalErrorBroadcast($"Error during launch phase: {e}");
+                    case LIGMA.Phase.Descent:
+                        var finishedDescent = MainDescentPlan.Run();
+                        if (finishedDescent) {
+                            LIGMA.CurrentPhase = LIGMA.Phase.Terminal;
+                            LIGMA.CreateWarningBroadcast("Entering terminal phase");
+                            // Stop any roll created during this phase
+                            LIGMA.FlightController.SetVr(0);
+                        };
+                        //
+                        break;
 
-                        }
-                    };
-                    break;
+                    case LIGMA.Phase.Terminal:
+                        var finishedTerminal = MainTerminalPlan.Run();
+                        // Detonation is handled purely by the DetonationSensor
+                        break;
 
-                case LIGMA.Phase.Flight:
-                    var finishedFlight = MainFlightPlan.Run();
-                    if (finishedFlight) {
-                        LIGMA.CurrentPhase = LIGMA.Phase.Descent;
-                        LIGMA.CreateWarningBroadcast("Entering descent phase");
-                        // Stop any roll created during this phase
-                        LIGMA.FlightController.SetVr(0);
-                    };
-                    break;
+                }
 
-                case LIGMA.Phase.Descent:
-                    var finishedDescent = MainDescentPlan.Run();
-                    if (finishedDescent) {
-                        LIGMA.CurrentPhase = LIGMA.Phase.Terminal;
-                        LIGMA.CreateWarningBroadcast("Entering terminal phase");
-                        // Stop any roll created during this phase
-                        LIGMA.FlightController.SetVr(0);
-                    };
-                    //
-                    break;
-
-                case LIGMA.Phase.Terminal:
-                    var finishedTerminal = MainTerminalPlan.Run();
-                    // Detonation is handled purely by the DetonationSensor
-                    break;
-
+            } catch (Exception e) {
+                LIGMA.CreateErrorBroadcast($"Error in main loop: {e}");
             }
 
         }

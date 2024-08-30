@@ -8,6 +8,7 @@
                 // All ILaunchPlans should call this method in their Run() method
                 public virtual void FirstRunTasks() {
                     if (IS_FIRST_RUN) {
+                        FlightController.UpdateShipMass();
                         // Detonation sensor activated for all descent plans
                         DetonationSensor.Enabled = true;
                         ArmWarheads();

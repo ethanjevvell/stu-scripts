@@ -6,7 +6,7 @@ namespace IngameScript {
 
             public class IntraplanetaryFlightPlan : IFlightPlan {
 
-                private const double FLIGHT_VELOCITY = 300;
+                private const double FLIGHT_VELOCITY = 400;
                 private const int TOTAL_ORBITAL_WAYPOINTS = 12;
                 private const double FIRST_ORBIT_WAYPOINT_COEFFICIENT = 0.6;
 

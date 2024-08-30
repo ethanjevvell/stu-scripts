@@ -22,7 +22,7 @@ namespace IngameScript {
             public MatrixD CurrentWorldMatrix { get; set; }
             public MatrixD PreviousWorldMatrix { get; set; }
 
-            public IMyThrust[] Thrusters { get; set; }
+            public IMyThrust[] ActiveThrusters { get; set; }
             public IMyGyro[] AllGyroscopes { get; set; }
 
             STUVelocityController VelocityController { get; set; }
@@ -38,9 +38,9 @@ namespace IngameScript {
             public STUFlightController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
-                Thrusters = allThrusters;
+                ActiveThrusters = allThrusters;
                 TargetVelocity = 0;
-                VelocityController = new STUVelocityController(RemoteControl, Thrusters);
+                VelocityController = new STUVelocityController(RemoteControl, ActiveThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
                 AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
                 PointOrbitController = new STUPointOrbitController(this, RemoteControl);
@@ -294,8 +294,12 @@ namespace IngameScript {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
             }
 
+            public double GetShipMass() {
+                return STUVelocityController.ShipMass;
+            }
+
             public void RelinquishThrusterControl() {
-                foreach (var thruster in Thrusters) {
+                foreach (var thruster in ActiveThrusters) {
                     thruster.ThrustOverride = 0;
                 }
                 HasThrusterControl = false;
@@ -316,7 +320,7 @@ namespace IngameScript {
             }
 
             public void ReinstateThrusterControl() {
-                foreach (var thruster in Thrusters) {
+                foreach (var thruster in ActiveThrusters) {
                     thruster.ThrustOverride = 0;
                 }
                 HasThrusterControl = true;

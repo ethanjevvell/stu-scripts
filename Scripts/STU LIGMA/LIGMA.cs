@@ -35,7 +35,7 @@ namespace IngameScript {
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
-            public static IMyThrust[] Thrusters { get; set; }
+            public static IMyThrust[] AllThrusters { get; set; }
             public static IMyGyro[] Gyros { get; set; }
             public static IMyBatteryBlock[] Batteries { get; set; }
             public static IMyGasTank[] GasTanks { get; set; }
@@ -114,7 +114,7 @@ namespace IngameScript {
 
                 List<IMyThrust> activeThrusters = new List<IMyThrust>();
 
-                foreach (IMyThrust thruster in Thrusters) {
+                foreach (IMyThrust thruster in AllThrusters) {
                     if (thruster.Enabled) {
                         activeThrusters.Add(thruster);
                     }
@@ -154,7 +154,7 @@ namespace IngameScript {
                 }
 
                 CreateOkBroadcast("Thrusters... nominal");
-                Thrusters = allThrusters;
+                AllThrusters = allThrusters;
             }
 
             private static void LoadGyros(IMyGridTerminalSystem grid) {
@@ -300,6 +300,11 @@ namespace IngameScript {
             }
 
             public static void UpdateMeasurements() {
+                if (IS_STAGED_LIGMA) {
+                    LaunchStage.MeasureCurrentFuel();
+                    FlightStage.MeasureCurrentFuel();
+                    TerminalStage.MeasureCurrentFuel();
+                }
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
                 if (CurrentPhase != Phase.Idle) {
@@ -401,6 +406,89 @@ namespace IngameScript {
                 return mergeBlock != null;
             }
 
+
+            public static void JettisonLaunchStage() {
+
+                // Prepare jettisoned stage's thrusters
+                LaunchStage.ToggleForwardThrusters(false);
+                LaunchStage.ToggleLateralThrusters(false);
+                LaunchStage.ToggleReverseThrusters(true);
+                LaunchStage.TriggerDisenageBurn();
+
+                // Arm stage warheads
+                LaunchStage.TriggerDetonationCountdown();
+
+                // Stage separation
+                LaunchStage.DisconnectMergeBlock();
+
+                // Remove launch stage thrusters from vehicle memory
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, LaunchStage.ForwardThrusters);
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, LaunchStage.LateralThrusters);
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, LaunchStage.ReverseThrusters);
+
+                // Remove launch stage hydrogen tanks from fuel calculations
+                GasTanks = Stage.RemoveHydrogenTanks(GasTanks, LaunchStage.HydrogenTanks);
+
+                // Turn on flight stage thrusters
+                FlightStage.ToggleForwardThrusters(true);
+                FlightStage.ToggleLateralThrusters(true);
+                FlightStage.ToggleReverseThrusters(true);
+
+                // Turn on terminal stage lateral thrusters only
+                TerminalStage.ToggleForwardThrusters(false);
+                TerminalStage.ToggleReverseThrusters(false);
+                TerminalStage.ToggleLateralThrusters(true);
+
+                List<IMyThrust> newActiveThrusters = new List<IMyThrust>();
+
+                foreach (IMyThrust thruster in AllThrusters) {
+                    if (thruster.Enabled) {
+                        newActiveThrusters.Add(thruster);
+                    }
+                }
+
+                FlightController.UpdateThrustersAfterGridChange(newActiveThrusters.ToArray());
+
+            }
+
+            public static void JettisonFlightStage() {
+
+                // Prepare jettisoned stage's thrusters
+                FlightStage.ToggleForwardThrusters(false);
+                FlightStage.ToggleLateralThrusters(false);
+                FlightStage.ToggleReverseThrusters(true);
+                FlightStage.TriggerDisenageBurn();
+
+                // Arm stage warheads
+                FlightStage.TriggerDetonationCountdown();
+
+                // Stage separation
+                FlightStage.DisconnectMergeBlock();
+
+                // Remove flight stage thrusters from vehicle memory
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, FlightStage.ForwardThrusters);
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, FlightStage.LateralThrusters);
+                AllThrusters = Stage.RemoveThrusters(AllThrusters, FlightStage.ReverseThrusters);
+
+                // Remove flight stage hydrogen tanks from fuel calculations
+                GasTanks = Stage.RemoveHydrogenTanks(GasTanks, FlightStage.HydrogenTanks);
+
+                // Turn on terminal stage thrusters
+                TerminalStage.ToggleForwardThrusters(true);
+                TerminalStage.ToggleLateralThrusters(true);
+                TerminalStage.ToggleReverseThrusters(true);
+
+                List<IMyThrust> newActiveThrusters = new List<IMyThrust>();
+
+                foreach (IMyThrust thruster in AllThrusters) {
+                    if (thruster.Enabled) {
+                        newActiveThrusters.Add(thruster);
+                    }
+                }
+
+                FlightController.UpdateThrustersAfterGridChange(newActiveThrusters.ToArray());
+
+            }
 
         }
     }
