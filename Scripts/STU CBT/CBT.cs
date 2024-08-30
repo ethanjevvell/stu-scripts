@@ -32,6 +32,8 @@ namespace IngameScript
             public static float UserInputPitchVelocity = 0;
             public static float UserInputYawVelocity = 0;
 
+            public static Vector3D NextWaypoint;
+
             /// <summary>
             ///  prepare the program by declaring all the different blocks we are going to use
             /// </summary>
@@ -545,6 +547,14 @@ namespace IngameScript
                 FlightController.SetVp(UserInputPitchVelocity);
                 FlightController.SetVw(UserInputYawVelocity);
                 return VxStable && VzStable && VyStable;
+            }
+
+            public static bool PointAtTarget()
+            {
+                AddToLogQueue("Pointing at target", STULogType.INFO);
+                FlightController.ReinstateGyroControl();
+                FlightController.ReinstateThrusterControl();
+                return FlightController.AlignShipToTarget(NextWaypoint);
             }
 
             // "AC130" mode

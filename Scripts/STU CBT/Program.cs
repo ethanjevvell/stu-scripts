@@ -90,14 +90,10 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff here
                     CBT.CurrentPhase = CBT.Phase.Executing;
-                    CBT.UserInputForwardVelocity = 0;
-                    CBT.UserInputRightVelocity = 0;
-                    CBT.UserInputUpVelocity = 0;
-                    CBT.UserInputPitchVelocity = 0;
-                    CBT.UserInputRollVelocity = 0;
-                    CBT.UserInputYawVelocity = 1;
-                    maneuver = CBT.GenericManeuver;
-                    RECALL = false;
+                    CBT.FlightController.ReinstateGyroControl();
+                    CBT.FlightController.ReinstateThrusterControl();
+                    CBT.NextWaypoint = new Vector3D(0, 0, 0);
+                    maneuver = CBT.PointAtTarget;
                     break;
 
                 case "ABORT":
@@ -153,7 +149,6 @@ namespace IngameScript
             if (RECALL) { CBT.CurrentPhase = CBT.Phase.Executing; CBT.RemoteControl.DampenersOverride = false; }
             CBT.UpdateAutopilotScreens(RECALL);
             
-
             /// main state machine
             switch (CBT.CurrentPhase)
             {
@@ -163,7 +158,9 @@ namespace IngameScript
                     var finishedExecuting = maneuver();
                     if (finishedExecuting)
                     {
+                        CBT.AddToLogQueue($"hit idle stage", STULogType.OK);
                         CBT.CurrentPhase = CBT.Phase.Idle;
+                        // set all thruster outputs to zero (in certain cases, the thing we talked about with Ethan about residual velocity on a previous tick)
                     }
                     break;
             }
