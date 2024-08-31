@@ -476,6 +476,18 @@ namespace IngameScript
             /// <returns></returns>
             /// 
 
+            public static bool IsAutopilotRunning()
+            {
+                return true;
+            }
+
+            public static void ChangeAutopilotControl(bool thrusters, bool gyroscopes, bool dampeners)
+            {
+                if (thrusters) { FlightController.ReinstateThrusterControl(); } else { FlightController.RelinquishThrusterControl(); }
+                if (gyroscopes) { FlightController.ReinstateGyroControl(); } else { FlightController.RelinquishGyroControl(); }
+                RemoteControl.DampenersOverride = dampeners;
+            }
+
             // power modes
             //public static void PowerMode(Enum state)
             //{

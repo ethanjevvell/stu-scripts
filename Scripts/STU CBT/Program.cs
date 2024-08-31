@@ -29,7 +29,6 @@ namespace IngameScript
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
         Func<bool> maneuver;
-        bool RECALL;
         
         public Program()
         {
@@ -46,9 +45,6 @@ namespace IngameScript
             // the program will do what it needs to do,
             // then it will set the update frequency to none.
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
-            RECALL = false;
-
-
         }
 
         public void Main(string argument, UpdateType updateSource)
@@ -65,26 +61,22 @@ namespace IngameScript
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     CBT.AddToLogQueue("Halting ship locomotion...", STULogType.WARNING);
                     maneuver = CBT.Hover;
-                    RECALL = false;
-                    CBT.RemoteControl.DampenersOverride = true;
                     break;
 
                 case "STOP":
-                    CBT.CurrentPhase = CBT.Phase.Executing;
-                    CBT.AddToLogQueue("Slamming on the brakes...", STULogType.WARNING);
-                    maneuver = CBT.FastStop;
-                    RECALL = false;
-                    CBT.RemoteControl.DampenersOverride = true;
+                    // CBT.CurrentPhase = CBT.Phase.Executing;
+                    CBT.AddToLogQueue("Stop command not implemented yet.", STULogType.WARNING);
+                    // maneuver = CBT.FastStop;
                     break;
 
                 case "CANCEL":
                     CBT.CurrentPhase = CBT.Phase.Idle;
-                    CBT.AddToLogQueue("Cancelling last command recallability...", STULogType.WARNING);
-                    RECALL = false;
+                    CBT.AddToLogQueue("Breaking out of main state machine...", STULogType.WARNING);
                     break;
 
                 case "AC130":
                     // CBT.CurrentPhase = CBT.Phase.Executing;
+
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     break;
 
@@ -96,26 +88,21 @@ namespace IngameScript
                     maneuver = CBT.PointAtTarget;
                     break;
 
-                case "ABORT":
+                case "ABORT": // keeping this stuff top-level for readability (rather than buried in the CBT class)
                     CBT.CurrentPhase = CBT.Phase.Idle;
-                    RECALL = false;
                     CBT.RemoteControl.DampenersOverride = true;
-                    CBT.AddToLogQueue("Attempting to relinquish control of the ship", STULogType.WARNING);
+                    CBT.AddToLogQueue("Attempting to relinquish control of the ship...", STULogType.WARNING);
                     CBT.FlightController.RelinquishGyroControl();
                     CBT.FlightController.RelinquishThrusterControl();
-                    CBT.AddToLogQueue($"Gyro control: {CBT.FlightController.HasGyroControl}", STULogType.OK);
-                    CBT.AddToLogQueue($"Thruster control: {CBT.FlightController.HasThrusterControl}", STULogType.OK);
-                    CBT.AddToLogQueue($"Dampeners: {CBT.RemoteControl.DampenersOverride}", STULogType.OK);
-                    CBT.AddToLogQueue($"Recall: {RECALL}", STULogType.OK);
+                    CBT.AddToLogQueue($"Gyro control: {CBT.FlightController.HasGyroControl}", STULogType.INFO);
+                    CBT.AddToLogQueue($"Thruster control: {CBT.FlightController.HasThrusterControl}", STULogType.INFO);
+                    CBT.AddToLogQueue($"Dampeners: {CBT.RemoteControl.DampenersOverride}", STULogType.INFO);
 
                     break;
 
                 case "PARK":
                     CBT.CurrentPhase = CBT.Phase.Executing;
-                    RECALL = true;
-                    CBT.RemoteControl.DampenersOverride = true;
-                    CBT.FlightController.ReinstateGyroControl();
-                    CBT.FlightController.ReinstateThrusterControl();
+                    CBT.ChangeAutopilotControl(true, true, true);
 
                     break;
 
@@ -124,9 +111,9 @@ namespace IngameScript
 
                 case "HELP":
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
-                    CBT.AddToLogQueue("HALT - Executes a hover maneuver and then idles.", STULogType.OK);
-                    CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation to best counterract the current trajectory.", STULogType.OK);
-                    CBT.AddToLogQueue("CANCEL - Cancels the last command recallability.", STULogType.OK);
+                    CBT.AddToLogQueue("HALT - Executes a hover maneuver.", STULogType.OK);
+                    CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation before firing thrusters to best counterract the current trajectory.", STULogType.OK);
+                    CBT.AddToLogQueue("CANCEL - Changes the state machine to IDLE without doing anything else.", STULogType.OK);
                     CBT.AddToLogQueue("ABORT - Relinquishes control of the gyroscopes and thrusters, turns dampener override ON, and idles.", STULogType.OK);
                     CBT.AddToLogQueue("PARK - Orients the CBT to align with the Dock Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
                     CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
@@ -144,10 +131,8 @@ namespace IngameScript
                     break;
                 }
 
-            // check whether RECALL variable is set.
-            // if true, then the last command will be executed again, essentially keeping the state machine in the same state.
-            if (RECALL) { CBT.CurrentPhase = CBT.Phase.Executing; CBT.RemoteControl.DampenersOverride = false; }
-            CBT.UpdateAutopilotScreens(RECALL);
+            // check whether Autopilot is engaged for displaying on the status LCD.
+            CBT.UpdateAutopilotScreens(CBT.IsAutopilotRunning());
             
             /// main state machine
             switch (CBT.CurrentPhase)
@@ -316,7 +301,6 @@ namespace IngameScript
                             break;
                     }
                 } 
-                RECALL = true;
                 return true;
             }
             else
