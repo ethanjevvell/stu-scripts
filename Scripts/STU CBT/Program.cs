@@ -131,8 +131,9 @@ namespace IngameScript
                     break;
                 }
 
-            // check whether Autopilot is engaged for displaying on the status LCD.
-            CBT.UpdateAutopilotScreens(CBT.IsAutopilotRunning());
+            // check the autopilot state and update the status screen accordingly.
+            if (CBT.IsAutopilotRunning() == 0) { CBT.UpdateAutopilotScreens(false); }
+            else { CBT.UpdateAutopilotScreens(true); }
             
             /// main state machine
             switch (CBT.CurrentPhase)

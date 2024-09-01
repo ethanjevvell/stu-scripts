@@ -476,9 +476,21 @@ namespace IngameScript
             /// <returns></returns>
             /// 
 
-            public static bool IsAutopilotRunning()
+            public static int IsAutopilotRunning()
             {
-                return true;
+                int autopilotState = 0;
+                if (FlightController.HasThrusterControl) { autopilotState += 1; }
+                if (FlightController.HasGyroControl) { autopilotState += 2; }
+                if (RemoteControl.DampenersOverride) { autopilotState += 4; }
+                // 0 = no autopilot
+                // 1 = thrusters only
+                // 2 = gyros only
+                // 3 = thrusters and gyros
+                // 4 = dampeners only
+                // 5 = thrusters and dampeners
+                // 6 = gyros and dampeners
+                // 7 = all three
+                return autopilotState;
             }
 
             public static void ChangeAutopilotControl(bool thrusters, bool gyroscopes, bool dampeners)
