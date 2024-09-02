@@ -49,9 +49,9 @@ namespace IngameScript
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
-            public static IMyMotorStator StingerHinge1 { get; set; }
-            public static IMyMotorStator StingerHinge2 { get; set; }
-            public static IMyPistonBase StingerPiston { get; set; }
+            public static IMyMotorStator RearHinge1 { get; set; }
+            public static IMyMotorStator RearHinge2 { get; set; }
+            public static IMyPistonBase RearPiston { get; set; }
             public static IMyMotorStator GangwayHinge1 { get; set; }
             public static IMyMotorStator GangwayHinge2 { get; set; }
             public static IMyMotorStator CameraRotor { get; set; }
@@ -123,7 +123,7 @@ namespace IngameScript
                 LoadFuelTanks(grid);
                 LoadLandingGear(grid);
                 LoadConnector(grid);
-                LoadStingerArm(grid);
+                LoadRearDockArm(grid);
                 LoadGangwayActuators(grid);
                 LoadCamera(grid);
                 AddAutopilotIndicatorSubscribers(grid);
@@ -424,20 +424,20 @@ namespace IngameScript
                 AddToLogQueue("Connector ... loaded", STULogType.INFO);
             }
 
-            private static void LoadStingerArm(IMyGridTerminalSystem grid)
+            private static void LoadRearDockArm(IMyGridTerminalSystem grid)
             {
-                var hinge1 = grid.GetBlockWithName("CBT Stinger Hinge 1");
-                var hinge2 = grid.GetBlockWithName("CBT Stinger Hinge 2");
-                var piston = grid.GetBlockWithName("CBT Stinger Piston");
+                var hinge1 = grid.GetBlockWithName("CBT Rear Hinge 1");
+                var hinge2 = grid.GetBlockWithName("CBT Rear Hinge 2");
+                var piston = grid.GetBlockWithName("CBT Rear Piston");
                 if (hinge1 == null || hinge2 == null || piston == null)
                 {
                     AddToLogQueue("Could not locate at least one stinger arm component; ensure all components are named appropriately", STULogType.ERROR);
                     return;
                 }
 
-                StingerHinge1 = hinge1 as IMyMotorStator;
-                StingerHinge2 = hinge2 as IMyMotorStator;
-                StingerPiston = piston as IMyPistonBase;
+                RearHinge1 = hinge1 as IMyMotorStator;
+                RearHinge2 = hinge2 as IMyMotorStator;
+                RearPiston = piston as IMyPistonBase;
                 AddToLogQueue("Stinger arm actuator assembly ... loaded", STULogType.INFO);
             }
 
@@ -456,24 +456,32 @@ namespace IngameScript
                 GangwayHinge2 = hinge2 as IMyMotorStator;
                 GangwayHinge2.TargetVelocityRPM = 0;
 
+                AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
+                
                 if (!IsGangwayStateValid())
                 {
-                    AddToLogQueue("Gangway actuator assembly is in an invalid state; resetting ...", STULogType.WARNING);
-                    ResetGangwayActuators();
+                    AddToLogQueue("GANGWAY ASSY INVALID. RESET RECOMMENDED", STULogType.ERROR);
+                    AddToLogQueue($"Hinge 1 angle: {GangwayHinge1.Angle * (180/Math.PI)}", STULogType.WARNING);
+                    AddToLogQueue($"Hinge 2 angle: {GangwayHinge2.Angle * (180 / Math.PI)}", STULogType.WARNING);
                 }
-
-                AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
+                else
+                {
+                    GangwayHinge1.UpperLimitDeg = 0;
+                    GangwayHinge1.LowerLimitDeg = -90;
+                    GangwayHinge2.UpperLimitDeg = 90;
+                    GangwayHinge2.LowerLimitDeg = -90;
+                }
             }
 
             private static bool IsGangwayStateValid()
             {
                 // check whether hinge 1 is out of bounds
-                if (GangwayHinge1.Angle > 0) { return false;}
+                if ((GangwayHinge1.Angle * (180/Math.PI)) > 0) { return false;}
                 // normalize both hinge angles to 0-180 degrees
-                float hinge1Angle = GangwayHinge1.Angle + 90;
-                float hinge2Angle = GangwayHinge2.Angle + 90;
+                float hinge1Angle = (float)(GangwayHinge1.Angle * (180 / Math.PI)) + 90;
+                float hinge2Angle = (float)(GangwayHinge2.Angle * (180 / Math.PI)) + 90;
                 // test whether hinge2's angle is twice hinge1's angle with a margin of error
-                if (Math.Abs(hinge2Angle - (2 * hinge1Angle)) < 0.1f) { return true; }
+                if (Math.Abs(hinge2Angle - (2 * hinge1Angle)) < 2f) { return true; }
                 else { return false; }
             }
 
@@ -485,7 +493,7 @@ namespace IngameScript
 
                 GangwayHinge1.TargetVelocityRPM = 0;
                 GangwayHinge1.Torque = 33000000;
-                if (GangwayHinge1.Angle > 0)
+                if ((GangwayHinge1.Angle * (180 / Math.PI)) + 90 > 0)
                 {
                     GangwayHinge1.LowerLimitDeg = 0;
                     GangwayHinge1.TargetVelocityRPM = -1;
@@ -501,12 +509,22 @@ namespace IngameScript
 
             public static void ExtendGangway()
             {
-                
+                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
+                {
+                    GangwayHinge1.TargetVelocityRPM = 1;
+                    GangwayHinge2.TargetVelocityRPM = 1;
+                }
+                else { AddToLogQueue("Gangway assy not valid or altitude too low; reset recommended.", STULogType.ERROR); }
             }
 
             public static void RetractGangway()
             {
-                
+                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
+                {
+                    GangwayHinge1.TargetVelocityRPM = 1;
+                    GangwayHinge2.TargetVelocityRPM = 1;
+                }
+                else { AddToLogQueue("Gangway assy not valid or altitude too low; reset recommended.", STULogType.ERROR); }
             }
 
             /// <summary>
@@ -523,7 +541,7 @@ namespace IngameScript
             {
                 var rotor = grid.GetBlockWithName("CBT Camera Rotor");
                 var hinge = grid.GetBlockWithName("CBT Camera Hinge");
-                var camera = grid.GetBlockWithName("CBT Camera");
+                var camera = grid.GetBlockWithName("CBT Bottom Camera");
                 if (rotor == null || hinge == null || camera == null)
                 {
                     AddToLogQueue("Could not locate at least one camera component; ensure all components are named appropriately", STULogType.ERROR);

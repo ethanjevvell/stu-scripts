@@ -71,6 +71,11 @@ namespace IngameScript {
                 CurrentPosition = RemoteControl.GetPosition();
             }
 
+            public double GetCurrentSurfaceAltitude()
+            {
+                return AltitudeController.GetSurfaceAltitude();
+            }
+
             public float GetForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)CurrentVelocity.Z;
