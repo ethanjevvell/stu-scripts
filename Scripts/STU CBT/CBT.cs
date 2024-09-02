@@ -32,6 +32,8 @@ namespace IngameScript
             public static float UserInputPitchVelocity = 0;
             public static float UserInputYawVelocity = 0;
 
+            public static Vector3D NextWaypoint;
+
             /// <summary>
             ///  prepare the program by declaring all the different blocks we are going to use
             /// </summary>
@@ -474,6 +476,30 @@ namespace IngameScript
             /// <returns></returns>
             /// 
 
+            public static int IsAutopilotRunning()
+            {
+                int autopilotState = 0;
+                if (FlightController.HasThrusterControl) { autopilotState += 1; }
+                if (FlightController.HasGyroControl) { autopilotState += 2; }
+                if (RemoteControl.DampenersOverride) { autopilotState += 4; }
+                // 0 = no autopilot
+                // 1 = thrusters only
+                // 2 = gyros only
+                // 3 = thrusters and gyros
+                // 4 = dampeners only
+                // 5 = thrusters and dampeners
+                // 6 = gyros and dampeners
+                // 7 = all three
+                return autopilotState;
+            }
+
+            public static void ChangeAutopilotControl(bool thrusters, bool gyroscopes, bool dampeners)
+            {
+                if (thrusters) { FlightController.ReinstateThrusterControl(); } else { FlightController.RelinquishThrusterControl(); }
+                if (gyroscopes) { FlightController.ReinstateGyroControl(); } else { FlightController.RelinquishGyroControl(); }
+                RemoteControl.DampenersOverride = dampeners;
+            }
+
             // power modes
             //public static void PowerMode(Enum state)
             //{
@@ -545,6 +571,14 @@ namespace IngameScript
                 FlightController.SetVp(UserInputPitchVelocity);
                 FlightController.SetVw(UserInputYawVelocity);
                 return VxStable && VzStable && VyStable;
+            }
+
+            public static bool PointAtTarget()
+            {
+                AddToLogQueue("Pointing at target", STULogType.INFO);
+                FlightController.ReinstateGyroControl();
+                FlightController.ReinstateThrusterControl();
+                return FlightController.AlignShipToTarget(NextWaypoint);
             }
 
             // "AC130" mode

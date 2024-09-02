@@ -56,18 +56,14 @@ namespace IngameScript {
                 TopLeft = Cursor = Viewport.Position;
                 if(ViewportOffsets.ContainsKey(Surface.DisplayName))
                 {
-                    CBT.EchoPassthru($"{Surface.DisplayName}!");
                     Center_X = (ViewportOffsets[Surface.DisplayName].Width + ViewportOffsets[Surface.DisplayName].X) / 2;
                     Center_Y = (ViewportOffsets[Surface.DisplayName].Height + ViewportOffsets[Surface.DisplayName].Y) / 2;
                 }
                 else
                 {
-                    CBT.EchoPassthru($"{Surface.DisplayName}?");
                     Center_X = Viewport.Width / 2;
                     Center_Y = Viewport.Height / 2;
                 };
-                CBT.EchoPassthru($"{Surface.DisplayName}");
-                CBT.EchoPassthru($"Center_X: {Center_X}, Center_Y: {Center_Y}");
                 Center = new Vector2(Center_X, Center_Y);
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
@@ -130,14 +126,6 @@ namespace IngameScript {
                 {
                     return standardViewport;
                 }
-                //switch (Surface.DisplayName) {
-                //    case "Large Display":
-                //        //float offsetPx = 8f;
-                //        //return new RectangleF(
-                //        //    new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
-                //        //    new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
-                //    default:
-                //        return standardViewport;
             }
 
             private float GetTextSpriteWidth(MySprite sprite) {
