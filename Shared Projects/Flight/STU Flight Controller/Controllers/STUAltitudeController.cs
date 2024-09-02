@@ -148,7 +148,7 @@ namespace IngameScript {
                     if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out elevation)) {
                         return elevation;
                     }
-                    return 1;
+                    return 0;
                 }
 
                 public double GetSeaLevelAltitude() {
@@ -156,7 +156,7 @@ namespace IngameScript {
                     if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Sealevel, out elevation)) {
                         return elevation;
                     }
-                    return 1;
+                    return 0;
                 }
 
             }

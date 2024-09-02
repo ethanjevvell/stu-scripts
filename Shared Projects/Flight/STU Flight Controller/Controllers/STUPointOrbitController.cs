@@ -41,16 +41,20 @@ namespace IngameScript {
                                 TargetRadius = Vector3D.Distance(targetPos, RemoteControl.CenterOfMass);
                                 TargetAltitude = FlightController.AltitudeController.CurrentSeaLevelAltitude;
                                 if (InGravity()) {
-                                    Vector3D gravityUnitVector = Vector3D.Normalize(FlightController.VelocityController.LocalGravityVector);
+                                    Vector3D gravityUnitVector = Vector3D.Normalize(RemoteControl.GetNaturalGravity());
                                     OrbitalAxis = new Line(targetPos - gravityUnitVector * TargetRadius, targetPos + gravityUnitVector * TargetRadius);
                                 } else {
                                     Vector3D velocityUnitVector = Vector3D.Normalize(RemoteControl.GetShipVelocities().LinearVelocity);
                                     Vector3D orbitalAxisUnitVector = Vector3D.Normalize(Vector3D.Cross(velocityUnitVector, targetPos - RemoteControl.CenterOfMass));
                                     OrbitalAxis = new Line(targetPos - orbitalAxisUnitVector * TargetRadius, targetPos + orbitalAxisUnitVector * TargetRadius);
                                 }
+                                LIGMA.CreateOkBroadcast($"Start: {OrbitalAxis.From}");
+                                LIGMA.CreateOkBroadcast($"End: {OrbitalAxis.To}");
                             }
                             break;
                         case PointOrbitState.Orbiting:
+                            Vector3D closestPoint = GetClosestPointOnOrbitalAxis();
+                            LIGMA.CreateFatalErrorBroadcast($"Closest point: {closestPoint}");
                             ExertCentripetalForce();
                             break;
                     }
@@ -89,29 +93,38 @@ namespace IngameScript {
                     double velocitySquared = velocity * velocity;
                     double radius = Vector3D.Distance(GetClosestPointOnOrbitalAxis(), RemoteControl.CenterOfMass);
                     double radiusError = radius - TargetRadius;
-                    // create a vector that points from the ship to the target
-                    // if velocity is really close to zero, we need to kickstart an orbit
                     double centripetalForceRequired = ((mass * velocitySquared) / radius) + 100 * radiusError;
                     Vector3D centripetalForceVector = GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired;
-                    //LIGMA.CreateOkBroadcast($"F_c_adj = {centripetalForce}");
-                    //LIGMA.CreateOkBroadcast($"F_c_raw = {(mass * velocitySquared) / radius}");
-                    //LIGMA.CreateOkBroadcast($"V_c = {FlightController.CurrentVelocity.Length()}");
-                    //LIGMA.CreateOkBroadcast($"r = {radius}");
-                    //LIGMA.CreateOkBroadcast($"r_e = {radiusError}");
-                    //LIGMA.CreateOkBroadcast($"r_t = {TargetRadius}");
                     Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
                     FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
                 }
 
+                /// <summary>
+                /// Finds the closest point on the orbital axis to the ship; https://en.wikipedia.org/wiki/Vector_projection
+                /// </summary>
+                /// <returns></returns>
                 private Vector3D GetClosestPointOnOrbitalAxis() {
-                    Vector3D shipToAxisStart = OrbitalAxis.From - RemoteControl.CenterOfMass;
-                    double projectionLength = Vector3D.Dot(shipToAxisStart, OrbitalAxis.Direction);
-                    return OrbitalAxis.From + projectionLength * Vector3D.Normalize(OrbitalAxis.Direction);
+                    Vector3D b = OrbitalAxis.To - OrbitalAxis.From;
+                    Vector3D a = RemoteControl.CenterOfMass - OrbitalAxis.From;
+                    double t = Vector3D.Dot(a, b) / Vector3D.Dot(b, b);
+                    if (t < 0) {
+                        LIGMA.CreateWarningBroadcast($"Below OA");
+                        return OrbitalAxis.From;
+                    } else if (t > 1) {
+                        LIGMA.CreateWarningBroadcast($"Above OA");
+                        return OrbitalAxis.To;
+                    } else {
+                        return (OrbitalAxis.From + t * b);
+                    }
                 }
 
+                /// <summary>
+                /// Returns a unit vector pointing from the ship to the closest point on the orbital axis
+                /// </summary>
+                /// <returns></returns>
                 private Vector3D GetUnitVectorTowardOrbitalAxis() {
-                    Vector3D closestPointOnOrbitalAxis = GetClosestPointOnOrbitalAxis();
-                    return Vector3D.Normalize(closestPointOnOrbitalAxis - RemoteControl.CenterOfMass);
+                    Vector3D closestPoint = GetClosestPointOnOrbitalAxis();
+                    return closestPoint - RemoteControl.CenterOfMass;
                 }
 
                 private bool InGravity() {
