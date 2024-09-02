@@ -46,6 +46,8 @@ namespace IngameScript
             public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
             public static List<CBTAutopilotLCD> AutopilotStatusChannel = new List<CBTAutopilotLCD>();
             public static STUFlightController FlightController { get; set; }
+            public static CBTGangway Gangway { get; set; }
+            public static CBTRearDock RearDock { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
@@ -116,7 +118,7 @@ namespace IngameScript
 
                 AddLogSubscribers(grid);
                 LoadRemoteController(grid);
-                // LoadFlightSeat(grid);
+                LoadFlightSeat(grid);
                 LoadThrusters(grid);
                 LoadGyros(grid);
                 LoadBatteries(grid);
@@ -133,12 +135,11 @@ namespace IngameScript
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
 
-                FlightSeat = grid.GetBlockWithName("CBT Flight Seat"); // as IMyTerminalBlock;
-
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
+                Gangway = new CBTGangway(GangwayHinge1, GangwayHinge2);
+                RearDock = new CBTRearDock(RearPiston, RearHinge1, RearHinge2, Connector);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
-                UpdateLogScreens();
             }
 
             public static void EchoPassthru(string text)
@@ -184,7 +185,7 @@ namespace IngameScript
                     screen.EndAndPaintFrame();
                 }
             }
-
+            
             public static void UpdateAutopilotScreens()
             {
                 foreach (var screen in AutopilotStatusChannel)
@@ -275,7 +276,7 @@ namespace IngameScript
             // load main flight seat BY NAME. Name must be "CBT Flight Seat"
             private static void LoadFlightSeat(IMyGridTerminalSystem grid)
             {
-                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyControlPanel;
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
                 if (FlightSeat == null)
                 {
                     AddToLogQueue("Could not locate \"CBT Flight Seat\"; ensure flight seat is named appropriately", STULogType.ERROR);
@@ -458,7 +459,7 @@ namespace IngameScript
 
                 AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
                 
-                if (!IsGangwayStateValid())
+                if (!Gangway.IsGangwayStateValid())
                 {
                     AddToLogQueue("GANGWAY ASSY INVALID. RESET RECOMMENDED", STULogType.ERROR);
                     AddToLogQueue($"Hinge 1 angle: {GangwayHinge1.Angle * (180/Math.PI)}", STULogType.WARNING);
@@ -471,70 +472,6 @@ namespace IngameScript
                     GangwayHinge2.UpperLimitDeg = 90;
                     GangwayHinge2.LowerLimitDeg = -90;
                 }
-            }
-
-            private static bool IsGangwayStateValid()
-            {
-                // check whether hinge 1 is out of bounds
-                if ((GangwayHinge1.Angle * (180/Math.PI)) > 0) { return false;}
-                // normalize both hinge angles to 0-180 degrees
-                float hinge1Angle = (float)(GangwayHinge1.Angle * (180 / Math.PI)) + 90;
-                float hinge2Angle = (float)(GangwayHinge2.Angle * (180 / Math.PI)) + 90;
-                // test whether hinge2's angle is twice hinge1's angle with a margin of error
-                if (Math.Abs(hinge2Angle - (2 * hinge1Angle)) < 2f) { return true; }
-                else { return false; }
-            }
-
-            public static void ResetGangwayActuators()
-            {
-                GangwayHinge2.Torque = 0;
-                GangwayHinge2.BrakingTorque = 0;
-                GangwayHinge2.TargetVelocityRPM = 0;
-
-                GangwayHinge1.TargetVelocityRPM = 0;
-                GangwayHinge1.Torque = 33000000;
-                if ((GangwayHinge1.Angle * (180 / Math.PI)) + 90 > 0)
-                {
-                    GangwayHinge1.LowerLimitDeg = 0;
-                    GangwayHinge1.TargetVelocityRPM = -1;
-                }
-                else
-                {
-                    GangwayHinge1.UpperLimitDeg = 0;
-                    GangwayHinge1.TargetVelocityRPM = 1;
-                }
-
-                GangwayHinge2.Torque = 33000000;
-            }
-
-            public static void ExtendGangway()
-            {
-                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
-                {
-                    GangwayHinge1.TargetVelocityRPM = 1;
-                    GangwayHinge2.TargetVelocityRPM = 1;
-                }
-                else { AddToLogQueue("Gangway assy not valid or altitude too low; reset recommended.", STULogType.ERROR); }
-            }
-
-            public static void RetractGangway()
-            {
-                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
-                {
-                    GangwayHinge1.TargetVelocityRPM = 1;
-                    GangwayHinge2.TargetVelocityRPM = 1;
-                }
-                else { AddToLogQueue("Gangway assy not valid or altitude too low; reset recommended.", STULogType.ERROR); }
-            }
-
-            /// <summary>
-            /// "TRUE" to extend, "FALSE" to retract
-            /// </summary>
-            /// <param name="extend"></param>
-            public static void ToggleGangway(bool extend)
-            {
-                if (extend) ExtendGangway();
-                else RetractGangway();
             }
 
             private static void LoadCamera(IMyGridTerminalSystem grid)

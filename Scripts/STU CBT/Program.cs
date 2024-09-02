@@ -49,9 +49,16 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            maneuver = CBT.GenericManeuver;
+            // maneuver = CBT.GenericManeuver;
+
+            // update various subsystems
             CBT.FlightController.UpdateState();
+            CBT.UpdateAutopilotScreens();
+            CBT.UpdateLogScreens();
+            CBT.Gangway.UpdateGangway();
+
             
+
             argument = argument.Trim().ToUpper();
             
             // check whether the passed argument is a special command word, if it's not, default to parsing what the user passed
@@ -100,10 +107,13 @@ namespace IngameScript
 
                     break;
 
+                case "GANGWAY":
+                    ;
+                    break;
+
                 case "PARK":
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     CBT.SetAutopilotControl(true, true, true);
-
                     break;
 
                 case "": // if the user passes nothing, do nothing
@@ -131,8 +141,6 @@ namespace IngameScript
                     break;
                 }
 
-            // update the Autopilot status screens.
-            CBT.UpdateAutopilotScreens();
             
             /// main state machine
             switch (CBT.CurrentPhase)
@@ -149,23 +157,6 @@ namespace IngameScript
                     }
                     break;
             }
-
-            // bit of code to change the update frequency based on whether the autopilot is enabled.
-            // BOTH gyros and thrusters have to be relinquised to the pilot to disable the autopilot
-            if ((!CBT.FlightController.HasGyroControl) && (!CBT.FlightController.HasThrusterControl))
-            {
-                // stop updating the script automatically
-                Runtime.UpdateFrequency = UpdateFrequency.None;
-
-            }
-            else
-            {
-                // if not both gyro and thruster control are enabled, update the script every 10 ticks
-                Runtime.UpdateFrequency = UpdateFrequency.Update10;
-            }
-
-            // update the log screens
-            CBT.UpdateLogScreens();
         }
 
         public bool ParseCommand(string arg)
