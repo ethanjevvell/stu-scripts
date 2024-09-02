@@ -26,13 +26,20 @@ namespace IngameScript {
             public float ScreenHeight { get; private set; }
             public float DefaultLineHeight { get; set; }
             public float CharacterWidth { get; private set; }
-            public int Lines { get; set; }            
-            
+            public int Lines { get; set; }
+
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.
             /// Flag intended for internal use; do not modify unless you know what you're doing.
             /// </summary>
             private bool NeedToCenterSprite;
+
+            public static Dictionary<string, RectangleF> ViewportOffsets { get; set; } = new Dictionary<string, RectangleF>
+            {
+                {"Large Display", new RectangleF(new Vector2(8, 8), new Vector2(512, 320))},
+                {"Keyboard", new RectangleF(new Vector2(0, 48), new Vector2(512, 204.8f))},
+                {"Bottom Left Screen", new RectangleF(new Vector2(60, 0), new Vector2(192, 256)) },
+            };
 
             /// <summary>
             /// Custom STU wrapper for text surfaces.
@@ -54,13 +61,10 @@ namespace IngameScript {
                 BackgroundSprite = new MySpriteCollection();
                 Viewport = GetViewport();
                 TopLeft = Cursor = Viewport.Position;
-                if(ViewportOffsets.ContainsKey(Surface.DisplayName))
-                {
+                if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
                     Center_X = (ViewportOffsets[Surface.DisplayName].Width + ViewportOffsets[Surface.DisplayName].X) / 2;
                     Center_Y = (ViewportOffsets[Surface.DisplayName].Height + ViewportOffsets[Surface.DisplayName].Y) / 2;
-                }
-                else
-                {
+                } else {
                     Center_X = Viewport.Width / 2;
                     Center_Y = Viewport.Height / 2;
                 };
@@ -119,11 +123,9 @@ namespace IngameScript {
 
             private RectangleF GetViewport() {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                if (ViewportOffsets.ContainsKey(Surface.DisplayName))
-                {
+                if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
                     return ViewportOffsets[Surface.DisplayName];
-                } else
-                {
+                } else {
                     return standardViewport;
                 }
             }

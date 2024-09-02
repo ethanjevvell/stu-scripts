@@ -1,6 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
-using VRage.Audio;
 using VRageMath;
 
 namespace IngameScript {
@@ -38,7 +37,6 @@ namespace IngameScript {
                                 gyro.Pitch = 0;
                                 gyro.Yaw = 0;
                             }
-                            CBT.AddToLogQueue($"hit truth condition inside OrientationController.AlignShipToTarget()");
                             return true;
                         }
 
@@ -47,7 +45,6 @@ namespace IngameScript {
                             Vector3D localRotationAxis = Vector3D.TransformNormal(rotationAxis, worldMatrixTranspose);
                             gyro.Pitch = (float)localRotationAxis.X;
                             gyro.Yaw = (float)localRotationAxis.Y;
-                            CBT.AddToLogQueue($"hit false condition inside OrientationController.AlignShipToTarget()");
                         }
                     }
 

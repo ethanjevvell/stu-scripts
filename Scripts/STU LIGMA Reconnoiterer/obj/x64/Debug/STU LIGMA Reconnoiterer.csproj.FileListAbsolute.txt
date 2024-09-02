@@ -2,3 +2,24 @@ C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU LIGMA Reconnoiterer.csproj.SuggestedBindingRedirects.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU Raycaster.exe.config
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU LIGMA Reconnoiterer.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\STU Raycaster.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\STU Raycaster.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\STU Raycaster.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\MDKUtilities.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU LIGMA Reconnoiterer.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU Raycaster.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Reconnoiterer\obj\x64\Debug\STU Raycaster.pdb

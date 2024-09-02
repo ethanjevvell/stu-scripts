@@ -1,6 +1,4 @@
 ﻿using Sandbox.ModAPI.Ingame;
-using System.Collections.Generic;
-using VRageMath;
 
 namespace IngameScript {
     partial class Program {
@@ -86,11 +84,5 @@ namespace IngameScript {
 
         }
 
-        public static Dictionary<string, RectangleF> ViewportOffsets { get; set; } = new Dictionary<string, RectangleF>
-        {
-            {"Large Display", new RectangleF(new Vector2(8, 8), new Vector2(512, 320))},
-            {"Keyboard", new RectangleF(new Vector2(0, 48), new Vector2(512, 204.8f))},
-            {"Bottom Left Screen", new RectangleF(new Vector2(60, 0), new Vector2(192, 256)) },
-        };
     }
 }
