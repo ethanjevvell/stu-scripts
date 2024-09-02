@@ -6,6 +6,7 @@
                 private int TERMINAL_VELOCITY = 250;
 
                 public override bool Run() {
+                    FirstRunTasks();
                     FlightController.SetStableForwardVelocity(TERMINAL_VELOCITY);
                     FlightController.AlignShipToTarget(TargetData.Position);
                     FlightController.OptimizeShipRoll(TargetData.Position);

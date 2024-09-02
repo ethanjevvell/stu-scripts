@@ -9,6 +9,7 @@
                 // All ILaunchPlans should call this method in their Run() method
                 public virtual void FirstRunTasks() {
                     if (IS_FIRST_RUN) {
+                        FlightController.UpdateShipMass();
                         // Disconnect all connectors from launch pad
                         for (var i = 0; i < Connectors.Length; i++) {
                             Connectors[i].Disconnect();
@@ -21,6 +22,7 @@
                         IS_FIRST_RUN = false;
                     }
                 }
+
             }
         }
     }

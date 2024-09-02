@@ -12,17 +12,24 @@ namespace IngameScript {
             public IMyThrust[] ReverseThrusters;
             public IMyThrust[] LateralThrusters;
 
+            public IMyGasTank[] HydrogenTanks;
             public IMyShipMergeBlock MergeBlock;
-
             public IMyWarhead[] Warheads;
+
+            public double CurrentFuel = 0;
+            public double FuelCapacity = 0;
 
             public Stage(IMyGridTerminalSystem grid, string stageKey) {
                 LIGMA.CreateOkBroadcast($"Initializing {stageKey.ToUpper()} stage thrusters and merge block");
                 ForwardThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "FORWARD");
                 ReverseThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "REVERSE");
                 LateralThrusters = FindThrusterBlockGroup(grid, stageKey.ToUpper(), "LATERAL");
+                HydrogenTanks = FindHydrogenTanks(grid, stageKey.ToUpper());
+                LIGMA.CreateOkBroadcast($"{HydrogenTanks.Length} tanks in {stageKey}");
+                FuelCapacity = MeasureFuelCapcity(HydrogenTanks);
                 Warheads = FindStageWarheads(grid, stageKey.ToUpper());
-                MergeBlock = FindStageMergeBlock(grid, stageKey);
+                MergeBlock = FindStageMergeBlock(grid, stageKey.ToUpper());
+                LIGMA.CreateOkBroadcast($"{stageKey.ToUpper()} stage fuel capacity: {FuelCapacity}");
             }
 
             public void ToggleForwardThrusters(bool on) {
@@ -43,7 +50,7 @@ namespace IngameScript {
                 }
             }
 
-            public void TriggerDisenageBurn(bool on) {
+            public void TriggerDisenageBurn() {
                 for (var i = 0; i < ReverseThrusters.Length; i++) {
                     ReverseThrusters[i].ThrustOverridePercentage = 1.0f;
                 }
@@ -140,6 +147,46 @@ namespace IngameScript {
 
             }
 
+            private IMyGasTank[] FindHydrogenTanks(IMyGridTerminalSystem grid, string stageKey) {
+
+                List<IMyTerminalBlock> tanks = new List<IMyTerminalBlock>();
+
+                try {
+                    grid.GetBlockGroupWithName($"{stageKey}_STAGE_HYDROGEN_TANKS").GetBlocks(tanks);
+                } catch (Exception e) {
+                    if (tanks.Count == 0) {
+                        LIGMA.CreateFatalErrorBroadcast($"No hydrogen tanks found for {stageKey.ToUpper()} stage!");
+                    } else {
+                        LIGMA.CreateFatalErrorBroadcast($"Error finding hydrogen tanks for {stageKey.ToUpper()} stage: {e}");
+                    }
+                }
+
+                IMyGasTank[] tanksArray = new IMyGasTank[tanks.Count];
+
+                for (int i = 0; i < tanks.Count; i++) {
+                    tanksArray[i] = tanks[i] as IMyGasTank;
+                }
+
+                LIGMA.CreateWarningBroadcast($"{tanks.Count} hydrogen tanks found for {stageKey.ToUpper()} stage!");
+
+                return tanksArray;
+
+            }
+
+            private double MeasureFuelCapcity(IMyGasTank[] tanks) {
+                double capacity = 0;
+                for (var i = 0; i < tanks.Length; i++) {
+                    capacity += tanks[i].Capacity;
+                }
+                return capacity;
+            }
+
+            /// <summary>
+            /// Remove thrusters from allThrusters that are in thrustersToRemove, return new array containing remaining thrusters
+            /// </summary>
+            /// <param name="allThrusters"></param>
+            /// <param name="thrustersToRemove"></param>
+            /// <returns></returns>
             public static IMyThrust[] RemoveThrusters(IMyThrust[] allThrusters, IMyThrust[] thrustersToRemove) {
                 List<IMyThrust> allThrustersList = new List<IMyThrust>(allThrusters);
                 List<IMyThrust> thrustersToRemoveList = new List<IMyThrust>(thrustersToRemove);
@@ -148,6 +195,30 @@ namespace IngameScript {
                 }
                 return allThrustersList.ToArray();
             }
+
+            /// <summary>
+            /// Remove tanks from allTanks that are in tanksToRemove, return new array containing remaining tanks
+            /// </summary>
+            /// <param name="allTanks"></param>
+            /// <param name="tanksToRemove"></param>
+            /// <returns></returns>
+            public static IMyGasTank[] RemoveHydrogenTanks(IMyGasTank[] allTanks, IMyGasTank[] tanksToRemove) {
+                List<IMyGasTank> allTanksList = new List<IMyGasTank>(allTanks);
+                List<IMyGasTank> tanksToRemoveList = new List<IMyGasTank>(tanksToRemove);
+                for (var i = 0; i < tanksToRemoveList.Count; i++) {
+                    allTanksList.Remove(tanksToRemoveList[i]);
+                }
+                return allTanksList.ToArray();
+            }
+
+            public void MeasureCurrentFuel() {
+                double currentFuel = 0;
+                foreach (IMyGasTank tank in HydrogenTanks) {
+                    currentFuel += tank.FilledRatio * tank.Capacity;
+                }
+                CurrentFuel = currentFuel;
+            }
+
 
         }
 

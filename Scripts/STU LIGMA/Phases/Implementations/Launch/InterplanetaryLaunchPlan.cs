@@ -6,8 +6,9 @@ namespace IngameScript {
         public partial class LIGMA {
             public class InterplanetaryLaunchPlan : ILaunchPlan {
 
-                private double LAUNCH_VELOCITY = 150;
-                public static double ELEVATION_CUTOFF = 1000;
+                private double LAUNCH_VELOCITY = 200;
+                private double ELEVATION_CUTOFF = LaunchPlanet.Value.Radius / 2;
+
                 private double CurrentElevation;
 
                 public override bool Run() {

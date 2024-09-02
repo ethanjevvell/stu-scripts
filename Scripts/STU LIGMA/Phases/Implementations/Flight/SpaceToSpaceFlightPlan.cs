@@ -5,6 +5,7 @@
             public class SpaceToSpaceFlightPlan : IFlightPlan {
 
                 public override bool Run() {
+                    FirstRunTasks();
                     return true;
                 }
 
