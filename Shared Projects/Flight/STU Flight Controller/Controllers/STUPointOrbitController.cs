@@ -53,6 +53,8 @@ namespace IngameScript {
                             }
                             break;
                         case PointOrbitState.Orbiting:
+                            Vector3D closestPoint = GetClosestPointOnOrbitalAxis();
+                            LIGMA.CreateFatalErrorBroadcast($"Closest point: {closestPoint}");
                             ExertCentripetalForce();
                             break;
                     }
