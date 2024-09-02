@@ -12,6 +12,9 @@ namespace IngameScript {
             public IMyTextSurface Surface { get; set; }
             public RectangleF Viewport { get; set; }
             public Vector2 TopLeft { get; private set; }
+            public Vector2 Center { get; private set; }
+            public float Center_X { get; private set; }
+            public float Center_Y { get; private set; }
             public Vector2 Cursor { get; set; }
             public MySpriteDrawFrame CurrentFrame { get; set; }
             /// <summary>
@@ -23,8 +26,8 @@ namespace IngameScript {
             public float ScreenHeight { get; private set; }
             public float DefaultLineHeight { get; set; }
             public float CharacterWidth { get; private set; }
-            public int Lines { get; set; }
-
+            public int Lines { get; set; }            
+            
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.
             /// Flag intended for internal use; do not modify unless you know what you're doing.
@@ -51,6 +54,21 @@ namespace IngameScript {
                 BackgroundSprite = new MySpriteCollection();
                 Viewport = GetViewport();
                 TopLeft = Cursor = Viewport.Position;
+                if(ViewportOffsets.ContainsKey(Surface.DisplayName))
+                {
+                    CBT.EchoPassthru($"{Surface.DisplayName}!");
+                    Center_X = (ViewportOffsets[Surface.DisplayName].Width + ViewportOffsets[Surface.DisplayName].X) / 2;
+                    Center_Y = (ViewportOffsets[Surface.DisplayName].Height + ViewportOffsets[Surface.DisplayName].Y) / 2;
+                }
+                else
+                {
+                    CBT.EchoPassthru($"{Surface.DisplayName}?");
+                    Center_X = Viewport.Width / 2;
+                    Center_Y = Viewport.Height / 2;
+                };
+                CBT.EchoPassthru($"{Surface.DisplayName}");
+                CBT.EchoPassthru($"Center_X: {Center_X}, Center_Y: {Center_Y}");
+                Center = new Vector2(Center_X, Center_Y);
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
                 DefaultLineHeight = GetDefaultLineHeight();
@@ -105,15 +123,21 @@ namespace IngameScript {
 
             private RectangleF GetViewport() {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                switch (Surface.DisplayName) {
-                    case "Large Display":
-                        float offsetPx = 8f;
-                        return new RectangleF(
-                            new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
-                            new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
-                    default:
-                        return standardViewport;
+                if (ViewportOffsets.ContainsKey(Surface.DisplayName))
+                {
+                    return ViewportOffsets[Surface.DisplayName];
+                } else
+                {
+                    return standardViewport;
                 }
+                //switch (Surface.DisplayName) {
+                //    case "Large Display":
+                //        //float offsetPx = 8f;
+                //        //return new RectangleF(
+                //        //    new Vector2(standardViewport.Position.X + offsetPx, standardViewport.Position.Y + offsetPx),
+                //        //    new Vector2(standardViewport.Width - offsetPx * 2, standardViewport.Height - offsetPx * 2));
+                //    default:
+                //        return standardViewport;
             }
 
             private float GetTextSpriteWidth(MySprite sprite) {

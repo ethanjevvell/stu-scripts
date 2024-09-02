@@ -48,7 +48,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "SquareSimple",
-                    Position = new Vector2(0f, 0f),
+                    Position = centerPos,
                     Size = new Vector2(ScreenWidth, ScreenHeight),
                     Color = new Color(0, 128, 0, 255),
                     RotationOrScale = 0f
@@ -58,7 +58,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "CircleHollow",
-                    Position = new Vector2(0f, 0f) * scale + centerPos,
+                    Position = new Vector2(0f, 0f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
                     Size = new Vector2(180f, 180f) * scale,
                     Color = new Color(0, 255, 0, 255),
                     RotationOrScale = 0f
@@ -68,7 +68,7 @@ namespace IngameScript
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
                     Data = "A",
-                    Position = new Vector2(-54f, -102f) * scale + centerPos,
+                    Position = new Vector2(-54f, -102f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
                     Color = new Color(0, 255, 0, 255),
                     FontId = "Debug",
                     RotationOrScale = 6f * scale
@@ -90,7 +90,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "SquareSimple",
-                    Position = new Vector2(0f + ScreenWidth / 2, 0f + ScreenHeight / 2 + 20),
+                    Position = centerPos,
                     Size = new Vector2(ScreenWidth, ScreenHeight) * scale,
                     Color = new Color(106, 0, 0, 255),
                     RotationOrScale = 0f
@@ -100,7 +100,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Alignment = TextAlignment.CENTER,
                     Data = "CircleHollow",
-                    Position = new Vector2(0f, 0f) * scale + centerPos,
+                    Position = new Vector2(0f, 0f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
                     Size = new Vector2(180f, 180f) * scale,
                     Color = new Color(255, 0, 0, 255),
                     RotationOrScale = 0f
@@ -110,7 +110,7 @@ namespace IngameScript
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
                     Data = "M",
-                    Position = new Vector2(-57f, -84f) * scale + centerPos,
+                    Position = new Vector2(-57f, -84f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
                     Color = new Color(255, 0, 0, 255),
                     FontId = "Debug",
                     RotationOrScale = 5f * scale
