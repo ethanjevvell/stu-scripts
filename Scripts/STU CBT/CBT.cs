@@ -49,6 +49,14 @@ namespace IngameScript
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
+            public static IMyMotorStator StingerHinge1 { get; set; }
+            public static IMyMotorStator StingerHinge2 { get; set; }
+            public static IMyPistonBase StingerPiston { get; set; }
+            public static IMyMotorStator GangwayHinge1 { get; set; }
+            public static IMyMotorStator GangwayHinge2 { get; set; }
+            public static IMyMotorStator CameraRotor { get; set; }
+            public static IMyMotorStator CameraHinge { get; set; }
+            public static IMyCameraBlock Camera { get; set; }
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyTerminalBlock FlightSeat { get; set; }
             public static STUDisplay FlightSeatFarLeftScreen { get; set; }
@@ -60,6 +68,7 @@ namespace IngameScript
             public static IMyGyro[] Gyros { get; set; }
             public static IMyBatteryBlock[] Batteries { get; set; }
             public static IMyGasTank[] HydrogenTanks { get; set; }
+            public static IMyLandingGear[] LandingGear { get; set; }
             public static IMyGasTank[] OxygenTanks { get; set; }
 
             public static IMyMedicalRoom MedicalRoom { get; set; }
@@ -74,6 +83,7 @@ namespace IngameScript
             public static double CurrentPower { get; set; }
             public static double FuelCapacity { get; set; }
             public static double PowerCapacity { get; set; }
+            public static bool LandingGearState { get; set; }
 
             // enumerate flight modes for the CBT, similar to how the LIGMA has flight plans / phases
             public enum Mode
@@ -106,12 +116,16 @@ namespace IngameScript
 
                 AddLogSubscribers(grid);
                 LoadRemoteController(grid);
-                LoadFlightSeat(grid);
+                // LoadFlightSeat(grid);
                 LoadThrusters(grid);
                 LoadGyros(grid);
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
+                LoadLandingGear(grid);
                 LoadConnector(grid);
+                LoadStingerArm(grid);
+                LoadGangwayActuators(grid);
+                LoadCamera(grid);
                 AddAutopilotIndicatorSubscribers(grid);
                 LoadMedicalRoom(grid);
                 LoadH2O2Generators(grid);
@@ -119,7 +133,7 @@ namespace IngameScript
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
 
-                FlightSeat = grid.GetBlockWithName("CBT Flight Seat") as IMyTerminalBlock;
+                FlightSeat = grid.GetBlockWithName("CBT Flight Seat"); // as IMyTerminalBlock;
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
 
@@ -171,17 +185,15 @@ namespace IngameScript
                 }
             }
 
-            public static void UpdateAutopilotScreens(bool status)
+            public static void UpdateAutopilotScreens()
             {
                 foreach (var screen in AutopilotStatusChannel)
                 {
                     screen.StartFrame();
-                    if (status) { 
-                        screen.SetupDrawSurface(screen.Surface, status); 
+                    if (GetAutopilotState() != 0) { 
                         screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, screen.Center); 
                     }
                     else { 
-                        screen.SetupDrawSurface(screen.Surface, status); 
                         screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, screen.Center); 
                     }
                     screen.EndAndPaintFrame();
@@ -359,17 +371,169 @@ namespace IngameScript
                 AddToLogQueue("Fuel tanks ... loaded", STULogType.INFO);
             }
 
+            // load landing gear
+            private static void LoadLandingGear(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> landingGearBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyLandingGear>(landingGearBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (landingGearBlocks.Count == 0)
+                {
+                    AddToLogQueue("No landing gear found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyLandingGear[] landingGear = new IMyLandingGear[landingGearBlocks.Count];
+                for (int i = 0; i < landingGearBlocks.Count; ++i)
+                {
+                    landingGear[i] = landingGearBlocks[i] as IMyLandingGear;
+                }
+
+                LandingGear = landingGear;
+                AddToLogQueue("Landing gear ... loaded", STULogType.INFO);
+            }
+
+            public static void SetLandingGear(bool @lock)
+            {
+                foreach (var gear in LandingGear)
+                {
+                    if (@lock) gear.Lock();
+                    else gear.Unlock();
+                }
+                LandingGearState = @lock;
+            }
+
+            public static void ToggleLandingGear()
+            {
+                foreach (var gear in LandingGear)
+                {
+                    if (LandingGearState) gear.Unlock();
+                    else gear.Lock();
+                }
+            }
+
             // load connector (stinger)
             private static void LoadConnector(IMyGridTerminalSystem grid)
             {
                 var connector = grid.GetBlockWithName("CBT Rear Connector");
                 if (connector == null)
                 {
-                    AddToLogQueue("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately. Also only one allowed", STULogType.ERROR);
+                    AddToLogQueue("Could not locate \"CBT Rear Connector\"; ensure connector is named appropriately.", STULogType.ERROR);
                     return;
                 }
                 Connector = connector as IMyShipConnector;
                 AddToLogQueue("Connector ... loaded", STULogType.INFO);
+            }
+
+            private static void LoadStingerArm(IMyGridTerminalSystem grid)
+            {
+                var hinge1 = grid.GetBlockWithName("CBT Stinger Hinge 1");
+                var hinge2 = grid.GetBlockWithName("CBT Stinger Hinge 2");
+                var piston = grid.GetBlockWithName("CBT Stinger Piston");
+                if (hinge1 == null || hinge2 == null || piston == null)
+                {
+                    AddToLogQueue("Could not locate at least one stinger arm component; ensure all components are named appropriately", STULogType.ERROR);
+                    return;
+                }
+
+                StingerHinge1 = hinge1 as IMyMotorStator;
+                StingerHinge2 = hinge2 as IMyMotorStator;
+                StingerPiston = piston as IMyPistonBase;
+                AddToLogQueue("Stinger arm actuator assembly ... loaded", STULogType.INFO);
+            }
+
+            private static void LoadGangwayActuators(IMyGridTerminalSystem grid)
+            {
+                var hinge1 = grid.GetBlockWithName("CBT Gangway Hinge 1");
+                var hinge2 = grid.GetBlockWithName("CBT Gangway Hinge 2");
+                if (hinge1 == null || hinge2 == null)
+                {
+                    AddToLogQueue("Could not locate at least one gangway actuator component; ensure all components are named appropriately", STULogType.ERROR);
+                    return;
+                }
+
+                GangwayHinge1 = hinge1 as IMyMotorStator;
+                GangwayHinge1.TargetVelocityRPM = 0;
+                GangwayHinge2 = hinge2 as IMyMotorStator;
+                GangwayHinge2.TargetVelocityRPM = 0;
+
+                if (!IsGangwayStateValid())
+                {
+                    AddToLogQueue("Gangway actuator assembly is in an invalid state; resetting ...", STULogType.WARNING);
+                    ResetGangwayActuators();
+                }
+
+                AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
+            }
+
+            private static bool IsGangwayStateValid()
+            {
+                // check whether hinge 1 is out of bounds
+                if (GangwayHinge1.Angle > 0) { return false;}
+                // normalize both hinge angles to 0-180 degrees
+                float hinge1Angle = GangwayHinge1.Angle + 90;
+                float hinge2Angle = GangwayHinge2.Angle + 90;
+                // test whether hinge2's angle is twice hinge1's angle with a margin of error
+                if (Math.Abs(hinge2Angle - (2 * hinge1Angle)) < 0.1f) { return true; }
+                else { return false; }
+            }
+
+            public static void ResetGangwayActuators()
+            {
+                GangwayHinge2.Torque = 0;
+                GangwayHinge2.BrakingTorque = 0;
+                GangwayHinge2.TargetVelocityRPM = 0;
+
+                GangwayHinge1.TargetVelocityRPM = 0;
+                GangwayHinge1.Torque = 33000000;
+                if (GangwayHinge1.Angle > 0)
+                {
+                    GangwayHinge1.LowerLimitDeg = 0;
+                    GangwayHinge1.TargetVelocityRPM = -1;
+                }
+                else
+                {
+                    GangwayHinge1.UpperLimitDeg = 0;
+                    GangwayHinge1.TargetVelocityRPM = 1;
+                }
+
+                GangwayHinge2.Torque = 33000000;
+            }
+
+            public static void ExtendGangway()
+            {
+                
+            }
+
+            public static void RetractGangway()
+            {
+                
+            }
+
+            /// <summary>
+            /// "TRUE" to extend, "FALSE" to retract
+            /// </summary>
+            /// <param name="extend"></param>
+            public static void ToggleGangway(bool extend)
+            {
+                if (extend) ExtendGangway();
+                else RetractGangway();
+            }
+
+            private static void LoadCamera(IMyGridTerminalSystem grid)
+            {
+                var rotor = grid.GetBlockWithName("CBT Camera Rotor");
+                var hinge = grid.GetBlockWithName("CBT Camera Hinge");
+                var camera = grid.GetBlockWithName("CBT Camera");
+                if (rotor == null || hinge == null || camera == null)
+                {
+                    AddToLogQueue("Could not locate at least one camera component; ensure all components are named appropriately", STULogType.ERROR);
+                    return;
+                }
+
+                CameraRotor = rotor as IMyMotorStator;
+                CameraHinge = hinge as IMyMotorStator;
+                Camera = camera as IMyCameraBlock;
+                AddToLogQueue("Camera and actuator assembly ... loaded", STULogType.INFO);
             }
 
             // load med bay
@@ -476,7 +640,7 @@ namespace IngameScript
             /// <returns></returns>
             /// 
 
-            public static int IsAutopilotRunning()
+            public static int GetAutopilotState()
             {
                 int autopilotState = 0;
                 if (FlightController.HasThrusterControl) { autopilotState += 1; }
@@ -493,11 +657,48 @@ namespace IngameScript
                 return autopilotState;
             }
 
-            public static void ChangeAutopilotControl(bool thrusters, bool gyroscopes, bool dampeners)
+            public static void SetAutopilotControl(bool thrusters, bool gyroscopes, bool dampeners)
             {
                 if (thrusters) { FlightController.ReinstateThrusterControl(); } else { FlightController.RelinquishThrusterControl(); }
                 if (gyroscopes) { FlightController.ReinstateGyroControl(); } else { FlightController.RelinquishGyroControl(); }
                 RemoteControl.DampenersOverride = dampeners;
+            }
+
+            public static void SetAutopilotControl(int state)
+            {
+                bool thrusters = false;
+                bool gyros = false;
+                bool dampeners = false;
+                switch (state)
+                {
+                    case 1:
+                        thrusters = true;
+                        break;
+                    case 2:
+                        gyros = true;
+                        break;
+                    case 3:
+                        thrusters = true;
+                        gyros = true;
+                        break;
+                    case 4:
+                        dampeners = true;
+                        break;
+                    case 5:
+                        thrusters = true;
+                        dampeners = true;
+                        break;
+                    case 6:
+                        gyros = true;
+                        dampeners = true;
+                        break;
+                    case 7:
+                        thrusters = true;
+                        gyros = true;
+                        dampeners = true;
+                        break;
+                }
+                SetAutopilotControl(thrusters, gyros, dampeners);
             }
 
             // power modes
@@ -506,10 +707,8 @@ namespace IngameScript
             //    switch (state)
             //    {
             //        case PowerStates.Normal:
-            //            // check power levels and adjust accordingly
             //            break;
             //        case PowerStates.Low:
-            //            // check power levels and adjust accordingly
             //            break;
             //    }
             //}

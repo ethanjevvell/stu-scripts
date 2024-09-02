@@ -102,7 +102,7 @@ namespace IngameScript
 
                 case "PARK":
                     CBT.CurrentPhase = CBT.Phase.Executing;
-                    CBT.ChangeAutopilotControl(true, true, true);
+                    CBT.SetAutopilotControl(true, true, true);
 
                     break;
 
@@ -131,9 +131,8 @@ namespace IngameScript
                     break;
                 }
 
-            // check the autopilot state and update the status screen accordingly.
-            if (CBT.IsAutopilotRunning() == 0) { CBT.UpdateAutopilotScreens(false); }
-            else { CBT.UpdateAutopilotScreens(true); }
+            // update the Autopilot status screens.
+            CBT.UpdateAutopilotScreens();
             
             /// main state machine
             switch (CBT.CurrentPhase)
