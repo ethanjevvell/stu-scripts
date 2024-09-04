@@ -1,7 +1,4 @@
-﻿using Sandbox.ModAPI.Ingame;
-using VRageMath;
-
-namespace IngameScript {
+﻿namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
             public partial class STUPointOrbitController {
@@ -48,8 +45,8 @@ namespace IngameScript {
                                     Vector3D orbitalAxisUnitVector = Vector3D.Normalize(Vector3D.Cross(velocityUnitVector, targetPos - RemoteControl.CenterOfMass));
                                     OrbitalAxis = new Line(targetPos - orbitalAxisUnitVector * TargetRadius, targetPos + orbitalAxisUnitVector * TargetRadius);
                                 }
-                                LIGMA.CreateOkBroadcast($"Start: {OrbitalAxis.From}");
-                                LIGMA.CreateOkBroadcast($"End: {OrbitalAxis.To}");
+                                //LIGMA.CreateOkBroadcast($"Start: {OrbitalAxis.From}");
+                                //LIGMA.CreateOkBroadcast($"End: {OrbitalAxis.To}");
                             }
                             break;
                         case PointOrbitState.Orbiting:
@@ -101,10 +98,10 @@ namespace IngameScript {
                     Vector3D a = RemoteControl.CenterOfMass - OrbitalAxis.From;
                     double t = Vector3D.Dot(a, b) / Vector3D.Dot(b, b);
                     if (t < 0) {
-                        LIGMA.CreateWarningBroadcast($"Below OA");
+                        //LIGMA.CreateWarningBroadcast($"Below OA");
                         return OrbitalAxis.From;
                     } else if (t > 1) {
-                        LIGMA.CreateWarningBroadcast($"Above OA");
+                        //LIGMA.CreateWarningBroadcast($"Above OA");
                         return OrbitalAxis.To;
                     } else {
                         return OrbitalAxis.From + t * b;

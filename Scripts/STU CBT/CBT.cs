@@ -116,6 +116,9 @@ namespace IngameScript
                 CBTGrid = grid;
                 echo = Echo;
 
+                
+                
+
                 AddLogSubscribers(grid);
                 LoadRemoteController(grid);
                 LoadFlightSeat(grid);
@@ -136,8 +139,6 @@ namespace IngameScript
                 LoadGravityGenerators(grid);
 
                 FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
-                Gangway = new CBTGangway(GangwayHinge1, GangwayHinge2);
-                RearDock = new CBTRearDock(RearPiston, RearHinge1, RearHinge2, Connector);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }
@@ -439,6 +440,9 @@ namespace IngameScript
                 RearHinge1 = hinge1 as IMyMotorStator;
                 RearHinge2 = hinge2 as IMyMotorStator;
                 RearPiston = piston as IMyPistonBase;
+
+                RearDock = new CBTRearDock(RearPiston, RearHinge1, RearHinge2, Connector);
+
                 AddToLogQueue("Stinger arm actuator assembly ... loaded", STULogType.INFO);
             }
 
@@ -456,6 +460,8 @@ namespace IngameScript
                 GangwayHinge1.TargetVelocityRPM = 0;
                 GangwayHinge2 = hinge2 as IMyMotorStator;
                 GangwayHinge2.TargetVelocityRPM = 0;
+
+                Gangway = new CBTGangway(GangwayHinge1, GangwayHinge2);
 
                 AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
                 

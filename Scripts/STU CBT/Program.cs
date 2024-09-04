@@ -108,7 +108,7 @@ namespace IngameScript
                     break;
 
                 case "GANGWAY":
-                    ;
+                    CBT.Gangway.ToggleGangway();
                     break;
 
                 case "PARK":
