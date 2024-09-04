@@ -130,7 +130,7 @@ namespace IngameScript {
 
                 public bool SetVa(double desiredVelocity, double altitudeVelocity) {
                     // Set the force components on the velocity controller
-                    Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(desiredVelocity, altitudeVelocity);
+                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     FlightController.ExertVectorForce(counterGravityForceVector);
                     return GetSurfaceAltitudeError() < 10;
                 }

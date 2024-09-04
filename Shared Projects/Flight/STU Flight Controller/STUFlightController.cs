@@ -71,8 +71,7 @@ namespace IngameScript {
                 CurrentPosition = RemoteControl.GetPosition();
             }
 
-            public double GetCurrentSurfaceAltitude()
-            {
+            public double GetCurrentSurfaceAltitude() {
                 return AltitudeController.GetSurfaceAltitude();
             }
 
@@ -254,7 +253,7 @@ namespace IngameScript {
                 return angle - Math.PI / 4;
             }
 
-            public Vector3D GetCounterGravityForceVector(double desiredVelocity, double altitudeVelocity) {
+            public Vector3D GetAltitudeVelocityChangeForceVector(double desiredVelocity, double altitudeVelocity) {
                 Vector3D localGravityVector = VelocityController.LocalGravityVector;
 
                 // Calculate the magnitude of the gravitational force
