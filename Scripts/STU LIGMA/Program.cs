@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
-namespace IngameScript {
-    partial class Program : MyGridProgram {
+namespace IngameScript
+{
+    partial class Program : MyGridProgram
+    {
 
         public bool ALREADY_RAN_FIRST_COMMAND = false;
 
@@ -27,7 +29,8 @@ namespace IngameScript {
 
         STULog IncomingLog;
 
-        enum Phase {
+        enum Phase
+        {
             Idle,
             Launch,
             Flight,
@@ -35,7 +38,8 @@ namespace IngameScript {
             Terminal,
         }
 
-        enum MissileMode {
+        enum MissileMode
+        {
             Intraplanetary,
             PlanetToSpace,
             SpaceToPlanet,
@@ -44,7 +48,8 @@ namespace IngameScript {
             Testing
         }
 
-        public Program() {
+        public Program()
+        {
             Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_VEHICLE_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
             Listener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER);
             Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
@@ -56,11 +61,14 @@ namespace IngameScript {
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
         }
 
-        void Main(string argument) {
+        void Main(string argument)
+        {
 
-            try {
+            try
+            {
 
-                if (Listener.HasPendingMessage) {
+                if (Listener.HasPendingMessage)
+                {
                     var message = Listener.AcceptMessage();
                     var command = message.Data.ToString();
                     ParseIncomingCommand(command);
@@ -70,7 +78,8 @@ namespace IngameScript {
                 LIGMA.UpdateMeasurements();
                 LIGMA.SendTelemetry();
 
-                switch (LIGMA.CurrentPhase) {
+                switch (LIGMA.CurrentPhase)
+                {
 
                     case LIGMA.Phase.Idle:
                         break;
@@ -79,13 +88,15 @@ namespace IngameScript {
 
                         var finishedLaunch = MainLaunchPlan.Run();
 
-                        if (finishedLaunch) {
+                        if (finishedLaunch)
+                        {
                             LIGMA.CurrentPhase = LIGMA.Phase.Flight;
                             LIGMA.CreateWarningBroadcast("Entering flight phase");
                             LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                             // Stop any roll created during this phase
                             LIGMA.FlightController.SetVr(0);
-                            if (LIGMA.IS_STAGED_LIGMA) {
+                            if (LIGMA.IS_STAGED_LIGMA)
+                            {
                                 LIGMA.JettisonLaunchStage();
                             }
                         };
@@ -93,18 +104,23 @@ namespace IngameScript {
 
                     case LIGMA.Phase.Flight:
                         var finishedFlight = MainFlightPlan.Run();
-                        if (finishedFlight) {
-                            try {
+                        if (finishedFlight)
+                        {
+                            try
+                            {
 
                                 LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                                 LIGMA.CurrentPhase = LIGMA.Phase.Descent;
                                 LIGMA.CreateWarningBroadcast("Entering descent phase");
                                 // Stop any roll created during this phase
                                 LIGMA.FlightController.SetVr(0);
-                                if (LIGMA.IS_STAGED_LIGMA) {
+                                if (LIGMA.IS_STAGED_LIGMA)
+                                {
                                     LIGMA.JettisonFlightStage();
                                 }
-                            } catch (Exception e) {
+                            }
+                            catch (Exception e)
+                            {
                                 LIGMA.CreateErrorBroadcast(e.ToString());
                             }
                         };
@@ -112,7 +128,8 @@ namespace IngameScript {
 
                     case LIGMA.Phase.Descent:
                         var finishedDescent = MainDescentPlan.Run();
-                        if (finishedDescent) {
+                        if (finishedDescent)
+                        {
                             LIGMA.CurrentPhase = LIGMA.Phase.Terminal;
                             LIGMA.CreateWarningBroadcast("Entering terminal phase");
                             // Stop any roll created during this phase
@@ -128,53 +145,66 @@ namespace IngameScript {
 
                 }
 
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 LIGMA.CreateErrorBroadcast($"Error in main loop: {e}");
             }
 
         }
 
-        public void ParseIncomingCommand(string logString) {
+        public void ParseIncomingCommand(string logString)
+        {
 
-            try {
+            try
+            {
                 IncomingLog = STULog.Deserialize(logString);
-            } catch {
+            }
+            catch
+            {
                 LIGMA.CreateErrorBroadcast($"Failed to deserialize incoming log: {logString}");
                 return;
             }
 
             string message = IncomingLog.Message;
 
-            if (CommandLineParser.TryParse(message)) {
+            if (CommandLineParser.TryParse(message))
+            {
 
                 int arguments = CommandLineParser.ArgumentCount;
 
-                if (arguments != 1) {
+                if (arguments != 1)
+                {
                     LIGMA.CreateErrorBroadcast("LIGMA only accepts one argument at a time.");
                     return;
                 }
 
                 string commandString = CommandLineParser.Argument(0);
                 Action commandAction;
-                if (!LIGMACommands.TryGetValue(commandString, out commandAction)) {
+                if (!LIGMACommands.TryGetValue(commandString, out commandAction))
+                {
                     LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands dictionary.");
                     return;
                 }
 
                 commandAction();
 
-            } else {
+            }
+            else
+            {
 
                 LIGMA.CreateErrorBroadcast($"Failed to parse command: {message}");
 
             }
         }
 
-        public void FirstRunTasks() {
+        public void FirstRunTasks()
+        {
 
             DeduceFlightMode();
 
-            switch (Mode) {
+            switch (Mode)
+            {
 
                 case MissileMode.Intraplanetary:
                     MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
@@ -224,22 +254,34 @@ namespace IngameScript {
 
         }
 
-        public void DeduceFlightMode() {
+        public void DeduceFlightMode()
+        {
 
             STUGalacticMap.Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
             STUGalacticMap.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
 
-            if (OnSamePlanet(launchPos, targetPos)) {
+            if (OnSamePlanet(launchPos, targetPos))
+            {
                 Mode = MissileMode.Intraplanetary;
-            } else if (!InSpace(launchPos) && InSpace(targetPos)) {
+            }
+            else if (!InSpace(launchPos) && InSpace(targetPos))
+            {
                 Mode = MissileMode.PlanetToSpace;
-            } else if (InSpace(launchPos) && !InSpace(targetPos)) {
+            }
+            else if (InSpace(launchPos) && !InSpace(targetPos))
+            {
                 Mode = MissileMode.SpaceToPlanet;
-            } else if (InSpace(launchPos) && InSpace(targetPos)) {
+            }
+            else if (InSpace(launchPos) && InSpace(targetPos))
+            {
                 Mode = MissileMode.SpaceToSpace;
-            } else if (OnDifferentPlanets(launchPos, targetPos)) {
+            }
+            else if (OnDifferentPlanets(launchPos, targetPos))
+            {
                 Mode = MissileMode.Interplanetary;
-            } else {
+            }
+            else
+            {
                 LIGMA.CreateFatalErrorBroadcast("Invalid flight mode in DeduceFlightMode");
             }
 
@@ -248,48 +290,62 @@ namespace IngameScript {
 
         }
 
-        public bool OnSamePlanet(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet) {
-            if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
+        public bool OnSamePlanet(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet)
+        {
+            if (InSpace(launchPlanet) || InSpace(targetPlanet))
+            {
                 return false;
             }
             return launchPlanet.Equals(targetPlanet);
         }
 
-        public bool OnDifferentPlanets(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet) {
-            if (InSpace(launchPlanet) || InSpace(targetPlanet)) {
+        public bool OnDifferentPlanets(STUGalacticMap.Planet? launchPlanet, STUGalacticMap.Planet? targetPlanet)
+        {
+            if (InSpace(launchPlanet) || InSpace(targetPlanet))
+            {
                 return false;
             }
             return !launchPlanet.Equals(targetPlanet);
         }
 
-        public bool InSpace(STUGalacticMap.Planet? planet) {
+        public bool InSpace(STUGalacticMap.Planet? planet)
+        {
             return planet == null;
         }
 
-        public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point) {
-            foreach (var kvp in STUGalacticMap.CelestialBodies) {
+        public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point)
+        {
+            foreach (var kvp in STUGalacticMap.CelestialBodies)
+            {
                 STUGalacticMap.Planet planet = kvp.Value;
                 BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
                 // if the point is inside the planet's detection sphere or intersects it, it is on the planet
-                if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
+                if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects)
+                {
                     return planet;
                 }
             }
             return null;
         }
 
-        public double ParseCoordinate(string doubleString) {
-            try {
+        public double ParseCoordinate(string doubleString)
+        {
+            try
+            {
                 string numPortion = doubleString.Split(':')[1].Trim().ToString();
                 return double.Parse(numPortion);
-            } catch {
+            }
+            catch
+            {
                 LIGMA.CreateFatalErrorBroadcast($"Invalid coordinate: {doubleString}");
                 throw new Exception($"Invalid coordinate: {doubleString}");
             }
         }
 
-        public string GetModeString() {
-            switch (Mode) {
+        public string GetModeString()
+        {
+            switch (Mode)
+            {
                 case MissileMode.Intraplanetary:
                     return "intraplanetary flight";
                 case MissileMode.PlanetToSpace:
@@ -305,49 +361,61 @@ namespace IngameScript {
             }
         }
 
-        public void HandleIncomingTargetData() {
-            try {
+        public void HandleIncomingTargetData()
+        {
+            try
+            {
                 LIGMA.UpdateTargetData(STURaycaster.DeserializeHitInfo(IncomingLog.Metadata));
                 string x = LIGMA.TargetData.Position.X.ToString("0.00");
                 string y = LIGMA.TargetData.Position.Y.ToString("0.00");
                 string z = LIGMA.TargetData.Position.Z.ToString("0.00");
                 string broadcastString = $"CONFIRMED - Target coordinates set to ({x}, {y}, {z})";
                 LIGMA.CreateOkBroadcast(broadcastString);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 LIGMA.CreateErrorBroadcast($"Failed to parse target data: {e}");
             }
         }
 
-        public void Launch() {
+        public void Launch()
+        {
             LIGMA.CreateOkBroadcast("Received launch command");
-            if (ALREADY_RAN_FIRST_COMMAND) {
+            if (ALREADY_RAN_FIRST_COMMAND)
+            {
                 LIGMA.CreateErrorBroadcast("Cannot launch more than once");
                 return;
             }
 
-            if (LIGMA.TargetData.Position == default(Vector3D)) {
+            if (LIGMA.TargetData.Position == default(Vector3D))
+            {
                 LIGMA.CreateErrorBroadcast("Cannot launch without target coordinates");
                 return;
             }
 
-            try {
+            try
+            {
                 ALREADY_RAN_FIRST_COMMAND = true;
                 FirstRunTasks();
                 LIGMA.CurrentPhase = LIGMA.Phase.Launch;
                 // Insurance in case LIGMA was modified on launch pad
                 LIGMA.FlightController.UpdateShipMass();
                 LIGMA.CreateOkBroadcast($"Launching in {GetModeString()}");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 LIGMA.CreateFatalErrorBroadcast($"Error during launch: {e}");
             }
         }
 
-        public void Test() {
+        public void Test()
+        {
             LIGMA.CurrentPhase = LIGMA.Phase.Launch;
             MainLaunchPlan = new LIGMA.TestSuite();
         }
 
-        public void Detonate() {
+        public void Detonate()
+        {
             LIGMA.SelfDestruct();
         }
 

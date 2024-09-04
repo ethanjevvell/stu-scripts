@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
-using static IngameScript.Program.CBT;
+// using static IngameScript.Program.CBT;
 
 namespace IngameScript
 {
@@ -63,7 +63,7 @@ namespace IngameScript
             public bool IsGangwayStateValid()
             { 
                 // check whether hinge 1 is out of bounds
-                if ((GangwayHinge1.Angle * (180 / Math.PI)) > 0) { return false; }
+                if (Math.Abs(GangwayHinge1.Angle * (180 / Math.PI)) < 0.1) { return false; }
                 // normalize both hinge angles to 0-180 degrees
                 float hinge1Angle = (float)(GangwayHinge1.Angle * (180 / Math.PI)) + 90;
                 float hinge2Angle = (float)(GangwayHinge2.Angle * (180 / Math.PI)) + 90;
@@ -98,22 +98,22 @@ namespace IngameScript
 
             public void ExtendGangway()
             {
-                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
+                if (IsGangwayStateValid() && CBT.FlightController.GetCurrentSurfaceAltitude() > 10)
                 {
                     GangwayHinge1.TargetVelocityRPM = 1;
                     GangwayHinge2.TargetVelocityRPM = 1;
                 }
-                else { AddToLogQueue("Gangway assy position not valid or altitude too low; manual reset recommended.", STULogType.ERROR); }
+                else { CBT.AddToLogQueue("Gangway assy position not valid or altitude too low; manual reset recommended.", STULogType.ERROR); }
             }
 
             public void RetractGangway()
             {
-                if (IsGangwayStateValid() && FlightController.GetCurrentSurfaceAltitude() > 10)
+                if (IsGangwayStateValid() && CBT.FlightController.GetCurrentSurfaceAltitude() > 10)
                 {
                     GangwayHinge1.TargetVelocityRPM = 1;
                     GangwayHinge2.TargetVelocityRPM = 1;
                 }
-                else { AddToLogQueue("Gangway assy position not valid or altitude too low; manual reset recommended.", STULogType.ERROR); }
+                else { CBT.AddToLogQueue("Gangway assy position not valid or altitude too low; manual reset recommended.", STULogType.ERROR); }
             }
 
             /// <summary>
