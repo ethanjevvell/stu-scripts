@@ -1,11 +1,15 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
+using System.Collections.Generic;
 using VRageMath;
 
 namespace IngameScript {
     partial class Program {
 
         public partial class STUFlightController {
+
+            public static Dictionary<string, string> Telemetry = new Dictionary<string, string>();
+            StandardOutput[] StandardOutputDisplays { get; set; }
 
             IMyRemoteControl RemoteControl { get; set; }
 
@@ -35,7 +39,7 @@ namespace IngameScript {
             /// Be sure to orient the Remote Control block so that its forward direction is the direction you want to be considered the "forward" direction of your ship.
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// </summary>
-            public STUFlightController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
+            public STUFlightController(IMyGridTerminalSystem grid, IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
                 RemoteControl = remoteControl;
                 AllGyroscopes = allGyros;
                 ActiveThrusters = allThrusters;
@@ -45,6 +49,7 @@ namespace IngameScript {
                 AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
                 PointOrbitController = new STUPointOrbitController(this, RemoteControl);
                 HasGyroControl = true;
+                StandardOutputDisplays = FindStandardOutputDisplays(grid);
                 UpdateState();
             }
 
@@ -93,6 +98,10 @@ namespace IngameScript {
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
+
+                foreach (var display in StandardOutputDisplays) {
+                    display.DrawTelemetry();
+                }
             }
 
             /// <summary>
@@ -329,6 +338,24 @@ namespace IngameScript {
                 }
                 HasThrusterControl = true;
             }
+
+            private StandardOutput[] FindStandardOutputDisplays(IMyGridTerminalSystem grid) {
+                List<IMyTextPanel> textPanels = new List<IMyTextPanel>();
+                grid.GetBlocksOfType(textPanels);
+
+                if (textPanels.Count == 0) {
+                    return new StandardOutput[] { };
+                }
+
+                List<StandardOutput> displays = new List<StandardOutput>();
+                foreach (var panel in textPanels) {
+                    if (panel.CustomName.Contains("STU Standard Output")) {
+                        displays.Add(new StandardOutput(panel, 0));
+                    }
+                }
+                return displays.ToArray();
+            }
+
         }
     }
 }

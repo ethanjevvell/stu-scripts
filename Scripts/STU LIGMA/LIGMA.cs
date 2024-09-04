@@ -120,7 +120,7 @@ namespace IngameScript {
                     }
                 }
 
-                FlightController = new STUFlightController(RemoteControl, activeThrusters.ToArray(), Gyros);
+                FlightController = new STUFlightController(grid, RemoteControl, activeThrusters.ToArray(), Gyros);
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
 
