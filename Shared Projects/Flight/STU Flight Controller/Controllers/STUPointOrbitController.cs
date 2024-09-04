@@ -20,12 +20,12 @@ namespace IngameScript {
 
                 private double TargetRadius { get; set; }
                 private double TargetAltitude { get; set; }
-                public double KickstartVelocity { get; set; }
+                public double TargetVelocity { get; set; }
 
                 public STUPointOrbitController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
                     RemoteControl = remoteControl;
-                    KickstartVelocity = 2.5;
+                    TargetVelocity = 2.5;
                 }
 
                 public bool Run(Vector3D targetPos) {
@@ -64,7 +64,7 @@ namespace IngameScript {
                     // If we're in gravity, use the gravity vector as the non-colinear vector
                     nonColinearVector = InGravity() ? FlightController.VelocityController.LocalGravityVector : new Vector3D(0, 0, 1);
 
-                    if (velocity < KickstartVelocity) {
+                    if (velocity < TargetVelocity) {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
@@ -78,16 +78,24 @@ namespace IngameScript {
 
 
                 public void ExertCentripetalForce() {
+
+                    double altitude = FlightController.AltitudeController.GetSeaLevelAltitude();
                     double mass = STUVelocityController.ShipMass;
                     double velocity = FlightController.CurrentVelocity.Length();
                     double velocitySquared = velocity * velocity;
                     double radius = Vector3D.Distance(GetClosestPointOnOrbitalAxis(), RemoteControl.CenterOfMass);
-                    double radiusError = radius - TargetRadius;
-                    double centripetalForceRequired = ((mass * velocitySquared) / TargetRadius) + 10 * radiusError;
+
+                    // TODO: Use velocity error to control orbital velocity
+                    double velocityError = TargetVelocity - velocity;
+                    double altitudeError = TargetAltitude - altitude;
+                    double radiusError = TargetRadius - radius;
+
+                    double centripetalForceRequired = ((mass * velocitySquared) / TargetRadius) - 10 * radiusError;
                     Vector3D centripetalForceVector = GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired;
-                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(TargetAltitude - FlightController.AltitudeController.GetSeaLevelAltitude(), FlightController.AltitudeController.SeaLevelAltitudeVelocity);
-                    LIGMA.CreateOkBroadcast($"Altitude error: {FlightController.AltitudeController.GetSeaLevelAltitude() - TargetAltitude}");
+                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(altitudeError, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
+
                     FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
+
                 }
 
                 /// <summary>
