@@ -1,7 +1,3 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\MDK\MDK.options.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\MDK\MDK.paths.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\STU LIGMA.exe.config
@@ -20,6 +16,10 @@ C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\SixLabors.Core.dll
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\System.Numerics.Vectors.dll
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\SixLabors.ImageSharp.xml
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\bin\SixLabors.Core.xml
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.exe
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.CopyComplete

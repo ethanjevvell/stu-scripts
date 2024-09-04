@@ -1,7 +1,3 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\MDK\MDK.options.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\MDK\MDK.paths.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\STU LIGMA Mission Control.exe.config
@@ -20,6 +16,10 @@ C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabo
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\System.Numerics.Vectors.dll
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.ImageSharp.xml
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.Core.xml
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.exe
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CopyComplete

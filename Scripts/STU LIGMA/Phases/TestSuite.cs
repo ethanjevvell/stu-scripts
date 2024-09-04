@@ -365,17 +365,17 @@ namespace IngameScript {
 
                     FirstRunTasks();
                     // Planetary orbit point
-                    //FlightController.OrbitPoint(new Vector3D(
-                    //    -38027,
-                    //    -39186,
-                    //    -28549
-                    //));
-                    // Space orbit point
                     FlightController.OrbitPoint(new Vector3D(
-                        -62478,
-                        -88117,
-                        -55007
-                        ));
+                        -38027,
+                        -39186,
+                        -28549
+                    ));
+                    // Space orbit point
+                    //FlightController.OrbitPoint(new Vector3D(
+                    //    -62478,
+                    //    -88117,
+                    //    -55007
+                    //    ));
                     return false;
 
                     // Use this to execute the test suite

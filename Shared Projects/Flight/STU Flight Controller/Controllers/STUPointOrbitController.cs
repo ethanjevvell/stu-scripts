@@ -53,8 +53,6 @@ namespace IngameScript {
                             }
                             break;
                         case PointOrbitState.Orbiting:
-                            Vector3D closestPoint = GetClosestPointOnOrbitalAxis();
-                            LIGMA.CreateFatalErrorBroadcast($"Closest point: {closestPoint}");
                             ExertCentripetalForce();
                             break;
                     }
@@ -66,20 +64,15 @@ namespace IngameScript {
                     double velocity = FlightController.CurrentVelocity.Length();
                     Vector3D nonColinearVector;
 
-                    // if we have a gravity vector, use that as the non-colinear vector
-                    // This ensure the orbit path is parallel with the surface of the planet
-                    if (InGravity()) {
-                        nonColinearVector = FlightController.VelocityController.LocalGravityVector;
-                    } else {
-                        nonColinearVector = new Vector3D(0, 0, 1);
-                    }
+                    // If we're in gravity, use the gravity vector as the non-colinear vector
+                    nonColinearVector = InGravity() ? FlightController.VelocityController.LocalGravityVector : new Vector3D(0, 0, 1);
 
                     if (velocity < KickstartVelocity) {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
                         Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
-                        FlightController.ExertVectorForce(kickstartThrust + counterGravityForceVector);
+                        FlightController.ExertVectorForce(Vector3D.TransformNormal(kickstartThrust, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
                         return false;
                     }
 
@@ -93,7 +86,7 @@ namespace IngameScript {
                     double velocitySquared = velocity * velocity;
                     double radius = Vector3D.Distance(GetClosestPointOnOrbitalAxis(), RemoteControl.CenterOfMass);
                     double radiusError = radius - TargetRadius;
-                    double centripetalForceRequired = ((mass * velocitySquared) / radius) + 100 * radiusError;
+                    double centripetalForceRequired = ((mass * velocitySquared) / TargetRadius) + 10 * radiusError;
                     Vector3D centripetalForceVector = GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired;
                     Vector3D counterGravityForceVector = FlightController.GetCounterGravityForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
                     FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
@@ -114,7 +107,7 @@ namespace IngameScript {
                         LIGMA.CreateWarningBroadcast($"Above OA");
                         return OrbitalAxis.To;
                     } else {
-                        return (OrbitalAxis.From + t * b);
+                        return OrbitalAxis.From + t * b;
                     }
                 }
 
@@ -124,7 +117,7 @@ namespace IngameScript {
                 /// <returns></returns>
                 private Vector3D GetUnitVectorTowardOrbitalAxis() {
                     Vector3D closestPoint = GetClosestPointOnOrbitalAxis();
-                    return closestPoint - RemoteControl.CenterOfMass;
+                    return Vector3D.Normalize(closestPoint - RemoteControl.CenterOfMass);
                 }
 
                 private bool InGravity() {
