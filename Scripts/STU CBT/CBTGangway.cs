@@ -61,7 +61,7 @@ namespace IngameScript
             }
 
             public bool IsGangwayStateValid()
-            {
+            { 
                 // check whether hinge 1 is out of bounds
                 if ((GangwayHinge1.Angle * (180 / Math.PI)) > 0) { return false; }
                 // normalize both hinge angles to 0-180 degrees
