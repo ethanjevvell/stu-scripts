@@ -23,7 +23,7 @@ namespace IngameScript {
 
         public void Main() {
             FlightController.UpdateState();
-            FlightController.MaintainSeaLevelAltitude(2000);
+            FlightController.OrbitPlanet();
             if (STUFlightController.FlightLogs.Count > 0) {
                 while (STUFlightController.FlightLogs.Count > 0) {
                     LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());

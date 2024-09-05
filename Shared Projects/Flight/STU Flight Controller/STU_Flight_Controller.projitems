@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUPlanetOrbitController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUPointOrbitController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUVelocityController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Displays\PlanetOrbitModeAdapters\SmallBuggyCockpit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Displays\StandardOutput.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\STUInterceptCalculator.cs" />

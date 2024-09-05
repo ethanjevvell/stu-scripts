@@ -13,6 +13,10 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Log", "..\..\Shared Projects\Logging\STU Log\STU Log.shproj", "{6EE22094-1878-45BC-805C-D32278F9C704}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Draw Mapper", "..\..\Shared Projects\Displays\STU Display Draw Mapper\STU Display Draw Mapper.shproj", "{23E2D3A8-97CD-4E45-889C-1798F06F4240}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Type", "..\..\Shared Projects\Displays\STU Display Type\STU Display Type.shproj", "{A2C2A7B0-3894-43F4-8EB5-71BFC87BE730}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -28,13 +32,17 @@ Global
 		SolutionGuid = {1D463395-128B-4038-84B7-32F0EB24BDAA}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{23e2d3a8-97cd-4e45-889c-1798f06f4240}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{83207d78-9012-4ea3-ac3f-5fea6193e59a}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

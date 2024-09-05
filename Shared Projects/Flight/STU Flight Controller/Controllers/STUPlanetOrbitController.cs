@@ -12,8 +12,6 @@ namespace IngameScript {
                     Idle,
                     AdjustingVelocity,
                     AdjustingAltitude,
-                    SwitchOff,
-                    SwitchOn,
                     Abort
                 }
 
@@ -34,6 +32,10 @@ namespace IngameScript {
                 }
 
                 public bool Run() {
+
+                    foreach (var display in FlightController.StandardOutputDisplays) {
+                        display.DrawTelemetry(FlightController.AltitudeController.CurrentSeaLevelAltitude);
+                    }
 
                     if (FlightController.RemoteControl.GetNaturalGravity().Length() == 0) {
                         CreateErrorFlightLog("ABORT -- NO GRAVITY");
@@ -60,12 +62,14 @@ namespace IngameScript {
 
                             if (!WithinVelocityErrorTolerance()) {
                                 CreateInfoFlightLog("Entering AdjustingVelocity");
+                                FlightController.ToggleThrusters(true);
                                 State = PlanetOrbitState.AdjustingVelocity;
                                 break;
                             }
 
                             if (!WithinAltitudeErrorTolerance()) {
                                 CreateInfoFlightLog("Entering AdjustingAltitude");
+                                FlightController.ToggleThrusters(true);
                                 State = PlanetOrbitState.AdjustingAltitude;
                                 break;
                             }
@@ -74,22 +78,16 @@ namespace IngameScript {
 
                         case PlanetOrbitState.AdjustingVelocity:
                             if (AdjustVelocity()) {
-                                State = PlanetOrbitState.SwitchOff;
+                                FlightController.ToggleThrusters(false);
+                                State = PlanetOrbitState.Idle;
                             }
                             break;
 
                         case PlanetOrbitState.AdjustingAltitude:
                             if (AdjustAltitude()) {
-                                State = PlanetOrbitState.SwitchOff;
+                                FlightController.ToggleThrusters(false);
+                                State = PlanetOrbitState.Idle;
                             }
-                            break;
-
-                        case PlanetOrbitState.SwitchOff:
-                            State = PlanetOrbitState.Idle;
-                            break;
-
-                        case PlanetOrbitState.SwitchOn:
-                            State = PlanetOrbitState.Idle;
                             break;
 
                         case PlanetOrbitState.Abort:
@@ -134,7 +132,7 @@ namespace IngameScript {
 
                 private bool AdjustAltitude() {
                     try {
-                        return FlightController.MaintainSurfaceAltitude(TargetAltitude);
+                        return FlightController.MaintainSeaLevelAltitude(TargetAltitude);
                     } catch (Exception e) {
                         CreateFatalFlightLog(e.ToString());
                         return false;

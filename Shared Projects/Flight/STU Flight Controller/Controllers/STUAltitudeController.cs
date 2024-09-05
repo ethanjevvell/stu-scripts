@@ -46,13 +46,11 @@ namespace IngameScript {
                         case AltitudeState.Ascending:
                             if (SetSurfaceVa(5, SurfaceAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetSurfaceVa(0, SurfaceAltitudeVelocity);
                             }
                             break;
                         case AltitudeState.Descending:
                             if (SetSurfaceVa(-5, SurfaceAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetSurfaceVa(0, SurfaceAltitudeVelocity);
                             }
                             break;
                     }
@@ -65,14 +63,14 @@ namespace IngameScript {
                             return IdleSeaLevelAltitude();
                         case AltitudeState.Ascending:
                             if (SetSeaLevelVa(5, SeaLevelAltitudeVelocity)) {
+                                CreateInfoFlightLog("Reached target sea level altitude");
                                 CurrentState = AltitudeState.Idle;
-                                SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                             }
                             break;
                         case AltitudeState.Descending:
                             if (SetSeaLevelVa(-5, SeaLevelAltitudeVelocity)) {
+                                CreateInfoFlightLog("Reached target sea level altitude");
                                 CurrentState = AltitudeState.Idle;
-                                SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                             }
                             break;
                     }
@@ -107,8 +105,10 @@ namespace IngameScript {
 
                     double altitude = GetSurfaceAltitude();
                     if (altitude > TargetSurfaceAltitude) {
+                        CreateInfoFlightLog($"Descending to target surface altitude: {TargetSurfaceAltitude}");
                         CurrentState = AltitudeState.Descending;
                     } else if (altitude < TargetSurfaceAltitude) {
+                        CreateInfoFlightLog($"Ascending to target surface altitude: {TargetSurfaceAltitude}");
                         CurrentState = AltitudeState.Ascending;
                     }
                     return false;
@@ -124,8 +124,10 @@ namespace IngameScript {
 
                     double altitude = GetSeaLevelAltitude();
                     if (altitude > TargetSeaLevelAltitude) {
+                        CreateInfoFlightLog($"Descending to target sea level altitude: {TargetSeaLevelAltitude}");
                         CurrentState = AltitudeState.Descending;
                     } else if (altitude < TargetSeaLevelAltitude) {
+                        CreateInfoFlightLog($"Ascending to target sea level altitude: {TargetSeaLevelAltitude}");
                         CurrentState = AltitudeState.Ascending;
                     }
                     return false;

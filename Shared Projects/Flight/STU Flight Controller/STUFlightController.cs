@@ -10,6 +10,7 @@ namespace IngameScript {
 
             public static Queue<STULog> FlightLogs = new Queue<STULog>();
             private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
+            private const string FLIGHT_CONTROLLER_STANDARD_OUTPUT_TAG = "FLIGHT_CONTROLLER_STANDARD_OUTPUT";
 
             public static Dictionary<string, string> Telemetry = new Dictionary<string, string>();
             StandardOutput[] StandardOutputDisplays { get; set; }
@@ -110,10 +111,6 @@ namespace IngameScript {
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
-
-                foreach (var display in StandardOutputDisplays) {
-                    display.DrawTelemetry();
-                }
             }
 
             /// <summary>
@@ -363,20 +360,32 @@ namespace IngameScript {
             }
 
             private StandardOutput[] FindStandardOutputDisplays(IMyGridTerminalSystem grid) {
-                List<IMyTextPanel> textPanels = new List<IMyTextPanel>();
-                grid.GetBlocksOfType(textPanels);
-
-                if (textPanels.Count == 0) {
-                    return new StandardOutput[] { };
-                }
-
-                List<StandardOutput> displays = new List<StandardOutput>();
-                foreach (var panel in textPanels) {
-                    if (panel.CustomName.Contains("STU Standard Output")) {
-                        displays.Add(new StandardOutput(panel, 0));
+                List<StandardOutput> output = new List<StandardOutput>();
+                List<IMyTerminalBlock> allBlocksOnGrid = new List<IMyTerminalBlock>();
+                grid.GetBlocks(allBlocksOnGrid);
+                foreach (var block in allBlocksOnGrid) {
+                    string customDataRawText = block.CustomData;
+                    string[] customDataLines = customDataRawText.Split('\n');
+                    foreach (var line in customDataLines) {
+                        if (line.Contains(FLIGHT_CONTROLLER_STANDARD_OUTPUT_TAG)) {
+                            string[] kvp = line.Split(':');
+                            // adjust font size based on what screen we're trying to initalize
+                            float fontSize;
+                            try {
+                                fontSize = float.Parse(kvp[2]);
+                                if (fontSize < 0.1f || fontSize > 10f) {
+                                    throw new Exception("Invalid font size");
+                                }
+                            } catch (Exception e) {
+                                CreateWarningFlightLog("Invalid font size for display " + block.CustomName + ". Defaulting to 0.5");
+                                fontSize = 0.5f;
+                            }
+                            StandardOutput screen = new StandardOutput(block, int.Parse(kvp[1]), "Monospace", fontSize);
+                            output.Add(screen);
+                        }
                     }
                 }
-                return displays.ToArray();
+                return output.ToArray();
             }
 
             public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point) {
