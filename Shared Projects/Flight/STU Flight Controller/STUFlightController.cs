@@ -8,6 +8,9 @@ namespace IngameScript {
 
         public partial class STUFlightController {
 
+            public static Queue<STULog> FlightLogs = new Queue<STULog>();
+            private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
+
             public static Dictionary<string, string> Telemetry = new Dictionary<string, string>();
             StandardOutput[] StandardOutputDisplays { get; set; }
 
@@ -33,6 +36,7 @@ namespace IngameScript {
             STUOrientationController OrientationController { get; set; }
             STUAltitudeController AltitudeController { get; set; }
             STUPointOrbitController PointOrbitController { get; set; }
+            STUPlanetOrbitController PlanetOrbitController { get; set; }
 
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
@@ -48,9 +52,11 @@ namespace IngameScript {
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
                 AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
                 PointOrbitController = new STUPointOrbitController(this, RemoteControl);
+                PlanetOrbitController = new STUPlanetOrbitController(this);
                 HasGyroControl = true;
                 StandardOutputDisplays = FindStandardOutputDisplays(grid);
                 UpdateState();
+                CreateOkFlightLog("Flight controller initialized.");
             }
 
             public void UpdateThrustersAfterGridChange(IMyThrust[] newActiveThrusters) {
@@ -78,6 +84,12 @@ namespace IngameScript {
 
             public double GetCurrentSurfaceAltitude() {
                 return AltitudeController.GetSurfaceAltitude();
+            }
+
+            public void ToggleThrusters(bool on) {
+                foreach (var thruster in ActiveThrusters) {
+                    thruster.Enabled = on;
+                }
             }
 
             public float GetForwardStoppingDistance() {
@@ -263,6 +275,7 @@ namespace IngameScript {
             }
 
             public Vector3D GetAltitudeVelocityChangeForceVector(double desiredVelocity, double altitudeVelocity) {
+                // Note that LocalGravityVector has already been transformed by the ship's orientation
                 Vector3D localGravityVector = VelocityController.LocalGravityVector;
 
                 // Calculate the magnitude of the gravitational force
@@ -298,10 +311,20 @@ namespace IngameScript {
                 PointOrbitController.Run(targetPos);
             }
 
-            public void MaintainAltitude(double targetAltitude = 100) {
-                AltitudeController.TargetSurfaceAltitude = targetAltitude;
-                AltitudeController.MaintainSurfaceAltitude();
+            public void OrbitPlanet() {
+                PlanetOrbitController.Run();
             }
+
+            public bool MaintainSurfaceAltitude(double targetAltitude = 100) {
+                AltitudeController.TargetSurfaceAltitude = targetAltitude;
+                return AltitudeController.MaintainSurfaceAltitude();
+            }
+
+            public bool MaintainSeaLevelAltitude(double targetAltitude = 100) {
+                AltitudeController.TargetSeaLevelAltitude = targetAltitude;
+                return AltitudeController.MaintainSeaLevelAltitude();
+            }
+
 
             public void UpdateShipMass() {
                 STUVelocityController.ShipMass = RemoteControl.CalculateShipMass().PhysicalMass;
@@ -354,6 +377,46 @@ namespace IngameScript {
                     }
                 }
                 return displays.ToArray();
+            }
+
+            public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point) {
+                foreach (var kvp in STUGalacticMap.CelestialBodies) {
+                    STUGalacticMap.Planet planet = kvp.Value;
+                    BoundingSphereD sphere = new BoundingSphereD(planet.Center, 1.76f * planet.Radius);
+                    // if the point is inside the planet's detection sphere or intersects it, it is on the planet
+                    if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
+                        return planet;
+                    }
+                }
+                return null;
+            }
+
+            public static void CreateOkFlightLog(string message) {
+                CreateFlightLog(message, STULogType.OK);
+            }
+
+            public static void CreateErrorFlightLog(string message) {
+                CreateFlightLog(message, STULogType.ERROR);
+            }
+
+            public static void CreateInfoFlightLog(string message) {
+                CreateFlightLog(message, STULogType.INFO);
+            }
+
+            public static void CreateWarningFlightLog(string message) {
+                CreateFlightLog(message, STULogType.WARNING);
+            }
+
+            public static void CreateFatalFlightLog(string message) {
+                CreateFlightLog(message, STULogType.ERROR);
+            }
+
+            private static void CreateFlightLog(string message, string type) {
+                FlightLogs.Enqueue(new STULog {
+                    Message = message,
+                    Type = type,
+                    Sender = FLIGHT_CONTROLLER_LOG_NAME
+                });
             }
 
         }

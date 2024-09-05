@@ -36,6 +36,7 @@ namespace IngameScript {
                     RemoteControl = remoteControl;
                     CurrentSurfaceAltitude = PreviousSurfaceAltitude = GetSurfaceAltitude();
                     CurrentSeaLevelAltitude = PreviousSeaLevelAltitude = GetSeaLevelAltitude();
+                    CurrentState = AltitudeState.Idle;
                 }
 
                 public bool MaintainSurfaceAltitude() {
@@ -43,15 +44,15 @@ namespace IngameScript {
                         case AltitudeState.Idle:
                             return IdleSurfaceAltitude();
                         case AltitudeState.Ascending:
-                            if (SetVa(5, SurfaceAltitudeVelocity)) {
+                            if (SetSurfaceVa(5, SurfaceAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetVa(0, SurfaceAltitudeVelocity);
+                                SetSurfaceVa(0, SurfaceAltitudeVelocity);
                             }
                             break;
                         case AltitudeState.Descending:
-                            if (SetVa(-5, SurfaceAltitudeVelocity)) {
+                            if (SetSurfaceVa(-5, SurfaceAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetVa(0, SurfaceAltitudeVelocity);
+                                SetSurfaceVa(0, SurfaceAltitudeVelocity);
                             }
                             break;
                     }
@@ -63,15 +64,15 @@ namespace IngameScript {
                         case AltitudeState.Idle:
                             return IdleSeaLevelAltitude();
                         case AltitudeState.Ascending:
-                            if (SetVa(5, SeaLevelAltitudeVelocity)) {
+                            if (SetSeaLevelVa(5, SeaLevelAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetVa(0, SeaLevelAltitudeVelocity);
+                                SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                             }
                             break;
                         case AltitudeState.Descending:
-                            if (SetVa(-5, SeaLevelAltitudeVelocity)) {
+                            if (SetSeaLevelVa(-5, SeaLevelAltitudeVelocity)) {
                                 CurrentState = AltitudeState.Idle;
-                                SetVa(0, SeaLevelAltitudeVelocity);
+                                SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                             }
                             break;
                     }
@@ -100,6 +101,7 @@ namespace IngameScript {
                     double surfaceAltitudeError = GetSurfaceAltitudeError();
                     // if we're close enough, don't do anything
                     if (surfaceAltitudeError < 10) {
+                        SetSurfaceVa(0, SurfaceAltitudeVelocity);
                         return true;
                     }
 
@@ -113,26 +115,34 @@ namespace IngameScript {
                 }
 
                 public bool IdleSeaLevelAltitude() {
-                    double seaLevelAltitude = GetSeaLevelAltitudeError();
+                    double seaLevelAltitudeError = GetSeaLevelAltitudeError();
                     // if we're close enough, don't do anything
-                    if (seaLevelAltitude < 10) {
+                    if (seaLevelAltitudeError < 10) {
+                        SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                         return true;
                     }
 
                     double altitude = GetSeaLevelAltitude();
-                    if (altitude > TargetSurfaceAltitude) {
+                    if (altitude > TargetSeaLevelAltitude) {
                         CurrentState = AltitudeState.Descending;
-                    } else if (altitude < TargetSurfaceAltitude) {
+                    } else if (altitude < TargetSeaLevelAltitude) {
                         CurrentState = AltitudeState.Ascending;
                     }
                     return false;
                 }
 
-                public bool SetVa(double desiredVelocity, double altitudeVelocity) {
+                public bool SetSurfaceVa(double desiredVelocity, double altitudeVelocity) {
                     // Set the force components on the velocity controller
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     FlightController.ExertVectorForce(counterGravityForceVector);
                     return GetSurfaceAltitudeError() < 10;
+                }
+
+                public bool SetSeaLevelVa(double desiredVelocity, double altitudeVelocity) {
+                    // Set the force components on the velocity controller
+                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
+                    FlightController.ExertVectorForce(counterGravityForceVector);
+                    return GetSeaLevelAltitudeError() < 10;
                 }
 
                 private double GetSurfaceAltitudeError() {
