@@ -41,9 +41,6 @@ namespace IngameScript
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
             // i.e. it's only when you hit "run" does the program pull whatever is in the user input buffer and run it.
-            // I moved the logic that controlls the update frequency to the end Main() method so that when the ABORT keyword can be passed,
-            // the program will do what it needs to do,
-            // then it will set the update frequency to none.
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -57,11 +54,9 @@ namespace IngameScript
             CBT.UpdateLogScreens();
             CBT.Gangway.UpdateGangway();
 
-            
-
             argument = argument.Trim().ToUpper();
             
-            // check whether the passed argument is a special command word, if it's not, default to parsing what the user passed
+            // check whether the passed argument is a special command word, if it's not, hand it off to the command parser
             switch (argument)
                 {
                 case "HALT":
@@ -111,6 +106,10 @@ namespace IngameScript
                     CBT.Gangway.ToggleGangway();
                     break;
 
+                case "GANGWAYRESET":
+                    CBT.UserInputGangwayState = CBTGangway.GangwayStates.Resetting;
+                    break;
+
                 case "PARK":
                     CBT.CurrentPhase = CBT.Phase.Executing;
                     CBT.SetAutopilotControl(true, true, true);
@@ -123,12 +122,32 @@ namespace IngameScript
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
                     CBT.AddToLogQueue("HALT - Executes a hover maneuver.", STULogType.OK);
                     CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation before firing thrusters to best counterract the current trajectory.", STULogType.OK);
-                    CBT.AddToLogQueue("CANCEL - Changes the state machine to IDLE without doing anything else.", STULogType.OK);
-                    CBT.AddToLogQueue("ABORT - Relinquishes control of the gyroscopes and thrusters, turns dampener override ON, and idles.", STULogType.OK);
+                    CBT.AddToLogQueue("CANCEL - Freezes all actuators and changes the state of the Flight Controller to IDLE, UNgracefully.", STULogType.OK);
+                    CBT.AddToLogQueue("ABORT - Freezes all actuators, relinquishes control of the gyroscopes and thrusters, turns dampener override ON, and idles the Flight Controller.", STULogType.OK);
                     CBT.AddToLogQueue("PARK - Orients the CBT to align with the Dock Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
                     CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
                     CBT.AddToLogQueue("TEST - Executes hard-coded maneuver parameters. FOR TESTING PURPOSES ONLY.", STULogType.OK);
-                    CBT.AddToLogQueue("F5 - Move forward at 5m/s. \"B5 R4 Y0.5\" is the command to move backwards 5m/s, right 4m/s, and yaw 0.5 RPS", STULogType.OK);
+                    CBT.AddToLogQueue("(enter 'helpp' to see an explanation of Generic Maneuvers)", STULogType.OK);
+                    break;
+
+                case "HELPP":
+                    CBT.AddToLogQueue("Generic Maneuvers:", STULogType.OK);
+                    CBT.AddToLogQueue("F5 - Move forward at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("B5 - Move backward at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("U5 - Move up at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("D5 - Move down at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("R5 - Move right at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("L5 - Move left at 5m/s", STULogType.OK);
+                    CBT.AddToLogQueue("P1 - Pitch up at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("H1 - Pitch down at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("O1 - Roll clockwise at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("Q1 - Roll counter-clockwise at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("Y1 - Yaw right at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("W1 - Yaw left at 1 rad/s", STULogType.OK);
+                    CBT.AddToLogQueue("A100 - Set cruising altitude to 100m", STULogType.OK);
+                    CBT.AddToLogQueue("C10 - Set cruising speed to 10m/s", STULogType.OK);
+                    CBT.AddToLogQueue("G0 - Retract gangway", STULogType.OK);
+                    CBT.AddToLogQueue("G1 - Extend gangway", STULogType.OK);
                     break;
 
                 default:
@@ -157,10 +176,13 @@ namespace IngameScript
                     }
                     break;
             }
+
+            argument = "";
         }
 
         public bool ParseCommand(string arg)
         {
+            CBT.AddToLogQueue($"Parsing command string \"{arg}\"", STULogType.INFO);
             /// code to break up space-separated commands that might be entered into the terminal.
             /// e.g. "F5" should be interpreted as "move forward at 5m/s"
             /// "F5 D1" should be interpreted as "move forward 5m/s AND down 1m/s"
@@ -287,8 +309,27 @@ namespace IngameScript
                             maneuver = CBT.CruisingSpeed;
                             break;
 
+                        case 'G':
+                            if (value == 0)
+                            {
+                                CBT.AddToLogQueue("Retracting gangway...", STULogType.INFO);
+                                CBT.UserInputGangwayState = CBTGangway.GangwayStates.Retracting;
+                                break;
+                            }
+                            else if (value == 1)
+                            {
+                                CBT.AddToLogQueue("Extending gangway...", STULogType.INFO);
+                                CBT.UserInputGangwayState = CBTGangway.GangwayStates.Extending;
+                                break;
+                            }
+                            else
+                            {
+                                CBT.AddToLogQueue($"Gangway command value {value} is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
+                                break;
+                            }
+
                         default:
-                            CBT.AddToLogQueue($"Command {command} is not a valid direction qualifier. Skipping...", STULogType.WARNING);
+                            CBT.AddToLogQueue($"Command letter {command} is not a valid operator. Skipping...", STULogType.WARNING);
                             break;
                     }
                 } 
