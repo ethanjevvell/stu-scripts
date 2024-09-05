@@ -33,10 +33,6 @@ namespace IngameScript {
 
                 public bool Run() {
 
-                    foreach (var display in FlightController.StandardOutputDisplays) {
-                        display.DrawTelemetry(FlightController.AltitudeController.CurrentSeaLevelAltitude);
-                    }
-
                     if (FlightController.RemoteControl.GetNaturalGravity().Length() == 0) {
                         CreateErrorFlightLog("ABORT -- NO GRAVITY");
                         State = PlanetOrbitState.Abort;

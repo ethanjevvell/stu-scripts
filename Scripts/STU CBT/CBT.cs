@@ -32,6 +32,8 @@ namespace IngameScript
             public static float UserInputPitchVelocity = 0;
             public static float UserInputYawVelocity = 0;
 
+            public static CBTGangway.GangwayStates UserInputGangwayState;
+
             public static Vector3D NextWaypoint;
 
             /// <summary>
@@ -116,9 +118,6 @@ namespace IngameScript
                 CBTGrid = grid;
                 echo = Echo;
 
-                
-                
-
                 AddLogSubscribers(grid);
                 LoadRemoteController(grid);
                 LoadFlightSeat(grid);
@@ -138,7 +137,7 @@ namespace IngameScript
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
 
-                FlightController = new STUFlightController(RemoteControl, Thrusters, Gyros);
+                FlightController = new STUFlightController(grid, RemoteControl, Thrusters, Gyros);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }

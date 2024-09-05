@@ -111,6 +111,13 @@ namespace IngameScript {
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
+                DrawToStandardOutputs();
+            }
+
+            private void DrawToStandardOutputs() {
+                for (int i = 0; i < StandardOutputDisplays.Length; i++) {
+                    StandardOutputDisplays[i].DrawTelemetry();
+                }
             }
 
             /// <summary>

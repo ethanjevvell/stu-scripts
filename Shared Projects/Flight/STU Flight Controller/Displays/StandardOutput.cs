@@ -7,27 +7,28 @@ namespace IngameScript {
         public partial class STUFlightController {
             public partial class StandardOutput : STUDisplay {
 
-                STUDisplayDrawMapper DrawMapper;
+                //STUDisplayDrawMapper DrawMapper;
 
                 public StandardOutput(IMyTerminalBlock block, int displayIndex, string font = "Monospace", float fontSize = 1) : base(block, displayIndex, font, fontSize) {
-                    DrawMapper = new STUDisplayDrawMapper {
-                        DisplayDrawMapper = {
-                            { STUDisplayType.CreateDisplayIdentifier(STUDisplayBlock.SmallBlockCockpit, STUSubDisplay.LargeDisplay), SmallBuggyCockpit.ScreenArea}
-                        }
-                    };
+                    //DrawMapper = new STUDisplayDrawMapper {
+                    //    DisplayDrawMapper = {
+                    //        { STUDisplayType.CreateDisplayIdentifier(STUDisplayBlock.SmallBlockCockpit, STUSubDisplay.LargeDisplay), SmallBuggyCockpit.ScreenArea}
+                    //    }
+                    //};
                 }
 
-                public void DrawTelemetry(double altitude) {
+                public void DrawTelemetry() {
                     StartFrame();
-                    MySprite sprite = new MySprite() {
+                    MySprite textSprite = new MySprite() {
                         Type = SpriteType.TEXT,
-                        Data = $"{altitude}",
-                        Position = Center,
+                        Data = $"ALTITUDE HERE",
                         RotationOrScale = 1f,
-                        Color = new Color(255, 255, 255),
+                        Size = new Vector2(Viewport.Width / 2, Viewport.Height / 2),
+                        Position = TopLeft,
+                        Color = Color.White,
                         FontId = "Monospace"
                     };
-                    CurrentFrame.Add(sprite);
+                    CurrentFrame.Add(textSprite);
                     EndAndPaintFrame();
                 }
             }

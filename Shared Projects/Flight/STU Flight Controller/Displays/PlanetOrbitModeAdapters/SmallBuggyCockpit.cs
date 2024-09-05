@@ -7,7 +7,7 @@ namespace IngameScript {
             public class SmallBuggyCockpit {
                 public static void ScreenArea(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f) {
                     // TODO: Create if statements that change the output sprite depending on the output mode! 
-                    frame.Add(new MySprite() {
+                    MySprite test = new MySprite() {
                         Type = SpriteType.TEXTURE,
                         Alignment = TextAlignment.CENTER,
                         Data = "SquareHollow",
@@ -15,7 +15,16 @@ namespace IngameScript {
                         Size = new Vector2(1080f, 534f) * scale,
                         Color = new Color(0, 255, 0, 255),
                         RotationOrScale = 0f
-                    }); // sprite6
+                    }; // sprite6
+
+                    MySprite background = new MySprite() {
+                        Type = SpriteType.TEXTURE,
+                        Alignment = TextAlignment.CENTER,
+                        Data = "SquareSimple",
+                        Position = new Vector2(0f, 0f) * scale + centerPos,
+                        Color = new Color(0, 0, 0, 255),
+                        RotationOrScale = 0f
+                    }; // sprite7
                 }
             }
         }

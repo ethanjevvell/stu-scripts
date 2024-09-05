@@ -61,14 +61,7 @@ namespace IngameScript {
                 BackgroundSprite = new MySpriteCollection();
                 Viewport = GetViewport();
                 TopLeft = Cursor = Viewport.Position;
-                if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
-                    Center_X = (ViewportOffsets[Surface.DisplayName].Width + ViewportOffsets[Surface.DisplayName].X) / 2;
-                    Center_Y = (ViewportOffsets[Surface.DisplayName].Height + ViewportOffsets[Surface.DisplayName].Y) / 2;
-                } else {
-                    Center_X = Viewport.Width / 2;
-                    Center_Y = Viewport.Height / 2;
-                };
-                Center = new Vector2(Center_X, Center_Y);
+                Center = Viewport.Center;
                 ScreenWidth = Viewport.Width;
                 ScreenHeight = Viewport.Height;
                 DefaultLineHeight = GetDefaultLineHeight();
@@ -123,11 +116,12 @@ namespace IngameScript {
 
             private RectangleF GetViewport() {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
-                    return ViewportOffsets[Surface.DisplayName];
-                } else {
-                    return standardViewport;
-                }
+                //if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
+                //    return ViewportOffsets[Surface.DisplayName];
+                //} else {
+                //    return standardViewport;
+                //}
+                return standardViewport;
             }
 
             private float GetTextSpriteWidth(MySprite sprite) {
