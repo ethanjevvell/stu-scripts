@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Flight Controller Tester", "STU Flight Controller Tester.csproj", "{794CB642-6246-49D0-9CBA-48763B8A83E5}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Flight Controller", "..\..\Shared Projects\Flight\STU Flight Controller\STU Flight Controller.shproj", "{C606C84C-C957-4859-BE77-23907A2B1B72}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{57B50592-7BEB-4012-A879-DEF8C4C735F0}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Log", "..\..\Shared Projects\Logging\STU Log\STU Log.shproj", "{6EE22094-1878-45BC-805C-D32278F9C704}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{794CB642-6246-49D0-9CBA-48763B8A83E5}.Debug|x64.ActiveCfg = Debug|x64
+		{794CB642-6246-49D0-9CBA-48763B8A83E5}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D463395-128B-4038-84B7-32F0EB24BDAA}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{83207d78-9012-4ea3-ac3f-5fea6193e59a}*SharedItemsImports = 13
+		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal

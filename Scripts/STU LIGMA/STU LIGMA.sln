@@ -17,8 +17,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Draw Mapper", "
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Type", "..\..\Shared Projects\Displays\STU Display Type\STU Display Type.shproj", "{A2C2A7B0-3894-43F4-8EB5-71BFC87BE730}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Flight Controller", "..\..\Shared Projects\Flight\STU Flight Controller\STU Flight Controller.shproj", "{C606C84C-C957-4859-BE77-23907A2B1B72}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU LIGMA Reconnoiterer", "..\STU LIGMA Reconnoiterer\STU LIGMA Reconnoiterer.csproj", "{CCADDDB9-50B2-4963-AC95-3DDE68101391}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU LIGMA Variables", "..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU LIGMA Variables.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
@@ -26,6 +24,8 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Raycaster", "..\..\Shared Projects\Raycasting\STU Raycaster\STU Raycaster.shproj", "{B77AA568-7B92-49E3-B6C3-61FA11E47EC0}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Flight Controller", "..\..\Shared Projects\Flight\STU Flight Controller\STU Flight Controller.shproj", "{C606C84C-C957-4859-BE77-23907A2B1B72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
