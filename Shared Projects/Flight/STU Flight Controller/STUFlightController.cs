@@ -106,6 +106,12 @@ namespace IngameScript {
             /// This must be called on every tick to ensure that the ship's state is up-to-date!
             /// </summary>
             public void UpdateState() {
+                if (!VelocityController.FINISHED_ORIENTATION_CALCULATION) {
+                    CreateInfoFlightLog($"{VelocityController.CALCULATION_PROGRESS}");
+                    VelocityController.RunOrientationCalculationOverTime();
+                    DrawLoadingScreen();
+                    return;
+                }
                 VelocityController.UpdateState();
                 AltitudeController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
@@ -425,6 +431,7 @@ namespace IngameScript {
 
             public static void CreateFatalFlightLog(string message) {
                 CreateFlightLog(message, STULogType.ERROR);
+                throw new Exception(message);
             }
 
             private static void CreateFlightLog(string message, string type) {
@@ -433,6 +440,12 @@ namespace IngameScript {
                     Type = type,
                     Sender = FLIGHT_CONTROLLER_LOG_NAME
                 });
+            }
+
+            private void DrawLoadingScreen() {
+                for (int i = 0; i < StandardOutputDisplays.Length; i++) {
+                    StandardOutputDisplays[i].DrawLoadingScreen(VelocityController.CALCULATION_PROGRESS);
+                }
             }
 
         }

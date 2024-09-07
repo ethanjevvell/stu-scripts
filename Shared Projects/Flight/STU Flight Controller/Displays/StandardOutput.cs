@@ -31,6 +31,28 @@ namespace IngameScript {
                     CurrentFrame.Add(textSprite);
                     EndAndPaintFrame();
                 }
+
+                public void DrawLoadingScreen(float progress) {
+                    StartFrame();
+                    MySprite backgroundSprite = new MySprite() {
+                        Type = SpriteType.TEXTURE,
+                        Data = "SquareSimple",
+                        Size = new Vector2(Viewport.Width, Viewport.Height),
+                        Position = TopLeft,
+                        Color = Color.Red
+                    };
+
+                    MySprite textSprite = new MySprite() {
+                        Type = SpriteType.TEXTURE,
+                        Data = "SquareSimple",
+                        Size = new Vector2(Viewport.Width * progress, Viewport.Height),
+                        Position = TopLeft,
+                        Color = Color.Green,
+                    };
+                    CurrentFrame.Add(backgroundSprite);
+                    CurrentFrame.Add(textSprite);
+                    EndAndPaintFrame();
+                }
             }
         }
     }

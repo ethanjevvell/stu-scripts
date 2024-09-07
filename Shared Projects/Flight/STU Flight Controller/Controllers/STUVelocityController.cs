@@ -15,6 +15,9 @@ namespace IngameScript {
                 /// </summary>
                 public static float ShipMass { get; set; }
 
+                public bool FINISHED_ORIENTATION_CALCULATION = false;
+                public float CALCULATION_PROGRESS = 0;
+
                 IMyRemoteControl RemoteControl { get; set; }
                 public Vector3D LocalGravityVector;
 
@@ -33,6 +36,10 @@ namespace IngameScript {
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
+                Matrix OptimalMaxThrustOrientation { get; set; }
+
+                IEnumerator<bool> OrientationCalculatorStateMachine;
+
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
 
                 public STUVelocityController(IMyRemoteControl remoteControl, IMyThrust[] allThrusters) {
@@ -49,6 +56,8 @@ namespace IngameScript {
                     ForwardController = new VelocityController(ForwardThrusters, ReverseThrusters);
                     RightController = new VelocityController(RightThrusters, LeftThrusters);
                     UpController = new VelocityController(UpThrusters, DownThrusters);
+
+                    OrientationCalculatorStateMachine = GetMaximumThrustOrientation();
 
                 }
 
@@ -354,7 +363,102 @@ namespace IngameScript {
                     return $"Hydrogen: {HydrogenThrusters.Length}, Atmospheric: {AtmosphericThrusters.Length}, Ion: {IonThrusters.Length}";
                 }
 
+                public void RunOrientationCalculationOverTime() {
+                    if (OrientationCalculatorStateMachine != null) {
+                        bool hasMoreSteps = OrientationCalculatorStateMachine.MoveNext();
+                        if (!hasMoreSteps) {
+                            OrientationCalculatorStateMachine.Dispose();
+                            OrientationCalculatorStateMachine = null;
+                        }
+                    }
+                }
+
+                private IEnumerator<bool> GetMaximumThrustOrientation() {
+
+                    float T_f = ForwardThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    float T_b = ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    float T_r = RightThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    float T_l = LeftThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    float T_u = UpThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    float T_d = DownThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+
+                    Dictionary<string, Vector3D> vectors = new Dictionary<string, Vector3D>() {
+                        { "Forward", new Vector3D(0, 0, T_f) },
+                        { "Backward", new Vector3D(0, 0, -T_b) },
+                        { "Right", new Vector3D(T_r, 0, 0) },
+                        { "Left", new Vector3D(-T_l, 0, 0) },
+                        { "Up", new Vector3D(0, T_u, 0) },
+                        { "Down", new Vector3D(0, -T_d, 0) }
+                    };
+
+                    float maxMagnitude = 0;
+                    string bestConfig = "";
+                    Vector3D bestVector = Vector3D.Zero;
+
+                    yield return true;
+
+                    Dictionary<string, float> axes = new Dictionary<string, float>() {
+                        { "x", 0 },
+                        { "y", 1 },
+                        { "z", 2 }
+                    };
+
+                    // Simulate rotations and thruster combinations
+                    foreach (var axis in axes) {
+                        CreateInfoFlightLog($"Axis value: {axis.Value}");
+                        for (float angle = 0; angle < 360; angle += 1) {
+
+                            CALCULATION_PROGRESS = (angle / (360 * 3)) + axis.Value / 3;
+
+                            if (angle % 10 == 0) {
+                                yield return true;
+                            }
+
+                            var rotation = Matrix.CreateFromAxisAngle(
+                                axis.Key == "x" ? Vector3.UnitX : (axis.Key == "y" ? Vector3.UnitY : Vector3.UnitZ),
+                                (float)Math.PI / 180 * angle
+                            );
+
+                            for (int combo = 0; combo < 64; combo++) // 2^6 possible thruster combinations
+                            {
+                                var thrustersOn = new int[6];
+                                int sum = 0;
+                                for (int i = 0; i < 6; i++) {
+                                    thrustersOn[i] = (combo >> i) & 1;
+                                    sum += thrustersOn[i];
+                                }
+
+                                if (sum != 3)
+                                    continue; // Continue if not exactly three thrusters are on
+
+                                Vector3 resultantVector = Vector3.Zero;
+                                int index = 0;
+                                foreach (var vec in vectors) {
+                                    Vector3 rotatedVec = Vector3.Transform(vec.Value, rotation);
+                                    if (thrustersOn[index++] == 1) {
+                                        resultantVector += rotatedVec;
+                                    }
+                                }
+
+                                float magnitude = resultantVector.Length();
+                                if (magnitude > maxMagnitude) {
+                                    maxMagnitude = magnitude;
+                                    bestConfig = $"Rotate around {axis.Key}-axis by {angle} degrees with thrusters {String.Join(", ", thrustersOn)}";
+                                    bestVector = resultantVector;
+                                }
+                            }
+                        }
+                    }
+
+                    OptimalMaxThrustOrientation = Matrix.CreateFromAxisAngle(Vector3.UnitX, 0) * Matrix.CreateFromAxisAngle(Vector3.UnitY, 0) * Matrix.CreateFromAxisAngle(Vector3.UnitZ, 0);
+                    FINISHED_ORIENTATION_CALCULATION = true;
+                    CreateOkFlightLog($"Best configuration: {bestConfig}, with resultant vector {bestVector}");
+
+                }
+
+
             }
+
         }
     }
 }
