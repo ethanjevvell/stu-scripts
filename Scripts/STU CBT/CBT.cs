@@ -708,7 +708,7 @@ namespace IngameScript
             {
                 FlightController.RelinquishGyroControl();
                 FlightController.ReinstateThrusterControl();
-                FlightController.MaintainAltitude(altitude);
+                FlightController.MaintainSeaLevelAltitude(altitude);
             }
 
             public static bool FastStop()

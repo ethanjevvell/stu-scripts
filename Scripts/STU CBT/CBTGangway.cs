@@ -17,7 +17,7 @@ namespace IngameScript
     {
         public partial class  CBTGangway
         {
-            private const float HINGE_ANGLE_TOLERANCE = 0.1f;
+            private const float HINGE_ANGLE_TOLERANCE = 0.0071f;
             public static IMyMotorStator GangwayHinge1 { get; set; }
             public static IMyMotorStator GangwayHinge2 { get; set; }
             public enum GangwayStates
@@ -183,14 +183,13 @@ namespace IngameScript
             {
                 GangwayHinge1.RotorLock = false;
                 GangwayHinge1.Torque = 33000000;
-                if (GangwayHinge1.Angle <= HINGE_ANGLE_TOLERANCE) // if it's close to 0 degrees, stop it, lock it, and set limits
+                if (Math.Abs(GangwayHinge1.Angle) < HINGE_ANGLE_TOLERANCE) // if it's close to 0 degrees, stop it, lock it, and set limits
                 {
                     CBT.AddToLogQueue($"Hinge 1 is close to 0 degrees", STULogType.INFO);
-                    GangwayHinge1.TargetVelocityRPM = 0;
+                    // GangwayHinge1.TargetVelocityRPM = 0;
                     GangwayHinge1.UpperLimitDeg = 0;
                     GangwayHinge1.LowerLimitDeg = -90;
                     GangwayHinge1.BrakingTorque = 33000000;
-                    GangwayHinge1.RotorLock = true;
                     return true;
                 }
                 else if (HINGE_ANGLE_TOLERANCE - GangwayHinge1.Angle < 0) // see whether the hinge was in a positive-angle state (which it shouldn't be in)
@@ -214,11 +213,10 @@ namespace IngameScript
                 if (Math.Abs(GangwayHinge2.Angle - (Math.PI/2)) < HINGE_ANGLE_TOLERANCE)
                 {
                     CBT.AddToLogQueue($"Hinge 2 is close to 90 degrees", STULogType.INFO);
-                    GangwayHinge2.TargetVelocityRPM = 0;
+                    // GangwayHinge2.TargetVelocityRPM = 0;
                     GangwayHinge2.UpperLimitDeg = 90;
                     GangwayHinge2.LowerLimitDeg = -90;
                     GangwayHinge2.BrakingTorque = 33000000;
-                    GangwayHinge2.RotorLock = true;
                     return true;
                 }
                 else { return false; }
@@ -254,10 +252,10 @@ namespace IngameScript
                 {
                     GangwayHinge1.TargetVelocityRPM = -1;
                     GangwayHinge2.TargetVelocityRPM = -1;
-                    if (Math.Abs(GangwayHinge1.Angle * (180 / Math.PI) + 90) < HINGE_ANGLE_TOLERANCE && Math.Abs(GangwayHinge2.Angle * (180 / Math.PI) + 90) - 90 < HINGE_ANGLE_TOLERANCE) // is hinge1 close enough to 0, and hinge2 close enough to +90?
+                    if (GangwayHinge1.Angle * (180 / Math.PI) + 90 < HINGE_ANGLE_TOLERANCE && GangwayHinge2.Angle < -1.54) // is hinge1 close enough to 0, and hinge2 close enough to +90?
                     {
-                        GangwayHinge1.TargetVelocityRPM = 0;
-                        GangwayHinge2.TargetVelocityRPM = 0;
+                        // GangwayHinge1.TargetVelocityRPM = 0;
+                        // GangwayHinge2.TargetVelocityRPM = 0;
                         CBT.AddToLogQueue("Gangway Retracted.", STULogType.OK);
                         return true;
                     }
