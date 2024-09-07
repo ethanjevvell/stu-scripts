@@ -52,7 +52,7 @@ namespace IngameScript
             CBT.FlightController.UpdateState();
             CBT.UpdateAutopilotScreens();
             CBT.UpdateLogScreens();
-            CBT.Gangway.UpdateGangway();
+            CBT.Gangway.UpdateGangway(CBT.UserInputGangwayState);
 
             argument = argument.Trim().ToUpper();
             
@@ -310,16 +310,9 @@ namespace IngameScript
                             break;
 
                         case 'G':
-                            if (value == 0)
+                            if (value == 0 || value == 1)
                             {
-                                CBT.AddToLogQueue("Retracting gangway...", STULogType.INFO);
-                                CBT.UserInputGangwayState = CBTGangway.GangwayStates.Retracting;
-                                break;
-                            }
-                            else if (value == 1)
-                            {
-                                CBT.AddToLogQueue("Extending gangway...", STULogType.INFO);
-                                CBT.UserInputGangwayState = CBTGangway.GangwayStates.Extending;
+                                CBT.Gangway.ToggleGangway(value);
                                 break;
                             }
                             else
