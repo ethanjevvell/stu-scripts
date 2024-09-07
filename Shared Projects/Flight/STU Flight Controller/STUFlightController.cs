@@ -106,12 +106,6 @@ namespace IngameScript {
             /// This must be called on every tick to ensure that the ship's state is up-to-date!
             /// </summary>
             public void UpdateState() {
-                if (!VelocityController.FINISHED_ORIENTATION_CALCULATION) {
-                    CreateInfoFlightLog($"{VelocityController.CALCULATION_PROGRESS}");
-                    VelocityController.RunOrientationCalculationOverTime();
-                    DrawLoadingScreen();
-                    return;
-                }
                 VelocityController.UpdateState();
                 AltitudeController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
@@ -446,6 +440,14 @@ namespace IngameScript {
                 for (int i = 0; i < StandardOutputDisplays.Length; i++) {
                     StandardOutputDisplays[i].DrawLoadingScreen(VelocityController.CALCULATION_PROGRESS);
                 }
+            }
+
+            public bool HardStop() {
+                ReinstateGyroControl();
+                Vector3D inertiaHeading = RemoteControl.GetShipVelocities().LinearVelocity;
+                Vector3D maximumThrustVector = VelocityController.MaximumThrustVector;
+                // point the thrusters in the opposite direction of the ship's velocity
+                return OrientationController.AlignShipAgainstVector(inertiaHeading, maximumThrustVector);
             }
 
         }

@@ -36,9 +36,7 @@ namespace IngameScript {
                 VelocityController RightController { get; set; }
                 VelocityController UpController { get; set; }
 
-                Matrix OptimalMaxThrustOrientation { get; set; }
-
-                IEnumerator<bool> OrientationCalculatorStateMachine;
+                public Vector3D MaximumThrustVector { get; set; }
 
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
 
@@ -57,7 +55,7 @@ namespace IngameScript {
                     RightController = new VelocityController(RightThrusters, LeftThrusters);
                     UpController = new VelocityController(UpThrusters, DownThrusters);
 
-                    OrientationCalculatorStateMachine = GetMaximumThrustOrientation();
+                    MaximumThrustVector = GetMaximumThrustOrientation();
 
                 }
 
@@ -363,96 +361,78 @@ namespace IngameScript {
                     return $"Hydrogen: {HydrogenThrusters.Length}, Atmospheric: {AtmosphericThrusters.Length}, Ion: {IonThrusters.Length}";
                 }
 
-                public void RunOrientationCalculationOverTime() {
-                    if (OrientationCalculatorStateMachine != null) {
-                        bool hasMoreSteps = OrientationCalculatorStateMachine.MoveNext();
-                        if (!hasMoreSteps) {
-                            OrientationCalculatorStateMachine.Dispose();
-                            OrientationCalculatorStateMachine = null;
-                        }
-                    }
-                }
+                private Vector3D GetMaximumThrustOrientation() {
 
-                private IEnumerator<bool> GetMaximumThrustOrientation() {
+                    float T_f = ForwardThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_b = ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_r = RightThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_l = LeftThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_u = UpThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_d = DownThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
 
-                    float T_f = ForwardThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
-                    float T_b = ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
-                    float T_r = RightThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
-                    float T_l = LeftThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
-                    float T_u = UpThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
-                    float T_d = DownThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxEffectiveThrust);
+                    // Unit vectors for each face (assuming initial alignment with axes)
+                    var vectors = new Dictionary<string, Vector3>
+                    {
+            { "Front", new Vector3(T_f, 0, 0) },
+            { "Back", new Vector3(-T_b, 0, 0) },
+            { "Left", new Vector3(0, T_l, 0) },
+            { "Right", new Vector3(0, -T_r, 0) },
+            { "Top", new Vector3(0, 0, T_u) },
+            { "Bottom", new Vector3(0, 0, -T_d) }
+        };
 
-                    Dictionary<string, Vector3D> vectors = new Dictionary<string, Vector3D>() {
-                        { "Forward", new Vector3D(0, 0, T_f) },
-                        { "Backward", new Vector3D(0, 0, -T_b) },
-                        { "Right", new Vector3D(T_r, 0, 0) },
-                        { "Left", new Vector3D(-T_l, 0, 0) },
-                        { "Up", new Vector3D(0, T_u, 0) },
-                        { "Down", new Vector3D(0, -T_d, 0) }
-                    };
+                    // Get side with most thrust
+                    var sideWithMostThrust = vectors.Aggregate((x, y) => x.Value.Length() > y.Value.Length() ? x : y).Key;
+                    var sideWithMostThrustIndex = vectors.Keys.ToList().IndexOf(sideWithMostThrust);
 
-                    float maxMagnitude = 0;
-                    string bestConfig = "";
-                    Vector3D bestVector = Vector3D.Zero;
+                    // Get sides adjacent to side with most thrust
+                    var adjacentSidesMap = new Dictionary<string, List<string>>
+                    {
+            { "Front", new List<string> { "Left", "Right", "Top", "Bottom" } },
+            { "Back", new List<string> { "Left", "Right", "Top", "Bottom" } },
+            { "Left", new List<string> { "Front", "Back", "Top", "Bottom" } },
+            { "Right", new List<string> { "Front", "Back", "Top", "Bottom" } },
+            { "Top", new List<string> { "Front", "Back", "Left", "Right" } },
+            { "Bottom", new List<string> { "Front", "Back", "Left", "Right" } }
+        };
 
-                    yield return true;
+                    var adjacentSides = adjacentSidesMap[sideWithMostThrust];
 
-                    Dictionary<string, float> axes = new Dictionary<string, float>() {
-                        { "x", 0 },
-                        { "y", 1 },
-                        { "z", 2 }
-                    };
+                    // Get adjacent side with most thrust
+                    var sideWithMostThrustAdjacent = adjacentSides.Aggregate((x, y) => vectors[x].Length() > vectors[y].Length() ? x : y);
+                    var sideWithMostThrustAdjacentIndex = vectors.Keys.ToList().IndexOf(sideWithMostThrustAdjacent);
 
-                    // Simulate rotations and thruster combinations
-                    foreach (var axis in axes) {
+                    // Get sides to avoid
+                    var sidesToAvoid = new List<string> { sideWithMostThrust, sideWithMostThrustAdjacent };
+                    var sidesToAvoidIndices = sidesToAvoid.Select(side => vectors.Keys.ToList().IndexOf(side)).ToList();
 
-                        for (float angle = 0; angle < 360; angle += 1) {
+                    // Get the side opposite of the side with the most thrust
+                    var oppositeSideMap = new Dictionary<string, string>
+                    {
+            { "Front", "Back" },
+            { "Back", "Front" },
+            { "Left", "Right" },
+            { "Right", "Left" },
+            { "Top", "Bottom" },
+            { "Bottom", "Top" }
+        };
 
-                            CALCULATION_PROGRESS = (angle / (360 * 3)) + axis.Value / 3;
+                    var oppositeSide = oppositeSideMap[sideWithMostThrust];
+                    var oppositeSideIndex = vectors.Keys.ToList().IndexOf(oppositeSide);
 
-                            if (angle % 10 == 0) {
-                                yield return true;
-                            }
+                    var secondOppositeSide = oppositeSideMap[sideWithMostThrustAdjacent];
+                    var secondOppositeSideIndex = vectors.Keys.ToList().IndexOf(secondOppositeSide);
 
-                            var rotation = Matrix.CreateFromAxisAngle(
-                                axis.Key == "x" ? Vector3.UnitX : (axis.Key == "y" ? Vector3.UnitY : Vector3.UnitZ),
-                                (float)Math.PI / 180 * angle
-                            );
+                    sidesToAvoidIndices.Add(oppositeSideIndex);
+                    sidesToAvoidIndices.Add(secondOppositeSideIndex);
 
-                            for (int combo = 0; combo < 64; combo++) // 2^6 possible thruster combinations
-                            {
-                                var thrustersOn = new int[6];
-                                int sum = 0;
-                                for (int i = 0; i < 6; i++) {
-                                    thrustersOn[i] = (combo >> i) & 1;
-                                    sum += thrustersOn[i];
-                                }
+                    // Find remaining adjacent sides
+                    var remainingSidesIndices = Enumerable.Range(0, 6).Where(i => !sidesToAvoidIndices.Contains(i)).ToList();
 
-                                if (sum != 3)
-                                    continue; // Continue if not exactly three thrusters are on
+                    // Get the index of the remaining adjacent side with the most thrust
+                    var sideWithMostThrustRemainingIndex = remainingSidesIndices.Aggregate((x, y) => vectors[vectors.Keys.ElementAt(x)].Length() > vectors[vectors.Keys.ElementAt(y)].Length() ? x : y);
 
-                                Vector3 resultantVector = Vector3.Zero;
-                                int index = 0;
-                                foreach (var vec in vectors) {
-                                    Vector3 rotatedVec = Vector3.Transform(vec.Value, rotation);
-                                    if (thrustersOn[index++] == 1) {
-                                        resultantVector += rotatedVec;
-                                    }
-                                }
-
-                                float magnitude = resultantVector.Length();
-                                if (magnitude > maxMagnitude) {
-                                    maxMagnitude = magnitude;
-                                    bestConfig = $"Rotate around {axis.Key}-axis by {angle} degrees with thrusters {String.Join(", ", thrustersOn)}";
-                                    bestVector = resultantVector;
-                                }
-                            }
-                        }
-                    }
-
-                    OptimalMaxThrustOrientation = Matrix.CreateFromAxisAngle(Vector3.UnitX, 0) * Matrix.CreateFromAxisAngle(Vector3.UnitY, 0) * Matrix.CreateFromAxisAngle(Vector3.UnitZ, 0);
-                    FINISHED_ORIENTATION_CALCULATION = true;
-                    CreateOkFlightLog($"Best configuration: {bestConfig}, with resultant vector {bestVector}");
+                    return vectors[sideWithMostThrust] + vectors[sideWithMostThrustAdjacent] + vectors[vectors.Keys.ElementAt(sideWithMostThrustRemainingIndex)];
 
                 }
 
