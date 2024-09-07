@@ -51,6 +51,34 @@ namespace IngameScript {
                     return false;
                 }
 
+                public bool AlignShipAgainstVector(Vector3D currentVelocity, Vector3D counterVelocity) {
+                    if (currentVelocity.LengthSquared() > DOT_PRODUCT_TOLERANCE) {
+                        Vector3D currentVelocityNormalized = -Vector3D.Normalize(currentVelocity);
+                        Vector3D counterVelocityTransformed = Vector3D.Transform(counterVelocity, RemoteControl.WorldMatrix);
+                        Vector3D rotationAxis = Vector3D.Cross(counterVelocity, currentVelocityNormalized);
+                        double dotProduct = MathHelper.Clamp(Vector3D.Dot(counterVelocity, currentVelocityNormalized), -1, 1);
+                        double rotationAngle = Math.Acos(dotProduct);
+                        if (Math.Abs(rotationAngle - Math.PI) < ANGLE_ERROR_TOLERANCE) {
+                            foreach (var gyro in Gyros) {
+                                gyro.Pitch = 0;
+                                gyro.Yaw = 0;
+                                gyro.Roll = 0;
+                            }
+                            CreateOkFlightLog("Aligned");
+                            return true;
+                        }
+                        MatrixD worldMatrixTranspose = MatrixD.Transpose(RemoteControl.WorldMatrix);
+                        foreach (var gyro in Gyros) {
+                            Vector3D localRotationAxis = Vector3D.TransformNormal(rotationAxis, worldMatrixTranspose);
+                            CreateInfoFlightLog($"{localRotationAxis.X}, {localRotationAxis.Y}, {localRotationAxis.Z}");
+                            gyro.Pitch = (float)localRotationAxis.X;
+                            gyro.Yaw = (float)localRotationAxis.Y;
+                            gyro.Roll = (float)localRotationAxis.Z;
+                        }
+                    }
+                    return false;
+                }
+
                 public void SetVr(double rollSpeed) {
                     foreach (var gyro in Gyros) {
                         gyro.Roll = (float)rollSpeed;
