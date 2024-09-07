@@ -405,7 +405,7 @@ namespace IngameScript {
 
                     // Simulate rotations and thruster combinations
                     foreach (var axis in axes) {
-                        CreateInfoFlightLog($"Axis value: {axis.Value}");
+
                         for (float angle = 0; angle < 360; angle += 1) {
 
                             CALCULATION_PROGRESS = (angle / (360 * 3)) + axis.Value / 3;
