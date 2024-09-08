@@ -33,6 +33,8 @@ namespace IngameScript
             public static float UserInputYawVelocity = 0;
 
             public static CBTGangway.GangwayStates UserInputGangwayState;
+            public static CBTRearDock.RearDockStates UserInputRearDockState;
+            public static string UserInputRearDockPort;
 
             public static Vector3D NextWaypoint;
 
@@ -108,6 +110,22 @@ namespace IngameScript
                 Normal,
                 Low
             }
+
+            public enum HardwareClassificationLevels
+            {
+                FlightCritical,
+                LifeSupport,
+                Radio,
+                Other,
+            }
+
+            public Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>> PowerStateLookupTable = new Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>>()
+            {
+                { HardwareClassificationLevels.FlightCritical, new List<IMyTerminalBlock> { } },
+                { HardwareClassificationLevels.LifeSupport, new List<IMyTerminalBlock> { } },
+                { HardwareClassificationLevels.Radio, new List<IMyTerminalBlock> { } },
+                { HardwareClassificationLevels.Other, new List<IMyTerminalBlock> { } },
+            };
 
             // define the CBT object for the CBT model in game
             public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
@@ -422,6 +440,9 @@ namespace IngameScript
                     return;
                 }
                 Connector = connector as IMyShipConnector;
+                Connector.Enabled = true;
+                Connector.IsParkingEnabled = false;
+                Connector.PullStrength = 0;
                 AddToLogQueue("Connector ... loaded", STULogType.INFO);
             }
 
@@ -463,20 +484,6 @@ namespace IngameScript
                 Gangway = new CBTGangway(GangwayHinge1, GangwayHinge2);
 
                 AddToLogQueue("Gangway actuator assembly ... loaded", STULogType.INFO);
-                
-                if (!Gangway.IsGangwayStateValid())
-                {
-                    AddToLogQueue("GANGWAY ASSY INVALID. RESET RECOMMENDED", STULogType.ERROR);
-                    AddToLogQueue($"Hinge 1 angle: {GangwayHinge1.Angle * (180/Math.PI)}", STULogType.WARNING);
-                    AddToLogQueue($"Hinge 2 angle: {GangwayHinge2.Angle * (180 / Math.PI)}", STULogType.WARNING);
-                }
-                else
-                {
-                    GangwayHinge1.UpperLimitDeg = 0;
-                    GangwayHinge1.LowerLimitDeg = -90;
-                    GangwayHinge2.UpperLimitDeg = 90;
-                    GangwayHinge2.LowerLimitDeg = -90;
-                }
             }
 
             private static void LoadCamera(IMyGridTerminalSystem grid)

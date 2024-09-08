@@ -106,6 +106,14 @@ namespace IngameScript
                     CBT.Gangway.ToggleGangway();
                     break;
 
+                case "GE":
+                    CBT.Gangway.ToggleGangway(1);
+                    break;
+
+                case "GR":
+                    CBT.Gangway.ToggleGangway(0);
+                    break;
+
                 case "GANGWAYRESET":
                     CBT.UserInputGangwayState = CBTGangway.GangwayStates.Resetting;
                     break;
@@ -309,17 +317,18 @@ namespace IngameScript
                             maneuver = CBT.CruisingSpeed;
                             break;
 
-                        case 'G':
-                            if (value == 0 || value == 1)
-                            {
-                                CBT.Gangway.ToggleGangway(value);
-                                break;
-                            }
-                            else
-                            {
-                                CBT.AddToLogQueue($"Gangway command value {value} is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
-                                break;
-                            }
+                        //case 'G':
+                        //    CBT.AddToLogQueue($"Gangway command value {value}", STULogType.INFO);
+                        //    if (value == 0 || value == 1)
+                        //    {
+                        //        CBT.Gangway.ToggleGangway(value);
+                        //        break;
+                        //    }
+                        //    else
+                        //    {
+                        //        CBT.AddToLogQueue($"Gangway command value {value} is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
+                        //        break;
+                        //    }
 
                         default:
                             CBT.AddToLogQueue($"Command letter {command} is not a valid operator. Skipping...", STULogType.WARNING);
