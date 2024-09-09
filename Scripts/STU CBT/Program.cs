@@ -50,16 +50,9 @@ namespace IngameScript
             {
                 // maneuver = CBT.GenericManeuver;
 
-                // update various subsystems
-                CBT.FlightController.UpdateState();
-                CBT.Gangway.UpdateGangway(CBT.UserInputGangwayState);
-                CBT.AddToLogQueue("Updated gangaway", STULogType.INFO);
-                CBT.RearDock.UpdateRearDock(CBT.UserInputRearDockState);
-                CBT.AddToLogQueue("Updated rear dock", STULogType.INFO);
+                
 
-                CBT.AddToLogQueue($"virgin argument: {argument}", STULogType.INFO);
                 argument = argument.Trim().ToUpper();
-                CBT.AddToLogQueue($"Trimmed string: {argument}", STULogType.INFO);
 
                 // check whether the passed argument is a special command word, if it's not, hand it off to the command parser
                 switch (argument)
@@ -195,12 +188,16 @@ namespace IngameScript
                         break;
                 }
 
+                // update various subsystems
+                CBT.FlightController.UpdateState();
+                CBT.Gangway.UpdateGangway(CBT.UserInputGangwayState);
+                CBT.RearDock.UpdateRearDock(CBT.UserInputRearDockState);
                 CBT.UpdateAutopilotScreens();
                 CBT.UpdateLogScreens();
-                // argument = "";
             }
             catch (Exception e)
             {
+                Echo($"Program.cs: Caught exception: {e}");
                 CBT.AddToLogQueue($"Caught exception: {e}", STULogType.ERROR);
                 CBT.UpdateLogScreens();
             }
