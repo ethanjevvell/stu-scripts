@@ -63,6 +63,7 @@ namespace IngameScript
             // state machine
             public void UpdateGangway(GangwayStates desiredState)
             {
+                CBT.AddToLogQueue("top of UpdateGangway", STULogType.INFO); // (DEBUGGING
                 if (desiredState != CurrentGangwayState && desiredState != LastUserInputGangwayState)
                 {
                     if (CanGoToRequestedState(desiredState))
@@ -76,6 +77,7 @@ namespace IngameScript
                         CBT.AddToLogQueue($"Cannot go to requested state {desiredState} cause of da rulez", STULogType.ERROR);
                     }
                 }
+                CBT.AddToLogQueue("hitting switch in update gangway", STULogType.INFO); // (DEBUGGING
                 switch (CurrentGangwayState)
                 {
                     case GangwayStates.Unknown:
@@ -254,6 +256,8 @@ namespace IngameScript
                 if (CurrentGangwayState == GangwayStates.Unknown) {
                     CBT.AddToLogQueue($"Gangway state unknown; to automatically reset, enter 'gangwayreset' in the prompt.", STULogType.WARNING);
                 }
+
+                CBT.AddToLogQueue($"desired state: {desiredState}", STULogType.INFO);
 
                 if (desiredState == 1 && CanGoToRequestedState(GangwayStates.Extending))
                 {

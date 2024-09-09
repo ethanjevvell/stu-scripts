@@ -48,19 +48,21 @@ namespace IngameScript
                 ResettingPiston,
                 ResettingHinge1,
                 ResettingHinge2,
-                ResettingToRetracted,
+                NeutralToRetracted,
                 Frozen,
             }
 
             public Dictionary<string, float[]> KnownPorts = new Dictionary<string, float[]>()
             {
                 // { "PortName", new float[] { pistonDistance (m), Hinge1Angle (radians), Hinge2Angle (radians) } }
-                { "Lunar HQ", new float[] { 10, (float)(36 / (180/Math.PI)), (float)(-36 / (180 / Math.PI)) } },
-                { "Generic Ship", new float[] { 5, 0, 0 } },
+                { "LUNAR HQ", new float[] { 10, (float)(36 / (180/Math.PI)), (float)(-36 / (180 / Math.PI)) } },
+                { "SHIP ON DECK", new float[] {0, (float)(-Math.PI / 2), (float)(-Math.PI / 2) } }, 
+                { "NEUTRAL", new float[] { 5, 0, 0 } },
             };
 
             public RearDockStates CurrentRearDockState { get; set; } 
             public RearDockStates LastUserInputRearDockState { get; set; }
+            public RearDockStates DestinationAfterNeutral { get; set; }
 
             public Dictionary<RearDockStates, List<RearDockStates>> ValidStateTransitions = new Dictionary<RearDockStates, List<RearDockStates>>()
             {
@@ -171,21 +173,21 @@ namespace IngameScript
                         // do nothing
                         break;
 
-                    case RearDockStates.Retracting:
-                        SetupRetraction();
-                        break;
+                    //case RearDockStates.Retracting:
+                    //    SetupRetraction();
+                    //    break;
 
-                    case RearDockStates.RetractingHinge1:
-                        RetractRearDock();
-                        break;
+                    //case RearDockStates.RetractingHinge1:
+                    //    RetractRearDock();
+                    //    break;
 
-                    case RearDockStates.RetractingHinge2:
-                        RetractRearDock();
-                        break;
+                    //case RearDockStates.RetractingHinge2:
+                    //    RetractRearDock();
+                    //    break;
 
-                    case RearDockStates.RetractingPiston:
-                        RetractRearDock();
-                        break;
+                    //case RearDockStates.RetractingPiston:
+                    //    RetractRearDock();
+                    //    break;
 
                     case RearDockStates.Retracted:
                         // do nothing
@@ -231,14 +233,28 @@ namespace IngameScript
                         break;
 
                     case RearDockStates.ResettingHinge2:
-                        if (ResetHinge2()) CurrentRearDockState = RearDockStates.ResettingToRetracted;
+                        if (ResetHinge2())
+                        {
+                            switch (DestinationAfterNeutral)
+                            {
+                                case RearDockStates.Retracted:
+                                    CurrentRearDockState = RearDockStates.NeutralToRetracted;
+                                    break;
+                                case RearDockStates.Extended:
+                                    CurrentRearDockState = RearDockStates.Extending;
+                                    break;
+                                default:
+                                    CurrentRearDockState = RearDockStates.Frozen;
+                                    break;
+                            }
+                        }
                         break;
 
-                    case RearDockStates.ResettingToRetracted:
-                        if (ResetToRetracted()) CurrentRearDockState = RearDockStates.Retracted;
+                    case RearDockStates.NeutralToRetracted:
+                        if (NeutralToRetracted()) CurrentRearDockState = RearDockStates.RetractingHinge1;
                         break;
 
-                    case RearDockStates.Frozen: // currently unused
+                    case RearDockStates.Frozen: 
                         CBT.AddToLogQueue("Halting Rear Dock actuators.", STULogType.INFO);
                         RearDockHinge1.TargetVelocityRPM = 0;
                         RearDockHinge2.TargetVelocityRPM = 0;
@@ -297,7 +313,7 @@ namespace IngameScript
                 return RearDockPiston.CurrentPosition - RearDockPiston.MaxLimit < PISTON_POSITION_TOLERANCE;
             }
 
-            private bool ResetHinge1()
+            private bool ResetHinge1() // get hinge 1 to 0 degrees (pointing straight back)
             {
                 RearDockHinge1.Torque = HINGE_TORQUE;
                 if (Math.Abs(RearDockHinge1.Angle) < HINGE_ANGLE_TOLERANCE)
@@ -318,19 +334,30 @@ namespace IngameScript
                 else return false;
             }
 
-            private bool ResetHinge2()
+            private bool ResetHinge2() // get hinge 2 to 0 degrees.
             {
                 RearDockHinge2.Torque = HINGE_TORQUE;
-                RearDockHinge2.TargetVelocityRPM = HINGE_TARGET_VELOCITY;
                 if (Math.Abs(RearDockHinge2.Angle - Math.PI / 2) < HINGE_ANGLE_TOLERANCE)
                 {
                     RearDockHinge2.TargetVelocityRPM = 0;
                     return true;
                 }
+                else if (HINGE_ANGLE_TOLERANCE - RearDockHinge2.Angle < 0)
+                {
+                    RearDockHinge2.UpperLimitDeg = 0;
+                    RearDockHinge2.TargetVelocityRPM = HINGE_TARGET_VELOCITY;
+                    return false;
+                }
+                else if (HINGE_ANGLE_TOLERANCE - RearDockHinge2.Angle > 0)
+                {
+                    RearDockHinge2.LowerLimitDeg = 0;
+                    RearDockHinge2.TargetVelocityRPM = -HINGE_TARGET_VELOCITY;
+                    return false;
+                }
                 else return false;
             }
 
-            private bool ResetToRetracted()
+            private bool NeutralToRetracted()
             {
                 RearDockHinge2.LowerLimitDeg = -90;
                 RearDockHinge2.TargetVelocityRPM = -HINGE_TARGET_VELOCITY;
@@ -415,10 +442,7 @@ namespace IngameScript
                 else return false;
             }
 
-            private void SetupRetraction()
-            {
-                
-            }
+
         }
     }
 }
