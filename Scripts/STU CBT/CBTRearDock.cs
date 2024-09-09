@@ -171,8 +171,8 @@ namespace IngameScript
                         // do nothing
                         break;
 
-                    case RearDockStates.Retracted:
-                        // do nothing
+                    case RearDockStates.Retracting:
+                        SetupRetraction();
                         break;
 
                     case RearDockStates.RetractingHinge1:
@@ -187,7 +187,7 @@ namespace IngameScript
                         RetractRearDock();
                         break;
 
-                    case RearDockStates.Extended:
+                    case RearDockStates.Retracted:
                         // do nothing
                         break;
 
@@ -201,16 +201,20 @@ namespace IngameScript
                         else { CBT.AddToLogQueue("Invalid Rear Dock port configuration requested.", STULogType.ERROR); }
                         break;
 
+                    case RearDockStates.ExtendingPiston:
+                        if (ExtendPiston()) { CurrentRearDockState = RearDockStates.ExtendingHinge1; }
+                        break;
+
                     case RearDockStates.ExtendingHinge1:
-                        ExtendRearDock();
+                        if (ExtendHinge1()) { CurrentRearDockState = RearDockStates.ExtendingHinge2; }
                         break;
 
                     case RearDockStates.ExtendingHinge2:
-                        ExtendRearDock();
+                        if (ExtendHinge2()) { CurrentRearDockState = RearDockStates.Extended; }
                         break;
 
-                    case RearDockStates.ExtendingPiston:
-                        ExtendRearDockPiston();
+                    case RearDockStates.Extended:
+                        // do nothing
                         break;
 
                     case RearDockStates.Resetting:
@@ -344,6 +348,77 @@ namespace IngameScript
             }
 
             private bool ExtendPiston()
+            {
+                if (RearDockPiston.CurrentPosition - PistonTargetDistance < PISTON_POSITION_TOLERANCE)
+                {
+                    RearDockPiston.Velocity = 0;
+                    return true;
+                }
+                else if (RearDockPiston.CurrentPosition < PistonTargetDistance)
+                {
+                    RearDockPiston.MaxLimit = PistonTargetDistance;
+                    RearDockPiston.Velocity = PISTON_TARGET_VELOCITY;
+                    return false;
+                }
+                else if (RearDockPiston.CurrentPosition > PistonTargetDistance)
+                {
+                    RearDockPiston.MinLimit = PistonTargetDistance;
+                    RearDockPiston.Velocity = -PISTON_TARGET_VELOCITY;
+                    return false;
+                }
+                else return false;
+            }
+
+            private bool ExtendHinge1()
+            {
+                RearDockHinge1.Torque = HINGE_TORQUE;
+                if (Math.Abs(RearDockHinge1.Angle - Hinge1TargetAngle) < HINGE_ANGLE_TOLERANCE)
+                {
+                    RearDockHinge1.TargetVelocityRPM = 0;
+                    return true;
+                }
+                else if (RearDockHinge1.Angle < Hinge1TargetAngle)
+                {
+                    RearDockHinge1.UpperLimitRad = Hinge1TargetAngle;
+                    RearDockHinge1.TargetVelocityRPM = HINGE_TARGET_VELOCITY;
+                    return false;
+                }
+                else if (RearDockHinge1.Angle > Hinge1TargetAngle)
+                {
+                    RearDockHinge1.LowerLimitRad = Hinge1TargetAngle;
+                    RearDockHinge1.TargetVelocityRPM = -HINGE_TARGET_VELOCITY;
+                    return false;
+                }
+                else return false;
+            }
+
+            private bool ExtendHinge2()
+            {
+                RearDockHinge2.Torque = HINGE_TORQUE;
+                if (Math.Abs(RearDockHinge2.Angle - Hinge2TargetAngle) < HINGE_ANGLE_TOLERANCE)
+                {
+                    RearDockHinge2.TargetVelocityRPM = 0;
+                    return true;
+                }
+                else if (RearDockHinge2.Angle < Hinge2TargetAngle)
+                {
+                    RearDockHinge2.UpperLimitRad = Hinge2TargetAngle;
+                    RearDockHinge2.TargetVelocityRPM = HINGE_TARGET_VELOCITY;
+                    return false;
+                }
+                else if (RearDockHinge2.Angle > Hinge2TargetAngle)
+                {
+                    RearDockHinge2.LowerLimitRad = Hinge2TargetAngle;
+                    RearDockHinge2.TargetVelocityRPM = -HINGE_TARGET_VELOCITY;
+                    return false;
+                }
+                else return false;
+            }
+
+            private void SetupRetraction()
+            {
+                
+            }
         }
     }
 }

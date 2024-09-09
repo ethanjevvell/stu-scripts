@@ -53,6 +53,7 @@ namespace IngameScript
             CBT.UpdateAutopilotScreens();
             CBT.UpdateLogScreens();
             CBT.Gangway.UpdateGangway(CBT.UserInputGangwayState);
+            CBT.RearDock.UpdateRearDock(CBT.UserInputRearDockState);
 
             argument = argument.Trim().ToUpper();
             
