@@ -102,7 +102,8 @@ namespace IngameScript
             public enum Phase
             {
                 Idle,
-                Executing
+                Executing,
+                GracefulExit,
             }
 
             public enum PowerStates
@@ -116,14 +117,16 @@ namespace IngameScript
                 FlightCritical,
                 LifeSupport,
                 Radio,
+                Production,
                 Other,
             }
 
-            public Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>> PowerStateLookupTable = new Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>>()
+            public static Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>> PowerStateLookupTable = new Dictionary<HardwareClassificationLevels, List<IMyTerminalBlock>>()
             {
                 { HardwareClassificationLevels.FlightCritical, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.LifeSupport, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.Radio, new List<IMyTerminalBlock> { } },
+                { HardwareClassificationLevels.Production, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.Other, new List<IMyTerminalBlock> { } },
             };
 
@@ -288,6 +291,10 @@ namespace IngameScript
                     return;
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Radio, out existingList);
+                existingList.Add(RemoteControl);
+                PowerStateLookupTable[HardwareClassificationLevels.Radio] = existingList;
                 AddToLogQueue("Remote control ... loaded", STULogType.INFO);
             }
 
@@ -324,6 +331,10 @@ namespace IngameScript
                 }
 
                 Thrusters = allThrusters;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.FlightCritical, out existingList);
+                existingList.AddRange(Thrusters);
+                PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Thrusters ... loaded", STULogType.INFO);
             }
 
@@ -345,6 +356,10 @@ namespace IngameScript
                 }
 
                 Gyros = gyros;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.FlightCritical, out existingList);
+                existingList.AddRange(Gyros);
+                PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Gyros ... loaded", STULogType.INFO);
             }
 
@@ -512,6 +527,10 @@ namespace IngameScript
                     AddToLogQueue("Could not locate \"CBT Medical Room\"; ensure medical room is named appropriately", STULogType.ERROR);
                     return;
                 }
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.LifeSupport, out existingList);
+                existingList.Add(MedicalRoom);
+                PowerStateLookupTable[HardwareClassificationLevels.LifeSupport] = existingList;
                 AddToLogQueue("Medical Room ... loaded", STULogType.INFO);
             }
 
@@ -533,6 +552,10 @@ namespace IngameScript
                 }
 
                 H2O2Generators = generators;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Production, out existingList);
+                existingList.AddRange(H2O2Generators);
+                PowerStateLookupTable[HardwareClassificationLevels.Production] = existingList;
                 AddToLogQueue("H2O2 generators ... loaded", STULogType.INFO);
             }
 
@@ -554,6 +577,10 @@ namespace IngameScript
                 }
 
                 OxygenTanks = oxygenTanks;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.LifeSupport, out existingList);
+                existingList.AddRange(OxygenTanks);
+                PowerStateLookupTable[HardwareClassificationLevels.LifeSupport] = existingList;
                 AddToLogQueue("Oxygen tanks ... loaded", STULogType.INFO);
             }
 
@@ -596,7 +623,16 @@ namespace IngameScript
                 }
 
                 GravityGenerators = gravityGenerators;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Other, out existingList);
+                existingList.AddRange(GravityGenerators);
+                PowerStateLookupTable[HardwareClassificationLevels.Other] = existingList;
                 AddToLogQueue("Gravity generators ... loaded", STULogType.INFO);
+            }
+
+            private static void LoadSensors(IMyGridTerminalSystem grid)
+            {
+                // load sensors
             }
 
             
@@ -612,7 +648,7 @@ namespace IngameScript
                 int autopilotState = 0;
                 if (FlightController.HasThrusterControl) { autopilotState += 1; }
                 if (FlightController.HasGyroControl) { autopilotState += 2; }
-                if (RemoteControl.DampenersOverride) { autopilotState += 4; }
+                if (!RemoteControl.DampenersOverride) { autopilotState += 4; }
                 // 0 = no autopilot
                 // 1 = thrusters only
                 // 2 = gyros only
@@ -668,19 +704,23 @@ namespace IngameScript
                 SetAutopilotControl(thrusters, gyros, dampeners);
             }
 
-            // power modes
-            //public static void PowerMode(Enum state)
-            //{
-            //    switch (state)
-            //    {
-            //        case PowerStates.Normal:
-            //            break;
-            //        case PowerStates.Low:
-            //            break;
-            //    }
-            //}
+            public static void PowerModeControl(HardwareClassificationLevels inputHardwareList, bool desiredState)
+            {
+                List<IMyTerminalBlock> retrievedHardwareList;
+                if (PowerStateLookupTable.TryGetValue(inputHardwareList, out retrievedHardwareList))
+                {
+                    foreach (var hardware in retrievedHardwareList)
+                    {
+                        if (hardware is IMyFunctionalBlock)
+                        {
+                            IMyFunctionalBlock functionalBlock = hardware as IMyFunctionalBlock;
+                            functionalBlock.Enabled = desiredState;
+                        }
+                    }
+                }
+            }
 
-            // "Hover" mode
+            // maneuvers
             public static bool Hover()
             {
                 FlightController.ReinstateGyroControl();
@@ -708,7 +748,7 @@ namespace IngameScript
                 bool stable = FlightController.SetVz(UserInputForwardVelocity);
                 bool VxStable = FlightController.SetVx(0);
                 bool VyStable = FlightController.SetVy(0);
-                return stable;
+                return false;
             }
 
             public static void CruisingAltitude(double altitude)
@@ -726,19 +766,6 @@ namespace IngameScript
                 return true;
             }
 
-            public static bool GenericManeuver()
-            {
-                FlightController.ReinstateGyroControl();
-                FlightController.ReinstateThrusterControl();
-                bool VzStable = FlightController.SetVz(UserInputForwardVelocity); 
-                bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-                bool VyStable = FlightController.SetVy(UserInputUpVelocity);
-                FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
-                FlightController.SetVp(UserInputPitchVelocity);
-                FlightController.SetVw(UserInputYawVelocity);
-                return VxStable && VzStable && VyStable;
-            }
-
             public static bool PointAtTarget()
             {
                 AddToLogQueue("Pointing at target", STULogType.INFO);
@@ -747,13 +774,30 @@ namespace IngameScript
                 return FlightController.AlignShipToTarget(NextWaypoint);
             }
 
-            // "AC130" mode
-            // radius is the radius from the center point that the CBT should travel in its circle
-            // the next three arguments are the coordinates of the center of the proposed circle
-            // speed is the time it should take the CBT to complete one revolution of the circle, in seconds.
-            public static void AC130(double radius, double xCoord, double yCoord, double zCoord, double seconds)
+            public static bool Abort()
             {
-                // I need to write a lot of code to figure out a flight plan for an arbitrary AC130 flight pattern
+                RemoteControl.DampenersOverride = true;
+                AddToLogQueue("Attempting to relinquish control of the ship...", STULogType.WARNING);
+                FlightController.RelinquishGyroControl();
+                FlightController.RelinquishThrusterControl();
+                AddToLogQueue($"Gyro control: {FlightController.HasGyroControl}", STULogType.INFO);
+                AddToLogQueue($"Thruster control: {FlightController.HasThrusterControl}", STULogType.INFO);
+                AddToLogQueue($"Dampeners: {RemoteControl.DampenersOverride}", STULogType.INFO);
+
+                return !FlightController.HasGyroControl && !FlightController.HasThrusterControl && RemoteControl.DampenersOverride;
+            }
+
+            public static bool GenericManeuver()
+            {
+                FlightController.ReinstateGyroControl();
+                FlightController.ReinstateThrusterControl();
+                bool VzStable = FlightController.SetVz(UserInputForwardVelocity);
+                bool VxStable = FlightController.SetVx(UserInputRightVelocity);
+                bool VyStable = FlightController.SetVy(UserInputUpVelocity);
+                FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
+                FlightController.SetVp(UserInputPitchVelocity);
+                FlightController.SetVw(UserInputYawVelocity);
+                return VxStable && VzStable && VyStable;
             }
         }
     }

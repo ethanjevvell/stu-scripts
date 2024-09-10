@@ -43,6 +43,7 @@
     <Compile Include="CBT Displays\Log LCDs\CBTLogLCD.cs" />
     <Compile Include="CBTAutopilotLCD.cs" />
     <Compile Include="CBTGangway.cs" />
+    <Compile Include="CBTManeuver.cs" />
     <Compile Include="CBTRearDock.cs" />
     <Compile Include="CBTStatusLCD.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />

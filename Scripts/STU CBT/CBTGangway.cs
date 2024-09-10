@@ -15,7 +15,7 @@ namespace IngameScript
 {
     partial class Program
     {
-        public partial class  CBTGangway
+        public partial class CBTGangway
         {
             private const float HINGE_ANGLE_TOLERANCE = 0.0071f;
             private const float HINGE_TARGET_VELOCITY_RPM = 1.5f;
@@ -63,7 +63,6 @@ namespace IngameScript
             // state machine
             public void UpdateGangway(GangwayStates desiredState)
             {
-                CBT.AddToLogQueue("top of UpdateGangway", STULogType.INFO); // (DEBUGGING
                 if (desiredState != CurrentGangwayState && desiredState != LastUserInputGangwayState)
                 {
                     if (CanGoToRequestedState(desiredState))
@@ -77,7 +76,6 @@ namespace IngameScript
                         CBT.AddToLogQueue($"Cannot go to requested state {desiredState} cause of da rulez", STULogType.ERROR);
                     }
                 }
-                CBT.AddToLogQueue("hitting switch in update gangway", STULogType.INFO); // (DEBUGGING
                 switch (CurrentGangwayState)
                 {
                     case GangwayStates.Unknown:
