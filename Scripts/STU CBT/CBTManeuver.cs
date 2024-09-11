@@ -11,9 +11,28 @@ namespace IngameScript
     {
         public partial class CBTManeuver
         {
-            public struct Maneuver
+            
+            public CBTManeuver()
             {
-                public string Name;
+
+            }
+
+            public bool Setup()
+            {
+
+                return false;
+            }
+
+            public bool Execute()
+            {
+
+                return false;
+            }
+
+            public bool Exit()
+            {
+
+                return false;
             }
         }
     }
