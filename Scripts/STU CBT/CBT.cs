@@ -787,18 +787,18 @@ namespace IngameScript
                 return !FlightController.HasGyroControl && !FlightController.HasThrusterControl && RemoteControl.DampenersOverride;
             }
 
-            public static bool GenericManeuver()
-            {
-                FlightController.ReinstateGyroControl();
-                FlightController.ReinstateThrusterControl();
-                bool VzStable = FlightController.SetVz(UserInputForwardVelocity);
-                bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-                bool VyStable = FlightController.SetVy(UserInputUpVelocity);
-                FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
-                FlightController.SetVp(UserInputPitchVelocity);
-                FlightController.SetVw(UserInputYawVelocity);
-                return VxStable && VzStable && VyStable;
-            }
+            //public static bool GenericManeuver()
+            //{
+            //    FlightController.ReinstateGyroControl();
+            //    FlightController.ReinstateThrusterControl();
+            //    bool VzStable = FlightController.SetVz(UserInputForwardVelocity);
+            //    bool VxStable = FlightController.SetVx(UserInputRightVelocity);
+            //    bool VyStable = FlightController.SetVy(UserInputUpVelocity);
+            //    FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
+            //    FlightController.SetVp(UserInputPitchVelocity);
+            //    FlightController.SetVw(UserInputYawVelocity);
+            //    return VxStable && VzStable && VyStable;
+            //}
         }
     }
 }

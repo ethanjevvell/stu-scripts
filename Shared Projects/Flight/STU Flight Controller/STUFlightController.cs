@@ -385,6 +385,7 @@ namespace IngameScript {
                                 }
                             } catch (Exception e) {
                                 CreateWarningFlightLog("Invalid font size for display " + block.CustomName + ". Defaulting to 0.5");
+                                CreateWarningFlightLog(e.Message);
                                 fontSize = 0.5f;
                             }
                             StandardOutput screen = new StandardOutput(block, int.Parse(kvp[1]), "Monospace", fontSize);
