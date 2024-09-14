@@ -51,7 +51,7 @@ namespace IngameScript {
                 TargetVelocity = 0;
                 VelocityController = new STUVelocityController(RemoteControl, ActiveThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
-                AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
+                AltitudeController = new STUAltitudeController(this, RemoteControl);
                 PointOrbitController = new STUPointOrbitController(this, RemoteControl);
                 PlanetOrbitController = new STUPlanetOrbitController(this);
                 HasGyroControl = true;
@@ -62,7 +62,7 @@ namespace IngameScript {
 
             public void UpdateThrustersAfterGridChange(IMyThrust[] newActiveThrusters) {
                 VelocityController = new STUVelocityController(RemoteControl, newActiveThrusters);
-                AltitudeController = new STUAltitudeController(this, VelocityController, RemoteControl);
+                AltitudeController = new STUAltitudeController(this, RemoteControl);
             }
 
             public void MeasureCurrentVelocity() {
@@ -443,13 +443,6 @@ namespace IngameScript {
                 }
             }
 
-            public bool HardStop() {
-                ReinstateGyroControl();
-                Vector3D inertiaHeading = RemoteControl.GetShipVelocities().LinearVelocity;
-                Vector3D maximumThrustVector = VelocityController.MaximumThrustVector;
-                // point the thrusters in the opposite direction of the ship's velocity
-                return OrientationController.AlignShipAgainstVector(inertiaHeading, maximumThrustVector);
-            }
 
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using VRageMath;
 
 namespace IngameScript {
@@ -25,21 +26,20 @@ namespace IngameScript {
                 public STUPointOrbitController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
                     RemoteControl = remoteControl;
-                    TargetVelocity = 2.5;
                 }
 
                 public bool Run(Vector3D targetPos) {
                     switch (CurrentState) {
                         case PointOrbitState.Idle:
-                            // do nothing
+                            TargetRadius = Vector3D.Distance(targetPos, RemoteControl.CenterOfMass);
+                            TargetAltitude = FlightController.AltitudeController.CurrentSeaLevelAltitude;
                             CurrentState = PointOrbitState.EnteringOrbit;
+                            TargetVelocity = FindMaximumOrbitVelocity();
                             break;
                         case PointOrbitState.EnteringOrbit:
                             if (EnterOrbit(targetPos)) {
                                 CurrentState = PointOrbitState.Orbiting;
                                 // Lock-in the current radius for PID purposes
-                                TargetRadius = Vector3D.Distance(targetPos, RemoteControl.CenterOfMass);
-                                TargetAltitude = FlightController.AltitudeController.CurrentSeaLevelAltitude;
                                 if (InGravity()) {
                                     Vector3D gravityUnitVector = Vector3D.Normalize(RemoteControl.GetNaturalGravity());
                                     OrbitalAxis = new Line(targetPos - gravityUnitVector * TargetRadius, targetPos + gravityUnitVector * TargetRadius);
@@ -85,7 +85,6 @@ namespace IngameScript {
                     double velocitySquared = velocity * velocity;
                     double radius = Vector3D.Distance(GetClosestPointOnOrbitalAxis(), RemoteControl.CenterOfMass);
 
-                    // TODO: Use velocity error to control orbital velocity
                     double velocityError = TargetVelocity - velocity;
                     double altitudeError = TargetAltitude - altitude;
                     double radiusError = TargetRadius - radius;
@@ -107,10 +106,8 @@ namespace IngameScript {
                     Vector3D a = RemoteControl.CenterOfMass - OrbitalAxis.From;
                     double t = Vector3D.Dot(a, b) / Vector3D.Dot(b, b);
                     if (t < 0) {
-                        //LIGMA.CreateWarningBroadcast($"Below OA");
                         return OrbitalAxis.From;
                     } else if (t > 1) {
-                        //LIGMA.CreateWarningBroadcast($"Above OA");
                         return OrbitalAxis.To;
                     } else {
                         return OrbitalAxis.From + t * b;
@@ -128,6 +125,14 @@ namespace IngameScript {
 
                 private bool InGravity() {
                     return FlightController.VelocityController.LocalGravityVector != Vector3D.Zero;
+                }
+
+                private double FindMaximumOrbitVelocity() {
+                    Vector3D weakestThrustVector = FlightController.VelocityController.MinimumThrustVector;
+                    double weakestThrust = weakestThrustVector.Length();
+                    double mass = STUVelocityController.ShipMass;
+                    double maximumOrbitVelocity = Math.Sqrt(weakestThrust * TargetRadius / mass);
+                    return maximumOrbitVelocity;
                 }
 
             }

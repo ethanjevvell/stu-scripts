@@ -59,7 +59,7 @@
     <Compile Include="Phases\Implementations\Flight\SpaceToPlanetFlightPlan.cs" />
     <Compile Include="Phases\Implementations\Flight\SpaceToSpaceFlightPlan.cs" />
     <Compile Include="Phases\Abstract Classes\IFlightPlan.cs" />
-    <Compile Include="Phases\Implementations\Flight\.cs" />
+    <Compile Include="Phases\Implementations\Flight\IntraplanetaryFlightPlan.cs" />
     <Compile Include="Phases\Abstract Classes\ILaunchPlan.cs" />
     <Compile Include="Phases\Implementations\Launch\InterplanetaryLaunchPlan.cs" />
     <Compile Include="Phases\Implementations\Launch\IntraplanetaryLaunchPlan.cs" />

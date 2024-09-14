@@ -22,7 +22,9 @@ namespace IngameScript {
                 PlanetOrbitState State;
 
                 const double VELOCITY_ERROR_TOLERANCE = 3;
-                const double ALTITUDE_ERROR_TOLERANCE = 20;
+                // Sets an upper-bound on how much the ship can be off-target in terms of altitude before it attempts to correct
+                // The AltitudeController has a default tolerance of 1m, so it will more finely tune the altitude from there
+                const double ALTITUDE_ERROR_TOLERANCE = 30;
 
                 STUFlightController FlightController;
 
