@@ -37,6 +37,7 @@ namespace IngameScript {
                 VelocityController UpController { get; set; }
 
                 public Vector3D MaximumThrustVector { get; set; }
+                public Vector3D MinimumThrustVector { get; set; }
                 public IMyThrust[] MaximumThrustVectorThrusters { get; set; }
 
                 public static Dictionary<string, double> ThrustCoefficients = new Dictionary<string, double>();
@@ -57,6 +58,7 @@ namespace IngameScript {
                     UpController = new VelocityController(UpThrusters, DownThrusters);
 
                     MaximumThrustVector = GetMaximumThrustVector();
+                    MinimumThrustVector = GetMinimumThrustVector();
 
                 }
 
@@ -362,8 +364,11 @@ namespace IngameScript {
                     return $"Hydrogen: {HydrogenThrusters.Length}, Atmospheric: {AtmosphericThrusters.Length}, Ion: {IonThrusters.Length}";
                 }
 
-
-
+                /// <summary>
+                /// Finds the maximum thrust vector for the ship by iterating through all possible orientations and finding the one with the maximum total thrust.
+                /// Has the side effect of setting the MaximumThrustVectorThrusters property to the thrusters used in the maximum thrust orientation.
+                /// </summary>
+                /// <returns></returns>
                 private Vector3D GetMaximumThrustVector() {
                     // Calculate total thrust in positive and negative directions along each axis
                     float T_f = ForwardThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
@@ -417,16 +422,76 @@ namespace IngameScript {
                             maxThrustersX = (signX == 1) ? RightThrusters : LeftThrusters;
                             maxThrustersY = (signY == 1) ? UpThrusters : DownThrusters;
                             maxThrustersZ = (signZ == 1) ? ForwardThrusters : ReverseThrusters;
+                        }
+                    }
+
+                    // Combine the thrusters for the maximum thrust orientation
+                    MaximumThrustVectorThrusters = maxThrustersX.Concat(maxThrustersY).Concat(maxThrustersZ).ToArray();
+                    return maxThrustVector;
+
+                }
+
+                /// <summary>
+                /// Finds the minimum thrust vector for the ship by iterating through all possible orientations and finding the one with the minimum total thrust.
+                /// This is used by AC130 mode to find the orientation where the ship would provide the least centriptal force.
+                /// </summary>
+                /// <returns></returns>
+                private Vector3D GetMinimumThrustVector() {
+
+                    // Calculate total thrust in positive and negative directions along each axis
+                    float T_f = ForwardThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_b = ReverseThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_r = RightThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_l = LeftThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_u = UpThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+                    float T_d = DownThrusters.Aggregate(0.0f, (acc, thruster) => acc + thruster.MaxThrust);
+
+                    var sextants = new List<int[]> {
+                        new int[] {0, 0, 1},
+                        new int[] {0, 0, -1},
+                        new int[] {0, 1, 0},
+                        new int[] {0, -1, 0},
+                        new int[] {1, 0, 0},
+                        new int[] {-1, 0, 0}
+                    };
+
+                    float minThrust = float.MaxValue;
+                    Vector3D minThrustVector = Vector3D.Zero;
+
+                    IMyThrust[] minThrustersX = null;
+                    IMyThrust[] minThrustersY = null;
+                    IMyThrust[] minThrustersZ = null;
+
+                    foreach (var sextant in sextants) {
+                        int signX = sextant[0];
+                        int signY = sextant[1];
+                        int signZ = sextant[2];
+
+                        float thrust_x = (signX == 1) ? T_r : (signX == -1) ? T_l : 0;
+                        float thrust_y = (signY == 1) ? T_u : (signY == -1) ? T_d : 0;
+                        float thrust_z = (signZ == 1) ? T_f : (signZ == -1) ? T_b : 0;
+
+                        float totalThrust = thrust_x + thrust_y + thrust_z;
+
+                        if (totalThrust < minThrust) {
+                            minThrust = totalThrust;
+                            minThrustVector = new Vector3D(
+                                signX * thrust_x,
+                                signY * thrust_y,
+                                signZ * thrust_z * -1
+                            );
+
+                            // Store the thrusters used in this orientation
+                            minThrustersX = (signX == 1) ? RightThrusters : (signX == -1) ? LeftThrusters : new IMyThrust[] { };
+                            minThrustersY = (signY == 1) ? UpThrusters : (signY == -1) ? DownThrusters : new IMyThrust[] { };
+                            minThrustersZ = (signZ == 1) ? ForwardThrusters : (signZ == -1) ? ReverseThrusters : new IMyThrust[] { };
 
                         }
                     }
 
-                    CreateOkFlightLog($"Max thrust vector: {maxThrustVector.Normalized()}");
+                    CreateInfoFlightLog($"Minimum thrust vector: {minThrustVector}");
+                    return minThrustVector;
 
-                    // Combine the thrusters for the maximum thrust orientation
-                    MaximumThrustVectorThrusters = maxThrustersX.Concat(maxThrustersY).Concat(maxThrustersZ).ToArray();
-
-                    return maxThrustVector;
                 }
             }
 

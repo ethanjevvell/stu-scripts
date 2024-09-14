@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -23,7 +24,11 @@ namespace IngameScript {
 
         public void Main() {
             FlightController.UpdateState();
-            FlightController.OrbitPlanet();
+            FlightController.OrbitPoint(new Vector3D(
+                        -62478,
+                        -88117,
+                        -55007
+                        ));
             if (STUFlightController.FlightLogs.Count > 0) {
                 while (STUFlightController.FlightLogs.Count > 0) {
                     LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());

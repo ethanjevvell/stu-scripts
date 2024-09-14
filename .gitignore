@@ -2,3 +2,6 @@
 *.bin
 *.cache
 **.vscode
+**.vsidx
+**.exe
+**.pdb
