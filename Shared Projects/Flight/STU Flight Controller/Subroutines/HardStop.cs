@@ -33,6 +33,15 @@ namespace IngameScript {
                             worldLinearVelocity,
                             VelocityController.MaximumThrustVector
                         );
+
+                        // While rotating, fire thrusters in the opposite direction of the current velocity
+                        Vector3D counterVelocity = -worldLinearVelocity;
+                        counterVelocity.Normalize();
+                        // We are limited by the minimum thrust vector
+                        counterVelocity *= VelocityController.MinimumThrustVector.Length();
+                        Vector3D tempCounterVelocityVector = Vector3D.TransformNormal(counterVelocity, MatrixD.Transpose(CurrentWorldMatrix)) * new Vector3D(1, 1, -1);
+                        ExertVectorForce(tempCounterVelocityVector);
+
                         if (alignedAgainstCurrentVelocity) {
                             CreateInfoFlightLog("Aligned against current velocity; initiating slowdown burn");
                             CurrentState = HardStopState.FireThrusters;
