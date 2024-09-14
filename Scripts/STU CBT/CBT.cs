@@ -36,7 +36,7 @@ namespace IngameScript
             public static CBTRearDock.RearDockStates UserInputRearDockState;
             public static string UserInputRearDockPort;
 
-            public static Vector3D NextWaypoint;
+            //public static Vector3D NextWaypoint;
 
             /// <summary>
             ///  prepare the program by declaring all the different blocks we are going to use
@@ -720,85 +720,30 @@ namespace IngameScript
                 }
             }
 
-            // maneuvers
-            public static bool Hover()
+            public static void ResetUserInputVelocities()
             {
-                FlightController.ReinstateGyroControl();
-                FlightController.ReinstateThrusterControl();
                 UserInputForwardVelocity = 0;
                 UserInputRightVelocity = 0;
                 UserInputUpVelocity = 0;
                 UserInputRollVelocity = 0;
                 UserInputPitchVelocity = 0;
                 UserInputYawVelocity = 0;
-                
-                bool VxStable = FlightController.SetVx(0);
-                bool VzStable = FlightController.SetVz(0);
-                bool VyStable = FlightController.SetVy(0);
-                FlightController.SetVr(0);
-                FlightController.SetVp(0);
-                FlightController.SetVw(0);
-                return VxStable && VzStable && VyStable;
             }
 
-            public static bool CruisingSpeed()
+            public static bool SetCruisingSpeed()
             {
-                FlightController.RelinquishGyroControl();
-                FlightController.ReinstateThrusterControl();
+                SetAutopilotControl(true, false, false);
                 bool stable = FlightController.SetVz(UserInputForwardVelocity);
                 bool VxStable = FlightController.SetVx(0);
                 bool VyStable = FlightController.SetVy(0);
-                return false;
+                return stable && VxStable && VyStable;
             }
 
-            public static void CruisingAltitude(double altitude)
+            public static void SetCruisingAltitude(double altitude)
             {
-                FlightController.RelinquishGyroControl();
-                FlightController.ReinstateThrusterControl();
+                SetAutopilotControl(true, false, false);
                 FlightController.MaintainSeaLevelAltitude(altitude);
             }
-
-            public static bool FastStop()
-            {
-                // get current velocity
-                Vector3D currentVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
-
-                return true;
-            }
-
-            public static bool PointAtTarget()
-            {
-                AddToLogQueue("Pointing at target", STULogType.INFO);
-                FlightController.ReinstateGyroControl();
-                FlightController.ReinstateThrusterControl();
-                return FlightController.AlignShipToTarget(NextWaypoint);
-            }
-
-            public static bool Abort()
-            {
-                RemoteControl.DampenersOverride = true;
-                AddToLogQueue("Attempting to relinquish control of the ship...", STULogType.WARNING);
-                FlightController.RelinquishGyroControl();
-                FlightController.RelinquishThrusterControl();
-                AddToLogQueue($"Gyro control: {FlightController.HasGyroControl}", STULogType.INFO);
-                AddToLogQueue($"Thruster control: {FlightController.HasThrusterControl}", STULogType.INFO);
-                AddToLogQueue($"Dampeners: {RemoteControl.DampenersOverride}", STULogType.INFO);
-
-                return !FlightController.HasGyroControl && !FlightController.HasThrusterControl && RemoteControl.DampenersOverride;
-            }
-
-            //public static bool GenericManeuver()
-            //{
-            //    FlightController.ReinstateGyroControl();
-            //    FlightController.ReinstateThrusterControl();
-            //    bool VzStable = FlightController.SetVz(UserInputForwardVelocity);
-            //    bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-            //    bool VyStable = FlightController.SetVy(UserInputUpVelocity);
-            //    FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
-            //    FlightController.SetVp(UserInputPitchVelocity);
-            //    FlightController.SetVw(UserInputYawVelocity);
-            //    return VxStable && VzStable && VyStable;
-            //}
         }
     }
 }
