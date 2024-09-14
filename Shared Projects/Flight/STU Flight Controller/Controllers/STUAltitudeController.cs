@@ -16,7 +16,6 @@ namespace IngameScript {
                 }
 
                 AltitudeState CurrentState = AltitudeState.Idle;
-                STUVelocityController VelocityController { get; set; }
                 STUFlightController FlightController { get; set; }
                 IMyRemoteControl RemoteControl { get; set; }
 
@@ -30,9 +29,10 @@ namespace IngameScript {
                 public double PreviousSurfaceAltitude { get; set; }
                 public double SurfaceAltitudeVelocity { get; set; }
 
-                public STUAltitudeController(STUFlightController flightController, STUVelocityController velocityController, IMyRemoteControl remoteControl) {
+                double ALTITUDE_ERROR_TOLERANCE = 1;
+
+                public STUAltitudeController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
-                    VelocityController = velocityController;
                     RemoteControl = remoteControl;
                     CurrentSurfaceAltitude = PreviousSurfaceAltitude = GetSurfaceAltitude();
                     CurrentSeaLevelAltitude = PreviousSeaLevelAltitude = GetSeaLevelAltitude();
@@ -98,7 +98,7 @@ namespace IngameScript {
                 public bool IdleSurfaceAltitude() {
                     double surfaceAltitudeError = GetSurfaceAltitudeError();
                     // if we're close enough, don't do anything
-                    if (surfaceAltitudeError < 10) {
+                    if (surfaceAltitudeError < ALTITUDE_ERROR_TOLERANCE) {
                         SetSurfaceVa(0, SurfaceAltitudeVelocity);
                         return true;
                     }
@@ -117,7 +117,7 @@ namespace IngameScript {
                 public bool IdleSeaLevelAltitude() {
                     double seaLevelAltitudeError = GetSeaLevelAltitudeError();
                     // if we're close enough, don't do anything
-                    if (seaLevelAltitudeError < 10) {
+                    if (seaLevelAltitudeError < ALTITUDE_ERROR_TOLERANCE) {
                         SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
                         return true;
                     }
@@ -137,14 +137,14 @@ namespace IngameScript {
                     // Set the force components on the velocity controller
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     FlightController.ExertVectorForce(counterGravityForceVector);
-                    return GetSurfaceAltitudeError() < 10;
+                    return GetSurfaceAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
                 }
 
                 public bool SetSeaLevelVa(double desiredVelocity, double altitudeVelocity) {
                     // Set the force components on the velocity controller
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     FlightController.ExertVectorForce(counterGravityForceVector);
-                    return GetSeaLevelAltitudeError() < 10;
+                    return GetSeaLevelAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
                 }
 
                 private double GetSurfaceAltitudeError() {
