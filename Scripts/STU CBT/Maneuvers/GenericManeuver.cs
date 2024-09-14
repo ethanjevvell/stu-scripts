@@ -12,26 +12,40 @@ namespace IngameScript
         {
             public class GenericManeuver : CBTManeuver
             {
+                public override string Name => "Generic";
+                public double InternalForwardVelocity { get; set; }
+                public double InternalRightVelocity { get; set; }
+                public double InternalUpVelocity { get; set; }
+                public double InternalRollVelocity { get; set; }
+                public double InternalPitchVelocity { get; set; }
+                public double InternalYawVelocity { get; set; }
+
+                public GenericManeuver(CBT cbt, double forwardVelocity, double rightVelocity, double upVelocity, double rollVelocity, double pitchVelocity, double yawVelocity)
+                {
+                    InternalForwardVelocity = forwardVelocity;
+                    InternalRightVelocity = rightVelocity;
+                    InternalUpVelocity = upVelocity;
+                    InternalRollVelocity = rollVelocity;
+                    InternalPitchVelocity = pitchVelocity;
+                    InternalYawVelocity = yawVelocity;
+                }
+                
                 public override bool Init()
                 {
                     // ensure we have access to the thrusters, gyros, and dampeners are off
-                    FlightController.ReinstateThrusterControl();
-                    FlightController.ReinstateGyroControl();
-                    RemoteControl.DampenersOverride = false;
-                    
-                    return FlightController.HasThrusterControl && FlightController.HasGyroControl;
+                    SetAutopilotControl(true, true, true);
+                    return true;
                 }
 
                 public override bool Run()
                 {
-                    FlightController.ReinstateGyroControl();
-                    FlightController.ReinstateThrusterControl();
-                    bool VzStable = FlightController.SetVz(UserInputForwardVelocity);
-                    bool VxStable = FlightController.SetVx(UserInputRightVelocity);
-                    bool VyStable = FlightController.SetVy(UserInputUpVelocity);
-                    FlightController.SetVr(UserInputRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
-                    FlightController.SetVp(UserInputPitchVelocity);
-                    FlightController.SetVw(UserInputYawVelocity);
+                    bool VzStable = FlightController.SetVz(InternalForwardVelocity);
+                    bool VxStable = FlightController.SetVx(InternalRightVelocity);
+                    bool VyStable = FlightController.SetVy(InternalUpVelocity);
+                    FlightController.SetVr(InternalRollVelocity * -1); // roll is inverted for some reason and is the only one that works like this on the CBT, not sure about other ships
+                    FlightController.SetVp(InternalPitchVelocity);
+                    FlightController.SetVw(InternalYawVelocity);
+
                     return VxStable && VzStable && VyStable;
                 }
 

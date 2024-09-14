@@ -1,14 +1,6 @@
-﻿using Sandbox.Game.Screens.DebugScreens;
-using Sandbox.ModAPI.Ingame;
-using SpaceEngineers.Game.ModAPI.Ingame;
+﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using VRage.Game.GUI.TextPanel;
-using VRageMath;
 
 namespace IngameScript
 {
@@ -34,30 +26,31 @@ namespace IngameScript
             public enum RearDockStates
             {
                 Unknown,
-                Retracted,
-                Retracting,
-                RetractingHinge1,
-                RetractingHinge2,
-                RetractingPiston,
-                Extended,
-                Extending,
-                ExtendingHinge1,
-                ExtendingHinge2,
-                ExtendingPiston,
+                Moved,
+                Moving,
+                MovingHinge1,
+                MovingHinge2,
+                MovingPiston,
                 Resetting,
                 ResettingPiston,
                 ResettingHinge1,
                 ResettingHinge2,
-                NeutralToRetracted,
                 Frozen,
             }
 
-            public Dictionary<string, float[]> KnownPorts = new Dictionary<string, float[]>()
+            public struct ActuatorPosition
             {
-                // { "PortName", new float[] { pistonDistance (m), Hinge1Angle (radians), Hinge2Angle (radians) } }
-                { "LUNAR HQ", new float[] { 10, (float)(36 / (180/Math.PI)), (float)(-36 / (180 / Math.PI)) } },
-                { "SHIP ON DECK", new float[] {0, (float)(-Math.PI / 2), (float)(-Math.PI / 2) } }, 
-                { "NEUTRAL", new float[] { 5, 0, 0 } },
+                public float PistonDistance;
+                public float Hinge1Angle;
+                public float Hinge2Angle;
+            }
+
+            public Dictionary<string, ActuatorPosition> KnownPorts = new Dictionary<string, ActuatorPosition>()
+            {
+                { "STOWED", new ActuatorPosition { PistonDistance = 0, Hinge1Angle = (float)(Math.PI / 2), Hinge2Angle = (float)(Math.PI / 2) } },
+                { "LUNAR HQ", new ActuatorPosition { PistonDistance = 10, Hinge1Angle = (float)(36 / (180 / Math.PI)), Hinge2Angle = (float)(-36 / (180 / Math.PI)) } },
+                { "SHIP ON DECK", new ActuatorPosition { PistonDistance = 0, Hinge1Angle = (float)(-Math.PI / 2), Hinge2Angle = (float)(-Math.PI / 2) } },
+                { "NEUTRAL", new ActuatorPosition { PistonDistance = 5, Hinge1Angle = 0, Hinge2Angle = 0 } },
             };
 
             public RearDockStates CurrentRearDockState { get; set; } 
@@ -66,43 +59,22 @@ namespace IngameScript
 
             public Dictionary<RearDockStates, List<RearDockStates>> ValidStateTransitions = new Dictionary<RearDockStates, List<RearDockStates>>()
             {
-                { RearDockStates.Unknown, 
+                { RearDockStates.Unknown,
                     new List<RearDockStates> {} }, // any state can go to Unknown
 
-                { RearDockStates.Retracted, 
-                    new List<RearDockStates> { 
-                        RearDockStates.Unknown,
-                        RearDockStates.RetractingHinge1, } }, // can only get to Retracted from RetractingHinge1, or can technically get there from Unknown if TryDetermineState() is true
-
-                { RearDockStates.RetractingHinge1, 
-                    new List<RearDockStates> { 
-                        RearDockStates.RetractingHinge2 } }, // can only get to RetractingHinge1 from RetractingHinge2
-
-                { RearDockStates.RetractingHinge2,
+                { RearDockStates.Moved,
                     new List<RearDockStates> {
-                        RearDockStates.Extended,
-                        RearDockStates.Frozen } }, // can initiate retraction from Extended or Frozen
+                        RearDockStates.MovingHinge2 } }, // can only get to Extended from ExtendingHinge2
 
-                { RearDockStates.RetractingPiston,
+                { RearDockStates.MovingHinge1,
+                    new List<RearDockStates> { } }, // NEED TO FIX THIS
+
+                { RearDockStates.MovingHinge2,
                     new List<RearDockStates> {
-                        RearDockStates.RetractingHinge1 } }, // can only retract the piston after both hinges (specifically Hinge1, which follows after Hinge2) are retracted
+                        RearDockStates.MovingHinge1, } }, // can only get to ExtendingHinge2 from ExtendingHinge1
 
-                { RearDockStates.Extended, 
-                    new List<RearDockStates> { 
-                        RearDockStates.ExtendingHinge2 } }, // can only get to Extended from ExtendingHinge2
-
-                { RearDockStates.ExtendingHinge1, 
-                    new List<RearDockStates> { 
-                        RearDockStates.Retracted, } }, // can only get to ExtendingHinge1 from Retracted
-
-                { RearDockStates.ExtendingHinge2,
-                    new List<RearDockStates> {
-                        RearDockStates.ExtendingHinge1, } }, // can only get to ExtendingHinge2 from ExtendingHinge1
-
-                { RearDockStates.ExtendingPiston,
-                    new List<RearDockStates> {
-                        RearDockStates.Retracted,
-                        RearDockStates.Frozen, } }, // can initiate Extension from Retracted or Frozen
+                { RearDockStates.MovingPiston,
+                    new List<RearDockStates> { } }, // NEED TO FIX THIS
 
                 { RearDockStates.Resetting,
                     new List<RearDockStates> {} }, // any state can go to Resetting
@@ -118,9 +90,7 @@ namespace IngameScript
                         RearDockStates.ResettingHinge2 } }, // can only reset Hinge1 after Hinge2 is reset
 
                 { RearDockStates.ResettingHinge2,
-                    new List<RearDockStates>
-                    {
-                        RearDockStates.Retracted } }, // can only reset Hinge2 after Hinge1 is reset
+                    new List<RearDockStates> { } }, // NEED TO FIX THIS
 
                 { RearDockStates.Frozen,
                     new List<RearDockStates> {} }, // any state can go to Frozen
@@ -134,21 +104,11 @@ namespace IngameScript
                 RearDockHinge2 = hinge2;
                 RearDockConnector = connector;
 
-                CurrentRearDockState = RearDockStates.Unknown;
+                CurrentRearDockState = TryDetermineState(); 
                 LastUserInputRearDockState = CBT.UserInputRearDockState;
 
                 RearDockHinge1.BrakingTorque = HINGE_TORQUE;
                 RearDockHinge2.BrakingTorque = HINGE_TORQUE;
-
-                switch (TryDetermineState())
-                {
-                    case RearDockStates.Retracted:
-                        CurrentRearDockState = RearDockStates.Retracted;
-                        break;
-                    default:
-                        CurrentRearDockState = RearDockStates.Unknown;
-                        break;
-                }
             }
 
             // state machine
@@ -173,49 +133,29 @@ namespace IngameScript
                         // do nothing
                         break;
 
-                    //case RearDockStates.Retracting:
-                    //    SetupRetraction();
-                    //    break;
-
-                    //case RearDockStates.RetractingHinge1:
-                    //    RetractRearDock();
-                    //    break;
-
-                    //case RearDockStates.RetractingHinge2:
-                    //    RetractRearDock();
-                    //    break;
-
-                    //case RearDockStates.RetractingPiston:
-                    //    RetractRearDock();
-                    //    break;
-
-                    case RearDockStates.Retracted:
-                        // do nothing
-                        break;
-
-                    case RearDockStates.Extending:
-                        float[] portParameters;
+                    case RearDockStates.Moving:
+                        ActuatorPosition portParameters;
                         if (KnownPorts.TryGetValue(CBT.UserInputRearDockPort, out portParameters)) 
                         { 
-                            SetupExtension(portParameters);
-                            CurrentRearDockState = RearDockStates.ExtendingPiston;
+                            SetUpExtension(portParameters);
+                            CurrentRearDockState = RearDockStates.MovingPiston;
                         } 
                         else { CBT.AddToLogQueue("Invalid Rear Dock port configuration requested.", STULogType.ERROR); }
                         break;
 
-                    case RearDockStates.ExtendingPiston:
-                        if (ExtendPiston()) { CurrentRearDockState = RearDockStates.ExtendingHinge1; }
+                    case RearDockStates.MovingPiston:
+                        if (MovePiston()) { CurrentRearDockState = RearDockStates.MovingHinge1; }
                         break;
 
-                    case RearDockStates.ExtendingHinge1:
-                        if (ExtendHinge1()) { CurrentRearDockState = RearDockStates.ExtendingHinge2; }
+                    case RearDockStates.MovingHinge1:
+                        if (MoveHinge1()) { CurrentRearDockState = RearDockStates.MovingHinge2; }
                         break;
 
-                    case RearDockStates.ExtendingHinge2:
-                        if (ExtendHinge2()) { CurrentRearDockState = RearDockStates.Extended; }
+                    case RearDockStates.MovingHinge2:
+                        if (MoveHinge2()) { CurrentRearDockState = RearDockStates.Moved; }
                         break;
 
-                    case RearDockStates.Extended:
+                    case RearDockStates.Moved:
                         // do nothing
                         break;
 
@@ -237,21 +177,14 @@ namespace IngameScript
                         {
                             switch (DestinationAfterNeutral)
                             {
-                                case RearDockStates.Retracted:
-                                    CurrentRearDockState = RearDockStates.NeutralToRetracted;
-                                    break;
-                                case RearDockStates.Extended:
-                                    CurrentRearDockState = RearDockStates.Extending;
+                                case RearDockStates.Moved:
+                                    CurrentRearDockState = RearDockStates.Moving;
                                     break;
                                 default:
                                     CurrentRearDockState = RearDockStates.Frozen;
                                     break;
                             }
                         }
-                        break;
-
-                    case RearDockStates.NeutralToRetracted:
-                        if (NeutralToRetracted()) CurrentRearDockState = RearDockStates.RetractingHinge1;
                         break;
 
                     case RearDockStates.Frozen: 
@@ -269,15 +202,23 @@ namespace IngameScript
             // methods
             private RearDockStates TryDetermineState()
             {
-                if (
-                    RearDockPiston.CurrentPosition - RearDockPiston.MinLimit < PISTON_POSITION_TOLERANCE
-                    && RearDockHinge1.Angle - Math.PI / 2 < HINGE_ANGLE_TOLERANCE
-                    && RearDockHinge2.Angle - Math.PI / 2 < HINGE_ANGLE_TOLERANCE
-                    )
+                ActuatorPosition currentPositions = new ActuatorPosition
                 {
-                    return RearDockStates.Retracted;
+                    PistonDistance = RearDockPiston.CurrentPosition,
+                    Hinge1Angle = RearDockHinge1.Angle,
+                    Hinge2Angle = RearDockHinge2.Angle,
+                };
+                foreach (KeyValuePair<string, ActuatorPosition> port in KnownPorts)
+                {
+                    if (
+                        Math.Abs(currentPositions.PistonDistance - port.Value.PistonDistance) < PISTON_POSITION_TOLERANCE && 
+                        Math.Abs(currentPositions.Hinge1Angle - port.Value.Hinge1Angle) < HINGE_ANGLE_TOLERANCE && 
+                        Math.Abs(currentPositions.Hinge2Angle - port.Value.Hinge2Angle) < HINGE_ANGLE_TOLERANCE)
+                    {
+                        return RearDockStates.Moved;
+                    }
                 }
-                else { return RearDockStates.Unknown; }
+                return RearDockStates.Unknown;
             }
 
             public bool CanGoToRequestedState(RearDockStates requestedState)
@@ -367,14 +308,14 @@ namespace IngameScript
                 return Math.Abs(RearDockHinge2.Angle - Math.PI / 2) < HINGE_ANGLE_TOLERANCE && RearDockPiston.CurrentPosition < PISTON_POSITION_TOLERANCE;
             }
 
-            private void SetupExtension(float[] portParameters)
+            private void SetUpExtension(ActuatorPosition portParameters)
             {
-                PistonTargetDistance = portParameters[0];
-                Hinge1TargetAngle = portParameters[1];
-                Hinge2TargetAngle = portParameters[2];
+                PistonTargetDistance = portParameters.PistonDistance;
+                Hinge1TargetAngle = portParameters.Hinge1Angle;
+                Hinge2TargetAngle = portParameters.Hinge2Angle;
             }
 
-            private bool ExtendPiston()
+            private bool MovePiston()
             {
                 if (RearDockPiston.CurrentPosition - PistonTargetDistance < PISTON_POSITION_TOLERANCE)
                 {
@@ -396,7 +337,7 @@ namespace IngameScript
                 else return false;
             }
 
-            private bool ExtendHinge1()
+            private bool MoveHinge1()
             {
                 RearDockHinge1.Torque = HINGE_TORQUE;
                 if (Math.Abs(RearDockHinge1.Angle - Hinge1TargetAngle) < HINGE_ANGLE_TOLERANCE)
@@ -419,7 +360,7 @@ namespace IngameScript
                 else return false;
             }
 
-            private bool ExtendHinge2()
+            private bool MoveHinge2()
             {
                 RearDockHinge2.Torque = HINGE_TORQUE;
                 if (Math.Abs(RearDockHinge2.Angle - Hinge2TargetAngle) < HINGE_ANGLE_TOLERANCE)
