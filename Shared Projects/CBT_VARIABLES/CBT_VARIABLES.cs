@@ -28,42 +28,13 @@ namespace IngameScript
             public const string CBT_BROADCAST_CHANNEL = "CBT";
 
             public const double PLANETARY_DETECTION_BUFFER = 2000;
+            public const string PRIVATE_KEY = "";
+            public const string PUBLIC_KEY = "";
 
             public static class COMMANDS
             {
                 public const string Stop = "Stop";
             }
-
-            public struct Planet
-            {
-                public string Name;
-                public double Radius;
-                public Vector3D Center;
-            }
-
-            public static Dictionary<string, Planet> CelestialBodies = new Dictionary<string, Planet> {
-            {
-                "TestEarth", new Planet {
-                    Name = "TestEarth",
-                    Radius = 61050.39,
-                    Center = new Vector3D(0, 0, 0)
-                }
-            },
-            {
-                "Luna", new Planet {
-                    Name = "Luna",
-                    Radius = 9453.8439,
-                    Center = new Vector3D(16400.0530046 ,  136405.82841528, -113627.17741361)
-                }
-            },
-                {
-                   "Mars", new Planet {
-                    Name = "Mars",
-                    Radius = 62763.4881,
-                    Center = new Vector3D(1031060.3327, 131094.9846, 1631139.8156)
-                   }
-                }
-            };  
         }
     }
 }
