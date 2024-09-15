@@ -1,5 +1,6 @@
 ﻿using Sandbox.Game.EntityComponents;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.WorldEnvironment.Modules;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -8,6 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using VRage;
@@ -38,8 +40,7 @@ namespace IngameScript
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
-            CBT.FlightController.ReinstateGyroControl();
-            CBT.FlightController.ReinstateThrusterControl();
+            CBT.SetAutopilotControl(true, true, false);
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
@@ -54,14 +55,17 @@ namespace IngameScript
                 argument = argument.Trim().ToUpper();
 
                 // check whether the passed argument is a special command word, if it's not, hand it off to the command parser
-                if (!CheckSpecialCommandWord(argument))
+                if (argument != "")
                 {
-                    if (!ParseCommand(argument))
+                    if (!CheckSpecialCommandWord(argument))
                     {
-                        CBT.AddToLogQueue($"cbt machine broke", STULogType.ERROR);
+                        if (!ParseCommand(argument))
+                        {
+                            CBT.AddToLogQueue($"cbt machine broke", STULogType.ERROR);
+                        }
                     }
                 }
-
+                
                 /// main state machine:
                 /// Idle phase: look for work, so to speak. If there's something in the queue, pull it out and start executing it.
                 /// Executing Phase: ultimately defers to the current maneuver's internal state machine.
@@ -74,7 +78,7 @@ namespace IngameScript
                             try
                             { 
                                 CurrentManeuver = ManeuverQueue.Dequeue();
-                                CBT.AddToLogQueue($"Executing \"{CurrentManeuver.Name}\" maneuver...", STULogType.INFO);
+                                CBT.AddToLogQueue($"Executing {CurrentManeuver.Name} maneuver...", STULogType.INFO);
                                 CBT.CurrentPhase = CBT.Phase.Executing;
                             }
                             catch
@@ -116,8 +120,6 @@ namespace IngameScript
         {
             switch (arg)
             {
-                case "":
-                    return true;
                 case "HALT":
                     CBT.AddToLogQueue("Queueing a Hover maneuver", STULogType.INFO);
                     ManeuverQueue.Enqueue(new CBT.HoverManeuver(CBTShip));
@@ -126,12 +128,21 @@ namespace IngameScript
                     CBT.AddToLogQueue("Queueing a fast stop maneuver", STULogType.INFO);
                     ManeuverQueue.Enqueue(new CBT.FastStopManeuver(CBTShip));
                     return true;
+                case "RESETAP":
+                    CBT.AddToLogQueue("Resetting autopilot...", STULogType.INFO);
+                    CBT.SetAutopilotControl(false, false, true);
+                    ManeuverQueue.Clear();
+                    CBT.ResetUserInputVelocities();
+                    CurrentManeuver = null;
+                    CBT.CurrentPhase = CBT.Phase.Idle;
+                    return true;
                 case "AC130":
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     return true;
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff here
-                    CBT.FlightController.AlignShipToTarget(new Vector3D(0, 0, 0));
+                    CBT.AddToLogQueue("Performing test", STULogType.INFO);
+                    ManeuverQueue.Enqueue(new CBT.TestManeuver(new Vector3D(0, 0, 0)));
                     return true;
 
                 case "GANGWAY":
@@ -155,6 +166,7 @@ namespace IngameScript
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
                     CBT.AddToLogQueue("HALT - Executes a hover maneuver.", STULogType.OK);
                     CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation before firing thrusters to best counterract the current trajectory.", STULogType.OK);
+                    CBT.AddToLogQueue("RESETAP - Resets the autopilot and clears the maneuver queue.", STULogType.OK);
                     CBT.AddToLogQueue("PARK - Orients the CBT to align with the Dock Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
                     CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
                     CBT.AddToLogQueue("TEST - Executes hard-coded maneuver parameters. FOR TESTING PURPOSES ONLY.", STULogType.OK);
@@ -218,6 +230,17 @@ namespace IngameScript
                     }
 
                     char direction = command[0];
+                    string secondCharacter = command.Substring(1);
+                    try
+                    {
+                        float.Parse(secondCharacter);
+                    }
+                    catch (Exception e)
+                    {
+                        Echo($"EXCEPTION: {e.Message}");
+                        CBT.AddToLogQueue($"EXCEPTION: {e.Message}");
+                        continue;
+                    }
                     float result;
                     float value = float.TryParse(command.Substring(1), out result) ? result : 0;
                     
