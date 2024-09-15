@@ -304,20 +304,31 @@ namespace IngameScript {
                 return outputForce;
             }
 
+            public void ExertVectorForce_LocalFrame(Vector3D vector) {
+                ExertVectorForce_LocalFrame(vector, vector.Length());
+            }
 
             public void ExertVectorForce_LocalFrame(Vector3D direction, double magnitude) {
+
                 direction.Normalize();
-                // TODO: Find if we can even exert this magnitude in this direction given thruster limitations
+
+                //double maxThrust_x = direction.X >= 0 ? AggregrateRightMaxThrust : AggregateLeftMaxThrust;
+                //double maxThrust_y = direction.Y >= 0 ? AggregrateUpMaxThrust : AggregateDownMaxThrust;
+                //double maxThrust_z = direction.Z >= 0 ? AggregrateForwardMaxThrust : AggregateReverseMaxThrust;
+
                 Vector3D outputVector = direction * magnitude;
+
                 VelocityController.SetFx(outputVector.X);
                 VelocityController.SetFy(outputVector.Y);
                 VelocityController.SetFz(outputVector.Z);
             }
 
-            public void ExertVectorForce_WorldFrame(Vector3D forceVector) {
-                // TODO: Replace this line with VectorUtils function
-                Vector3D localForceVector = Vector3D.TransformNormal(forceVector, MatrixD.Transpose(CurrentWorldMatrix));
-                ExertVectorForce_LocalFrame(localForceVector);
+            public void ExertVectorForce_WorldFrame(Vector3D direction, double magnitude) {
+                ExertVectorForce_LocalFrame(STUTransformationUtils.LocalDirectionToWorldDirection(RemoteControl, direction), magnitude);
+            }
+
+            public void ExertVectorForce_WorldFrame(Vector3D vector) {
+                ExertVectorForce_LocalFrame(STUTransformationUtils.LocalDirectionToWorldDirection(RemoteControl, vector));
             }
 
             public void OrbitPoint(Vector3D targetPos) {
