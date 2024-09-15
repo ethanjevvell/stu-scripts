@@ -69,7 +69,7 @@ namespace IngameScript {
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
                         Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
-                        FlightController.ExertVectorForce(Vector3D.TransformNormal(kickstartThrust, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
+                        FlightController.ExertVectorForce_LocalFrame(Vector3D.TransformNormal(kickstartThrust, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
                         return false;
                     }
 
@@ -93,7 +93,7 @@ namespace IngameScript {
                     Vector3D centripetalForceVector = GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired;
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(altitudeError, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
 
-                    FlightController.ExertVectorForce(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
+                    FlightController.ExertVectorForce_LocalFrame(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
 
                 }
 

@@ -40,7 +40,7 @@ namespace IngameScript {
                         // We are limited by the minimum thrust vector
                         counterVelocity *= VelocityController.MinimumThrustVector.Length();
                         Vector3D tempCounterVelocityVector = Vector3D.TransformNormal(counterVelocity, MatrixD.Transpose(CurrentWorldMatrix)) * new Vector3D(1, 1, -1);
-                        ExertVectorForce(tempCounterVelocityVector);
+                        ExertVectorForce_LocalFrame(tempCounterVelocityVector);
 
                         if (alignedAgainstCurrentVelocity) {
                             CreateInfoFlightLog("Aligned against current velocity; initiating slowdown burn");

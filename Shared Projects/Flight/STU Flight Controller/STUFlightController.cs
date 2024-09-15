@@ -305,10 +305,19 @@ namespace IngameScript {
             }
 
 
-            public void ExertVectorForce(Vector3D forceVector) {
-                VelocityController.SetFx(forceVector.X);
-                VelocityController.SetFy(forceVector.Y);
-                VelocityController.SetFz(forceVector.Z);
+            public void ExertVectorForce_LocalFrame(Vector3D direction, double magnitude) {
+                direction.Normalize();
+                // TODO: Find if we can even exert this magnitude in this direction given thruster limitations
+                Vector3D outputVector = direction * magnitude;
+                VelocityController.SetFx(outputVector.X);
+                VelocityController.SetFy(outputVector.Y);
+                VelocityController.SetFz(outputVector.Z);
+            }
+
+            public void ExertVectorForce_WorldFrame(Vector3D forceVector) {
+                // TODO: Replace this line with VectorUtils function
+                Vector3D localForceVector = Vector3D.TransformNormal(forceVector, MatrixD.Transpose(CurrentWorldMatrix));
+                ExertVectorForce_LocalFrame(localForceVector);
             }
 
             public void OrbitPoint(Vector3D targetPos) {

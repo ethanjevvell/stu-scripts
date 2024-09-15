@@ -19,5 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Subroutines\HardStop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\STUInterceptCalculator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\STUTransformationUtils.cs" />
   </ItemGroup>
 </Project>
