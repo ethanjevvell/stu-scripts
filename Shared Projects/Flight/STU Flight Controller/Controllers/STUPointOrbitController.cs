@@ -69,7 +69,9 @@ namespace IngameScript {
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
                         Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
-                        FlightController.ExertVectorForce_LocalFrame(Vector3D.TransformNormal(kickstartThrust, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
+                        Vector3D transposedKickstartThrust = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, kickstartThrust);
+                        Vector3D outputVector = transposedKickstartThrust + counterGravityForceVector;
+                        FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
                         return false;
                     }
 
@@ -90,10 +92,12 @@ namespace IngameScript {
                     double radiusError = TargetRadius - radius;
 
                     double centripetalForceRequired = ((mass * velocitySquared) / TargetRadius) - 10 * radiusError;
-                    Vector3D centripetalForceVector = GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired;
+                    Vector3D centripetalForceVector = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired);
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(altitudeError, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
 
-                    FlightController.ExertVectorForce_LocalFrame(Vector3D.TransformNormal(centripetalForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1) + counterGravityForceVector);
+                    Vector3D outputVector = centripetalForceVector + counterGravityForceVector;
+
+                    FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
 
                 }
 

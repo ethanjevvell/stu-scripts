@@ -134,16 +134,16 @@ namespace IngameScript {
                 }
 
                 public bool SetSurfaceVa(double desiredVelocity, double altitudeVelocity) {
-                    // Set the force components on the velocity controller
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
-                    FlightController.ExertVectorForce_LocalFrame(counterGravityForceVector);
+                    // NOTE: counterGravityForceVector has already been transformed to local frame of reference
+                    FlightController.VelocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
                     return GetSurfaceAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
                 }
 
                 public bool SetSeaLevelVa(double desiredVelocity, double altitudeVelocity) {
-                    // Set the force components on the velocity controller
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
-                    FlightController.ExertVectorForce_LocalFrame(counterGravityForceVector);
+                    // NOTE: counterGravityForceVector has already been transformed to local frame of reference
+                    FlightController.VelocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
                     return GetSeaLevelAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
                 }
 

@@ -7,62 +7,43 @@ namespace IngameScript {
 
             enum HardStopState {
                 Initialize,
-                Aligning,
-                FireThrusters,
                 Stopping,
                 Terminate
             }
 
             HardStopState CurrentState = HardStopState.Initialize;
+            double oneTickAcceleration = 0;
 
             public bool HardStop() {
 
                 switch (CurrentState) {
 
                     case HardStopState.Initialize:
+                        CreateWarningFlightLog("Initiating hard stop! User controls disabled");
+                        // Determine the maximum acceleration the ship can exert per tick
+                        double maxAcceleration = VelocityController.MaximumThrustVector.Length() / GetShipMass();
+                        oneTickAcceleration = Math.Ceiling(maxAcceleration / 6.0);
                         ReinstateGyroControl();
                         ReinstateThrusterControl();
-                        RemoteControl.DampenersOverride = false;
-                        CreateWarningFlightLog("Initiating hard stop!");
-                        CurrentState = HardStopState.Aligning;
-                        break;
 
-                    case HardStopState.Aligning:
-                        Vector3D worldLinearVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
-                        bool alignedAgainstCurrentVelocity = OrientationController.AlignCounterVelocity(
-                            worldLinearVelocity,
-                            VelocityController.MaximumThrustVector
-                        );
-
-                        // While rotating, fire thrusters in the opposite direction of the current velocity
-                        Vector3D counterVelocity = -worldLinearVelocity;
-                        counterVelocity.Normalize();
-                        // We are limited by the minimum thrust vector
-                        counterVelocity *= VelocityController.MinimumThrustVector.Length();
-                        Vector3D tempCounterVelocityVector = Vector3D.TransformNormal(counterVelocity, MatrixD.Transpose(CurrentWorldMatrix)) * new Vector3D(1, 1, -1);
-                        ExertVectorForce_LocalFrame(tempCounterVelocityVector);
-
-                        if (alignedAgainstCurrentVelocity) {
-                            CreateInfoFlightLog("Aligned against current velocity; initiating slowdown burn");
-                            CurrentState = HardStopState.FireThrusters;
-                        }
-                        break;
-
-                    case HardStopState.FireThrusters:
-                        CreateInfoFlightLog($"Thruster count: {VelocityController.MaximumThrustVectorThrusters.Length}");
-                        foreach (var thruster in VelocityController.MaximumThrustVectorThrusters) {
+                        // Make sure all thrusters are on
+                        foreach (var thruster in ActiveThrusters) {
                             thruster.Enabled = true;
-                            thruster.ThrustOverride = thruster.MaxEffectiveThrust;
                         }
-                        CreateInfoFlightLog("Monitoring velocity for terminate condition");
+
+                        RemoteControl.DampenersOverride = false;
                         CurrentState = HardStopState.Stopping;
                         break;
 
                     case HardStopState.Stopping:
-                        double maxAcceleration = VelocityController.MaximumThrustVector.Length() / GetShipMass();
-                        double oneTickAcceleration = Math.Ceiling(maxAcceleration / 6.0);
-                        if (CurrentVelocity.Length() < oneTickAcceleration) {
-                            CreateOkFlightLog($"Velocity below {oneTickAcceleration} m/s; terminating hard stop");
+                        Vector3D worldLinearVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
+                        VelocityController.ExertVectorForce_WorldFrame(-worldLinearVelocity, float.PositiveInfinity);
+                        OrientationController.AlignCounterVelocity(
+                            worldLinearVelocity,
+                            VelocityController.MaximumThrustVector
+                        );
+                        if (worldLinearVelocity.Length() < oneTickAcceleration) {
+                            CreateOkFlightLog("Hard stop complete! Returning controls to user");
                             CurrentState = HardStopState.Terminate;
                         }
                         break;

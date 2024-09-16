@@ -106,7 +106,7 @@ namespace IngameScript {
                             Vector3D gravityVector = FlightController.RemoteControl.GetNaturalGravity();
                             Vector3D initialOrbitVector = Vector3D.Cross(gravityVector, new Vector3D(0, 0, 1));
                             Vector3D kickstartVelocityForce = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                            FlightController.ExertVectorForce_LocalFrame(Vector3D.TransformNormal(kickstartVelocityForce, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1));
+                            FlightController.VelocityController.ExertVectorForce_WorldFrame(kickstartVelocityForce, kickstartVelocityForce.Length());
                             return false;
                         }
 
@@ -118,8 +118,7 @@ namespace IngameScript {
 
                         double outputForce = STUVelocityController.ShipMass * velocityError;
                         Vector3D outputForceVector = velocityUnitVector * outputForce;
-                        Vector3D transformedOutputForceVector = Vector3D.TransformNormal(outputForceVector, MatrixD.Transpose(FlightController.CurrentWorldMatrix)) * new Vector3D(1, 1, -1);
-                        FlightController.ExertVectorForce_LocalFrame(transformedOutputForceVector);
+                        FlightController.VelocityController.ExertVectorForce_WorldFrame(outputForceVector, outputForceVector.Length());
                         return Math.Abs(velocityError) < VELOCITY_ERROR_TOLERANCE;
 
                     } catch (Exception e) {

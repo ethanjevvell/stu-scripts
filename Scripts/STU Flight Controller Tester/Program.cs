@@ -17,7 +17,7 @@ namespace IngameScript {
             Gyros = FindGyros();
             LogScreen = FindLogScreen();
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Thrusters, Gyros);
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            Runtime.UpdateFrequency = UpdateFrequency.Update1;
             FlightController.RelinquishGyroControl();
         }
 

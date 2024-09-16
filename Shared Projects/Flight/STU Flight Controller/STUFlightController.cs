@@ -155,6 +155,10 @@ namespace IngameScript {
                 OrientationController.SetVr(roll);
             }
 
+            public void Hover() {
+                VelocityController.ExertVectorForce_WorldFrame(Vector3D.Zero, 0);
+            }
+
             /// <summary>
             /// Sets the ship's pitch. Positive values pitch the ship clockwise, negative values pitch the ship counterclockwise. (probably)
             /// </summary>
@@ -302,33 +306,6 @@ namespace IngameScript {
                 Vector3D outputForce = -unitGravityVector * totalForceNeeded;
 
                 return outputForce;
-            }
-
-            public void ExertVectorForce_LocalFrame(Vector3D vector) {
-                ExertVectorForce_LocalFrame(vector, vector.Length());
-            }
-
-            public void ExertVectorForce_LocalFrame(Vector3D direction, double magnitude) {
-
-                direction.Normalize();
-
-                //double maxThrust_x = direction.X >= 0 ? AggregrateRightMaxThrust : AggregateLeftMaxThrust;
-                //double maxThrust_y = direction.Y >= 0 ? AggregrateUpMaxThrust : AggregateDownMaxThrust;
-                //double maxThrust_z = direction.Z >= 0 ? AggregrateForwardMaxThrust : AggregateReverseMaxThrust;
-
-                Vector3D outputVector = direction * magnitude;
-
-                VelocityController.SetFx(outputVector.X);
-                VelocityController.SetFy(outputVector.Y);
-                VelocityController.SetFz(outputVector.Z);
-            }
-
-            public void ExertVectorForce_WorldFrame(Vector3D direction, double magnitude) {
-                ExertVectorForce_LocalFrame(STUTransformationUtils.LocalDirectionToWorldDirection(RemoteControl, direction), magnitude);
-            }
-
-            public void ExertVectorForce_WorldFrame(Vector3D vector) {
-                ExertVectorForce_LocalFrame(STUTransformationUtils.LocalDirectionToWorldDirection(RemoteControl, vector));
             }
 
             public void OrbitPoint(Vector3D targetPos) {

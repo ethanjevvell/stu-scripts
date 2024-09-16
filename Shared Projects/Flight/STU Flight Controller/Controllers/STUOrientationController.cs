@@ -58,7 +58,7 @@ namespace IngameScript {
                     localCounterVelocity.Normalize();
 
                     // Transform local counter velocity to world coordinates
-                    Vector3D transformedCounterVelocity = Vector3D.TransformNormal(localCounterVelocity, RemoteControl.WorldMatrix);
+                    Vector3D transformedCounterVelocity = STUTransformationUtils.LocalDirectionToWorldDirection(RemoteControl, localCounterVelocity);
 
                     // Desired direction is opposite to current velocity
                     Vector3D desiredDirection = currentVelocity;
@@ -85,12 +85,13 @@ namespace IngameScript {
                     Vector3D angularVelocity = rotationAxis * rotationAngle * error;
 
                     // Transform angular velocity to local coordinates
-                    Vector3D localAngularVelocity = Vector3D.TransformNormal(angularVelocity, MatrixD.Transpose(RemoteControl.WorldMatrix));
+                    Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);
 
                     // Correctly map the local angular velocity to gyro controls
                     foreach (var gyro in Gyros) {
                         gyro.Pitch = (float)localAngularVelocity.X;
                         gyro.Yaw = (float)localAngularVelocity.Y;
+                        gyro.Roll = (float)localAngularVelocity.Z;
                     }
 
                     return false;
