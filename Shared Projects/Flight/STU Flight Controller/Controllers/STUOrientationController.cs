@@ -32,11 +32,6 @@ namespace IngameScript {
                         double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVectorNormalized), -1, 1);
                         double rotationAngle = Math.Acos(dotProduct);
 
-                        CBT.AddToLogQueue($"delta x: {targetVector.X}");
-                        CBT.AddToLogQueue($"delta y: {targetVector.Y}");
-                        CBT.AddToLogQueue($"delta z: {targetVector.Z}");
-                        CBT.AddToLogQueue($"rotationAngle - pi: {rotationAngle - Math.PI}");
-
                         if (Math.Abs(rotationAngle - Math.PI) < ANGLE_ERROR_TOLERANCE) {
                             foreach (var gyro in Gyros) {
                                 gyro.Pitch = 0;

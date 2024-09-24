@@ -14,6 +14,9 @@ namespace IngameScript {
             private float raycastDistance = 10000;
             private float raycastPitch = 0;
             private float raycastYaw = 0;
+            private IEnumerator<bool> imageStateMachine;
+            private bool finishedTakingImage;
+            private List<List<float>> image;
 
             // Getters and Setters
             #region
@@ -21,26 +24,37 @@ namespace IngameScript {
                 get { return camera; }
                 set { camera = value; }
             }
-
             public float RaycastDistance {
                 get { return raycastDistance; }
                 set { raycastDistance = value; }
             }
-
             public float RaycastPitch {
                 get { return raycastPitch; }
-                set { raycastPitch = value; }
+                set { raycastPitch = MathHelper.Clamp(value, -45, 45); }
             }
-
             public float RaycastYaw {
                 get { return raycastYaw; }
-                set { raycastYaw = value; }
+                set { raycastYaw = MathHelper.Clamp(value, -45, 45); }
+            }
+            public bool FinishedTakingImage {
+                get { return finishedTakingImage; }
+                private set { finishedTakingImage = value; }
+            }
+            public List<List<float>> Image {
+                get { return image; }
+                private set { image = value; }
+            }
+            public IEnumerator<bool> ImageStateMachine {
+                get { return imageStateMachine; }
+                private set { imageStateMachine = value; }
             }
             #endregion
 
             public STURaycaster(IMyCameraBlock camera) {
                 Camera = camera;
                 Camera.EnableRaycast = true;
+                Image = new List<List<float>>();
+                FinishedTakingImage = false;
             }
 
             /// <summary>
@@ -57,6 +71,71 @@ namespace IngameScript {
 
             public void ToggleRaycast() {
                 Camera.EnableRaycast = !Camera.EnableRaycast;
+            }
+
+            /// <summary>
+            /// Runs a state machine to take an image over time. The image is stored in the Image property.
+            /// Poll the FinishedTakingImage property to check if the image is done before attempting to draw it with STUDisplay.DrawCustomImageOverTime()
+            /// The raycasting camera MUST be stationary, unless the resolution and distance are very small and can be executed in a single tick
+            /// </summary>
+            /// <param name="distance"></param>
+            /// <param name="fov"></param>
+            /// <param name="x"></param>
+            /// <param name="y"></param>
+            public void TakeImageOverTime(float distance, float fov, uint x, uint y) {
+                if (ImageStateMachine != null && !FinishedTakingImage) {
+                    bool hasMoreSteps = ImageStateMachine.MoveNext();
+                    if (!hasMoreSteps) {
+                        ImageStateMachine.Dispose();
+                        ImageStateMachine = null;
+                        FinishedTakingImage = true;
+                        // Disable raycasting to save performance and battery
+                        Camera.EnableRaycast = false;
+                    }
+                } else {
+                    ImageStateMachine = RunImageCoroutine(distance, fov, x, y);
+                    Camera.EnableRaycast = true;
+                }
+            }
+
+            /// <summary>
+            /// Coroutine for taking an image over time. The image is stored in the Image property.
+            /// Not to be called directly.
+            /// </summary>
+            /// <param name="distance"></param>
+            /// <param name="fov"></param>
+            /// <param name="x"></param>
+            /// <param name="y"></param>
+            /// <returns></returns>
+            IEnumerator<bool> RunImageCoroutine(float distance, float fov, uint x, uint y) {
+                // Make sure camera is on
+                Camera.Enabled = true;
+                yield return false;
+                float aspectRatio = (float)x / y;
+                float currentYaw = -fov / 2;
+                float currentPitch = fov / 2 / aspectRatio;
+                float yawIncrement = fov / x;
+                float pitchIncrement = fov / y / aspectRatio;
+                for (int r = 0; r < y; r++) {
+                    List<float> row = new List<float>();
+                    for (int c = 0; c < x; c++) {
+                        // Waits until the camera can scan the distance
+                        while (!Camera.CanScan(distance)) {
+                            yield return false;
+                        }
+                        MyDetectedEntityInfo hit = Camera.Raycast(distance, currentPitch, currentYaw);
+                        if (hit.IsEmpty()) {
+                            row.Add(float.PositiveInfinity);
+                        } else {
+                            row.Add((float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition()));
+                        }
+                        currentYaw += yawIncrement;
+                    }
+                    Image.Add(row);
+                    currentPitch -= pitchIncrement;
+                    currentYaw = -fov / 2;
+                }
+                Camera.EnableRaycast = false;
             }
 
             /// <summary>

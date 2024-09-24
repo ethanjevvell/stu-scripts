@@ -9,8 +9,8 @@ namespace IngameScript {
     partial class Program {
         public class STUDisplay {
 
-            public IMyTextSurface Surface { get; set; }
-            public RectangleF Viewport { get; set; }
+            public IMyTextSurface Surface { get; private set; }
+            public RectangleF Viewport { get; private set; }
             public Vector2 TopLeft { get; private set; }
             public Vector2 Center { get; private set; }
             public float Center_X { get; private set; }
@@ -27,6 +27,9 @@ namespace IngameScript {
             public float DefaultLineHeight { get; set; }
             public float CharacterWidth { get; private set; }
             public int Lines { get; set; }
+
+            IEnumerator<bool> ImageDrawerStateMachine { get; set; }
+            bool FinishedDrawingCustomImage { get; set; }
 
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.
@@ -67,7 +70,7 @@ namespace IngameScript {
                 DefaultLineHeight = GetDefaultLineHeight();
                 Lines = (int)(ScreenHeight / DefaultLineHeight);
                 NeedToCenterSprite = true;
-
+                FinishedDrawingCustomImage = false;
                 Clear();
             }
 
@@ -116,12 +119,64 @@ namespace IngameScript {
 
             private RectangleF GetViewport() {
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
-                //if (ViewportOffsets.ContainsKey(Surface.DisplayName)) {
-                //    return ViewportOffsets[Surface.DisplayName];
-                //} else {
-                //    return standardViewport;
-                //}
                 return standardViewport;
+            }
+
+            private IEnumerator<bool> RunDrawCustomImageCoroutine(List<List<float>> image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
+                StartFrame();
+                float pixelSideLength = ScreenWidth / width;
+                for (int i = 0; i < height; i++) {
+                    for (int j = 0; j < width; j++) {
+                        float distanceData = image[i][j];
+                        Color pixelColor = GetPixelColorFromDistance(distanceData, minDistance, maxDistance);
+                        MySprite pixel = new MySprite() {
+                            Type = SpriteType.TEXTURE,
+                            Data = "SquareSimple",
+                            // Remember that the middle-left side of a sprite is where the position is anchored, so we shift the position by half the pixel side length
+                            // This assumes that pixels are always square
+                            Position = new Vector2(j * pixelSideLength, i * pixelSideLength + pixelSideLength / 2),
+                            Size = new Vector2(pixelSideLength, pixelSideLength),
+                            Color = pixelColor
+                        };
+                        CurrentFrame.Add(pixel);
+                        // Yield every 512 pixels; arbitrary but conservative to prevent script complexity timeout
+                        if ((i * height + j) % 512 == 0) {
+                            yield return true;
+                        }
+                    }
+                }
+                EndAndPaintFrame();
+            }
+
+            private Color GetPixelColorFromDistance(float distance, double minDistance, double maxDistance) {
+                double redIntensity;
+                double blueIntensity;
+                if (distance == float.PositiveInfinity) {
+                    redIntensity = 0;
+                    blueIntensity = 0;
+                } else {
+                    double normalizedDistance = (distance - minDistance) / (maxDistance - minDistance);
+                    normalizedDistance = Math.Max(0, Math.Min(1, normalizedDistance));
+                    redIntensity = 1 - normalizedDistance;
+                    blueIntensity = normalizedDistance;
+                }
+                byte redValue = (byte)(redIntensity * 255);
+                byte blueValue = (byte)(blueIntensity * 255);
+                return new Color(redValue, 0, blueValue);
+            }
+
+            public void DrawCustomImageOverTime(List<List<float>> image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
+                if (ImageDrawerStateMachine != null && !FinishedDrawingCustomImage) {
+                    bool hasMoreSteps = ImageDrawerStateMachine.MoveNext();
+                    if (!hasMoreSteps) {
+                        echo("disposing of drawer state machine");
+                        ImageDrawerStateMachine.Dispose();
+                        ImageDrawerStateMachine = null;
+                        FinishedDrawingCustomImage = true;
+                    }
+                } else {
+                    ImageDrawerStateMachine = RunDrawCustomImageCoroutine(image, width, height, minDistance, maxDistance, echo);
+                }
             }
 
             private float GetTextSpriteWidth(MySprite sprite) {
