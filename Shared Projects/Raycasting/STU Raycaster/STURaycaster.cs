@@ -100,6 +100,7 @@ namespace IngameScript {
 
             /// <summary>
             /// Coroutine for taking an image over time. The image is stored in the Image property.
+            /// Uses imaginary "screen space" to reduce distortion
             /// Not to be called directly.
             /// </summary>
             /// <param name="distance"></param>
@@ -108,36 +109,67 @@ namespace IngameScript {
             /// <param name="y"></param>
             /// <returns></returns>
             IEnumerator<bool> RunImageCoroutine(float distance, float fov, uint x, uint y) {
-                // Make sure camera is on
+                // Ensure the camera is enabled
                 Camera.Enabled = true;
                 yield return false;
+
+                // Convert field of view from degrees to radians
+                float fov_rad = MathHelper.ToRadians(fov);
+
+                // Calculate aspect ratio
                 float aspectRatio = (float)x / y;
-                float currentYaw = -fov / 2;
-                float currentPitch = fov / 2 / aspectRatio;
-                float yawIncrement = fov / x;
-                float pitchIncrement = fov / y / aspectRatio;
+
+                // Compute the vertical field of view based on the horizontal FOV and aspect ratio
+                float fov_y_rad = 2 * (float)Math.Atan(Math.Tan(fov_rad / 2) / aspectRatio);
+
+                // Precompute tangent values for efficiency
+                float tan_fov_x = (float)Math.Tan(fov_rad / 2);
+                float tan_fov_y = (float)Math.Tan(fov_y_rad / 2);
+
                 for (int r = 0; r < y; r++) {
                     List<float> row = new List<float>();
                     for (int c = 0; c < x; c++) {
-                        // Waits until the camera can scan the distance
+                        // Wait until the camera can scan the distance
                         while (!Camera.CanScan(distance)) {
                             yield return false;
                         }
+
+                        // Compute normalized device coordinates (NDC) in the range [-1, 1]
+                        float ndc_x = ((c + 0.5f) / x) * 2f - 1f; // Horizontal coordinate
+                        float ndc_y = 1f - ((r + 0.5f) / y) * 2f; // Vertical coordinate (flipped for image coordinates)
+
+                        // Compute the direction vector components in camera space
+                        float dir_x = ndc_x * tan_fov_x;
+                        float dir_y = ndc_y * tan_fov_y;
+                        float dir_z = 1f; // Assuming the camera looks along the positive Z-axis
+
+                        // Normalize the direction vector
+                        float length = (float)Math.Sqrt(dir_x * dir_x + dir_y * dir_y + dir_z * dir_z);
+                        dir_x /= length;
+                        dir_y /= length;
+                        dir_z /= length;
+
+                        // Compute yaw and pitch angles from the direction vector
+                        float yaw_rad = (float)Math.Atan2(dir_x, dir_z);
+                        float pitch_rad = (float)Math.Asin(dir_y);
+
+                        // Convert yaw and pitch from radians to degrees
+                        float currentYaw = MathHelper.ToDegrees(yaw_rad);
+                        float currentPitch = MathHelper.ToDegrees(pitch_rad);
+
+                        // Perform the raycast with the computed yaw and pitch angles
                         MyDetectedEntityInfo hit = Camera.Raycast(distance, currentPitch, currentYaw);
+
                         if (hit.IsEmpty()) {
                             row.Add(float.PositiveInfinity);
                         } else {
                             row.Add((float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition()));
                         }
-                        currentYaw += yawIncrement;
                     }
                     Image.Add(row);
-                    currentPitch -= pitchIncrement;
-                    currentYaw = -fov / 2;
                 }
-                Camera.EnableRaycast = false;
+                Camera.Enabled = false;
             }
-
             /// <summary>
             /// Returns a string with the hit info. Always check if a hit.IsEmpty() before using this.
             /// </summary>
