@@ -16,7 +16,7 @@ namespace IngameScript {
             private float raycastYaw = 0;
             private IEnumerator<bool> imageStateMachine;
             private bool finishedTakingImage;
-            private List<List<float>> image;
+            private STUImage image;
 
             // Getters and Setters
             #region
@@ -40,7 +40,7 @@ namespace IngameScript {
                 get { return finishedTakingImage; }
                 private set { finishedTakingImage = value; }
             }
-            public List<List<float>> Image {
+            public STUImage Image {
                 get { return image; }
                 private set { image = value; }
             }
@@ -53,8 +53,8 @@ namespace IngameScript {
             public STURaycaster(IMyCameraBlock camera) {
                 Camera = camera;
                 Camera.EnableRaycast = true;
-                Image = new List<List<float>>();
                 FinishedTakingImage = false;
+                Image = new STUImage();
             }
 
             /// <summary>
@@ -82,7 +82,7 @@ namespace IngameScript {
             /// <param name="fov"></param>
             /// <param name="x"></param>
             /// <param name="y"></param>
-            public void TakeImageOverTime(float distance, float fov, uint x, uint y) {
+            public void TakeImageOverTime(float distance, float fov, uint x, uint y, Action<string> echo) {
                 if (ImageStateMachine != null && !FinishedTakingImage) {
                     bool hasMoreSteps = ImageStateMachine.MoveNext();
                     if (!hasMoreSteps) {
@@ -93,14 +93,14 @@ namespace IngameScript {
                         Camera.EnableRaycast = false;
                     }
                 } else {
-                    ImageStateMachine = RunImageCoroutine(distance, fov, x, y);
+                    ImageStateMachine = RunImageCoroutine(distance, fov, x, y, echo);
                     Camera.EnableRaycast = true;
                 }
             }
 
             /// <summary>
             /// Coroutine for taking an image over time. The image is stored in the Image property.
-            /// Uses imaginary "screen space" to reduce distortion
+            /// Uses perspective projection to mitigate the fisheye effect.
             /// Not to be called directly.
             /// </summary>
             /// <param name="distance"></param>
@@ -108,7 +108,7 @@ namespace IngameScript {
             /// <param name="x"></param>
             /// <param name="y"></param>
             /// <returns></returns>
-            IEnumerator<bool> RunImageCoroutine(float distance, float fov, uint x, uint y) {
+            IEnumerator<bool> RunImageCoroutine(float distance, float fov, uint x, uint y, Action<string> echo) {
                 // Ensure the camera is enabled
                 Camera.Enabled = true;
                 yield return false;
@@ -166,7 +166,7 @@ namespace IngameScript {
                             row.Add((float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition()));
                         }
                     }
-                    Image.Add(row);
+                    Image.PixelArray.Add(row);
                 }
                 Camera.Enabled = false;
             }

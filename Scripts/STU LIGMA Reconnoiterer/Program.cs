@@ -61,18 +61,20 @@ namespace IngameScript {
                 }
             }
 
-            float distance = 25;
+            float distance = 15;
             float fov = 90;
-            uint width = 512;
-            uint height = 512;
+            uint width = 128;
+            uint height = 128;
 
             double minDistance = 0.1;
             double maxDistance = distance;
 
             try {
                 Echo($"Estimated wait: {width * height * distance / 2000 / 60} mins");
-                Raycaster.TakeImageOverTime(distance, fov, width, height);
-                Echo($"Progress: {(float)Raycaster.Image.Count / height * 100}%");
+                Raycaster.TakeImageOverTime(distance, fov, width, height, Echo);
+                Echo($"width = {width}, height = {height}");
+                Echo($"Image size: {Raycaster.Image.Width} x {Raycaster.Image.Height}");
+                Echo($"Progress: {(float)Raycaster.Image.Height / height * 100}%");
                 if (Raycaster.FinishedTakingImage) {
                     Echo("Drawing...");
                     ImageDisplay.DrawCustomImageOverTime(Raycaster.Image, width, height, minDistance, maxDistance, Echo);

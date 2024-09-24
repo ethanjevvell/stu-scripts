@@ -22,30 +22,34 @@ namespace IngameScript {
                 }
 
                 public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition) {
-                    Vector3D targetVector = target - currentPosition;
-                    if (targetVector.LengthSquared() > DOT_PRODUCT_TOLERANCE) {
 
-                        Vector3D targetVectorNormalized = -Vector3D.Normalize(targetVector);
-                        Vector3D forwardVector = RemoteControl.WorldMatrix.Forward;
+                    Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
+                    Vector3D forwardVector = Vector3D.Normalize(RemoteControl.WorldMatrix.Forward);
 
-                        Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVectorNormalized);
-                        double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVectorNormalized), -1, 1);
-                        double rotationAngle = Math.Acos(dotProduct);
+                    double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
+                    double rotationAngle = Math.Acos(dotProduct);
 
-                        if (Math.Abs(rotationAngle - Math.PI) < ANGLE_ERROR_TOLERANCE) {
-                            foreach (var gyro in Gyros) {
-                                gyro.Pitch = 0;
-                                gyro.Yaw = 0;
-                            }
-                            return true;
-                        }
-
-                        MatrixD worldMatrixTranspose = MatrixD.Transpose(RemoteControl.WorldMatrix);
+                    if (Math.Abs(Math.Abs(rotationAngle) - Math.PI) < ANGLE_ERROR_TOLERANCE) {
                         foreach (var gyro in Gyros) {
-                            Vector3D localRotationAxis = Vector3D.TransformNormal(rotationAxis, worldMatrixTranspose);
-                            gyro.Yaw = (float)localRotationAxis.X;
-                            gyro.Pitch = (float)localRotationAxis.Y;
+                            gyro.Pitch = 0;
+                            gyro.Yaw = 0;
+                            gyro.Roll = 0;
                         }
+                        return true;
+                    }
+
+                    Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
+                    rotationAxis.Normalize();
+
+                    double error = rotationAngle - Math.PI;
+                    Vector3D angularVelocity = rotationAxis * rotationAngle * error;
+                    Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);
+
+                    // Correctly map the local angular velocity to gyro controls
+                    foreach (var gyro in Gyros) {
+                        gyro.Pitch = (float)localAngularVelocity.X;
+                        gyro.Yaw = (float)localAngularVelocity.Y;
+                        gyro.Roll = (float)localAngularVelocity.Z;
                     }
 
                     return false;

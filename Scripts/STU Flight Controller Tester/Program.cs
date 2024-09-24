@@ -23,7 +23,7 @@ namespace IngameScript {
 
         public void Main() {
             FlightController.UpdateState();
-            FlightController.HardStop();
+            FlightController.AlignShipToTarget(new VRageMath.Vector3D(0, 0, 0));
             if (STUFlightController.FlightLogs.Count > 0) {
                 while (STUFlightController.FlightLogs.Count > 0) {
                     LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());

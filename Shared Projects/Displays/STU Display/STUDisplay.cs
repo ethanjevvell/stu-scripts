@@ -122,12 +122,12 @@ namespace IngameScript {
                 return standardViewport;
             }
 
-            private IEnumerator<bool> RunDrawCustomImageCoroutine(List<List<float>> image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
+            private IEnumerator<bool> RunDrawCustomImageCoroutine(STUImage image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
                 StartFrame();
                 float pixelSideLength = ScreenWidth / width;
                 for (int i = 0; i < height; i++) {
                     for (int j = 0; j < width; j++) {
-                        float distanceData = image[i][j];
+                        float distanceData = image.PixelArray[i][j];
                         Color pixelColor = GetPixelColorFromDistance(distanceData, minDistance, maxDistance);
                         MySprite pixel = new MySprite() {
                             Type = SpriteType.TEXTURE,
@@ -165,7 +165,7 @@ namespace IngameScript {
                 return new Color(redValue, 0, blueValue);
             }
 
-            public void DrawCustomImageOverTime(List<List<float>> image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
+            public void DrawCustomImageOverTime(STUImage image, uint width, uint height, double minDistance, double maxDistance, Action<string> echo) {
                 if (ImageDrawerStateMachine != null && !FinishedDrawingCustomImage) {
                     bool hasMoreSteps = ImageDrawerStateMachine.MoveNext();
                     if (!hasMoreSteps) {

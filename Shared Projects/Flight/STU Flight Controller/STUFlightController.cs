@@ -206,6 +206,7 @@ namespace IngameScript {
             /// <param name="targetPos"></param>
             /// <returns></returns>
             public bool AlignShipToTarget(Vector3D targetPos) {
+                ReinstateGyroControl();
                 return OrientationController.AlignShipToTarget(targetPos, CurrentPosition);
             }
 
