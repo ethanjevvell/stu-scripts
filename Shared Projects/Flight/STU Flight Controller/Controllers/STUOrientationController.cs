@@ -29,7 +29,7 @@ namespace IngameScript {
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
 
-                    if (Math.Abs(Math.Abs(rotationAngle) - Math.PI) < ANGLE_ERROR_TOLERANCE) {
+                    if (Math.Abs(rotationAngle) < Math.Abs(ANGLE_ERROR_TOLERANCE * Vector3D.Distance(target, RemoteControl.CenterOfMass) * 1e-6)) {
                         foreach (var gyro in Gyros) {
                             gyro.Pitch = 0;
                             gyro.Yaw = 0;

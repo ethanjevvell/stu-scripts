@@ -93,7 +93,7 @@ namespace IngameScript {
                 }
             }
 
-            public float GetForwardStoppingDistance() {
+            public float CalculateForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)CurrentVelocity.Z;
                 float maxReverseAcceleration = VelocityController.GetMaximumReverseAcceleration();

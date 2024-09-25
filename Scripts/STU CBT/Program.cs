@@ -140,9 +140,9 @@ namespace IngameScript
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     return true;
 
-                case "TEST": // should only be used for testing purposes. hard-code stuff here
+                case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.TestManeuver(new Vector3D(0, 0, 0)));
+                    ManeuverQueue.Enqueue(new CBT.TestManeuver(new Vector3D(98636.19, 158249.34, 5853864.81)));
                     return true;
 
                 case "GANGWAY":
