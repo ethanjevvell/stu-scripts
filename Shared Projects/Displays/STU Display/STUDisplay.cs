@@ -29,7 +29,7 @@ namespace IngameScript {
             public int Lines { get; set; }
 
             IEnumerator<bool> ImageDrawerStateMachine { get; set; }
-            bool FinishedDrawingCustomImage { get; set; }
+            public bool FinishedDrawingCustomImage { get; private set; }
 
             /// <summary>
             /// Used to determine if a sprite needs to be centered within its parent sprite.
@@ -127,7 +127,7 @@ namespace IngameScript {
                 float pixelSideLength = ScreenWidth / width;
                 for (int i = 0; i < height; i++) {
                     for (int j = 0; j < width; j++) {
-                        float distanceData = image.PixelArray[i][j];
+                        float distanceData = image.PixelArray[i][j].distanceVal;
                         Color pixelColor = GetPixelColorFromDistance(distanceData, minDistance, maxDistance);
                         MySprite pixel = new MySprite() {
                             Type = SpriteType.TEXTURE,

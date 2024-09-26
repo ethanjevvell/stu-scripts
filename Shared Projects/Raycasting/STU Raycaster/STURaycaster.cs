@@ -127,7 +127,7 @@ namespace IngameScript {
                 float tan_fov_y = (float)Math.Tan(fov_y_rad / 2);
 
                 for (int r = 0; r < y; r++) {
-                    List<float> row = new List<float>();
+                    List<STUImage.Pixel> row = new List<STUImage.Pixel>();
                     for (int c = 0; c < x; c++) {
                         // Wait until the camera can scan the distance
                         while (!Camera.CanScan(distance)) {
@@ -138,20 +138,18 @@ namespace IngameScript {
                         float ndc_x = ((c + 0.5f) / x) * 2f - 1f; // Horizontal coordinate
                         float ndc_y = 1f - ((r + 0.5f) / y) * 2f; // Vertical coordinate (flipped for image coordinates)
 
-                        // Compute the direction vector components in camera space
-                        float dir_x = ndc_x * tan_fov_x;
-                        float dir_y = ndc_y * tan_fov_y;
-                        float dir_z = 1f; // Assuming the camera looks along the positive Z-axis
+                        Vector3 dir = new Vector3(
+                            ndc_x * tan_fov_x,
+                            ndc_y * tan_fov_y,
+                            1f // Assuming the camera looks along the positive Z-axis
+                        );
 
                         // Normalize the direction vector
-                        float length = (float)Math.Sqrt(dir_x * dir_x + dir_y * dir_y + dir_z * dir_z);
-                        dir_x /= length;
-                        dir_y /= length;
-                        dir_z /= length;
+                        dir.Normalize();
 
                         // Compute yaw and pitch angles from the direction vector
-                        float yaw_rad = (float)Math.Atan2(dir_x, dir_z);
-                        float pitch_rad = (float)Math.Asin(dir_y);
+                        float yaw_rad = (float)Math.Atan2(dir.X, dir.Z);
+                        float pitch_rad = (float)Math.Asin(dir.Y);
 
                         // Convert yaw and pitch from radians to degrees
                         float currentYaw = MathHelper.ToDegrees(yaw_rad);
@@ -160,11 +158,12 @@ namespace IngameScript {
                         // Perform the raycast with the computed yaw and pitch angles
                         MyDetectedEntityInfo hit = Camera.Raycast(distance, currentPitch, currentYaw);
 
-                        if (hit.IsEmpty()) {
-                            row.Add(float.PositiveInfinity);
-                        } else {
-                            row.Add((float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition()));
-                        }
+                        STUImage.Pixel pixel = new STUImage.Pixel {
+                            distanceVal = hit.IsEmpty() ? float.PositiveInfinity : (float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition())
+                        };
+
+                        row.Add(pixel);
+
                     }
                     Image.PixelArray.Add(row);
                 }

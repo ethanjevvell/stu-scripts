@@ -61,10 +61,10 @@ namespace IngameScript {
                 }
             }
 
-            float distance = 15;
+            float distance = 20;
             float fov = 90;
-            uint width = 128;
-            uint height = 128;
+            uint width = 80;
+            uint height = 80;
 
             double minDistance = 0.1;
             double maxDistance = distance;
@@ -78,6 +78,13 @@ namespace IngameScript {
                 if (Raycaster.FinishedTakingImage) {
                     Echo("Drawing...");
                     ImageDisplay.DrawCustomImageOverTime(Raycaster.Image, width, height, minDistance, maxDistance, Echo);
+                    if (ImageDisplay.FinishedDrawingCustomImage) {
+                        Echo("Exporting...");
+                        Raycaster.Image.ExportOverTime(Raycaster.Camera);
+                        if (Raycaster.Image.FinishedExporting) {
+                            Echo("Done");
+                        }
+                    }
                 }
             } catch (Exception e) {
                 Echo("Error in image capture: " + e.Message);
