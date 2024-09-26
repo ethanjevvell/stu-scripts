@@ -16,6 +16,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUVelocityController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Displays\PlanetOrbitModeAdapters\SmallBuggyCockpit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Displays\StandardOutput.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Subroutines\ManeuverTemplate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Subroutines\StopOnADime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Subroutines\HardStop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\STUInterceptCalculator.cs" />
