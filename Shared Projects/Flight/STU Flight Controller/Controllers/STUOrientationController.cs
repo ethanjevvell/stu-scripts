@@ -10,7 +10,7 @@ namespace IngameScript {
                 IMyRemoteControl RemoteControl { get; set; }
                 IMyGyro[] Gyros { get; set; }
 
-                private const double ANGLE_ERROR_TOLERANCE = 1e-3;
+                private const double ANGLE_ERROR_TOLERANCE = 1e-2;
                 private const double DOT_PRODUCT_TOLERANCE = 1e-6;
 
                 public STUOrientationController(IMyRemoteControl remoteControl, IMyGyro[] gyros) {
@@ -29,7 +29,9 @@ namespace IngameScript {
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
 
-                    if (Math.Abs(Math.Abs(rotationAngle) - Math.PI) < ANGLE_ERROR_TOLERANCE) {
+                    CBT.AddToLogQueue($"rotationAngle: {rotationAngle}", STULogType.INFO);
+
+                    if (Math.Abs(rotationAngle) < Math.Abs(ANGLE_ERROR_TOLERANCE)) {
                         foreach (var gyro in Gyros) {
                             gyro.Pitch = 0;
                             gyro.Yaw = 0;
@@ -41,8 +43,10 @@ namespace IngameScript {
                     Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
                     rotationAxis.Normalize();
 
-                    double error = rotationAngle - Math.PI;
-                    Vector3D angularVelocity = rotationAxis * rotationAngle * error;
+                    double proportionalError = rotationAngle * -1.8;
+                    
+                    Vector3D angularVelocity = rotationAxis * proportionalError;
+
                     Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);
 
                     // Correctly map the local angular velocity to gyro controls

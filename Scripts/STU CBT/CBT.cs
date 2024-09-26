@@ -671,7 +671,7 @@ namespace IngameScript
             {
                 bool thrusters = false;
                 bool gyros = false;
-                bool dampeners = false;
+                bool dampeners = true;
                 switch (state)
                 {
                     case 1:
@@ -685,20 +685,20 @@ namespace IngameScript
                         gyros = true;
                         break;
                     case 4:
-                        dampeners = true;
+                        dampeners = false;
                         break;
                     case 5:
                         thrusters = true;
-                        dampeners = true;
+                        dampeners = false;
                         break;
                     case 6:
                         gyros = true;
-                        dampeners = true;
+                        dampeners = false;
                         break;
                     case 7:
                         thrusters = true;
                         gyros = true;
-                        dampeners = true;
+                        dampeners = false;
                         break;
                 }
                 SetAutopilotControl(thrusters, gyros, dampeners);

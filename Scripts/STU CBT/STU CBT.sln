@@ -21,6 +21,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CBT_VARIABLES", "..\..\Shar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD94D95E-6F7F-470A-AB06-DA0476DFAE00}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Image", "..\..\Shared Projects\Displays\STU Image\STU Image.shproj", "{7D53F862-DF1C-4FC4-92F8-49568E15C32B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,12 +43,14 @@ Global
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
 		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
+		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{7d53f862-df1c-4fc4-92f8-49568e15c32b}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13
 		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{fceb5928-717d-4f38-9eec-9e89c6d1a0e5}*SharedItemsImports = 4
