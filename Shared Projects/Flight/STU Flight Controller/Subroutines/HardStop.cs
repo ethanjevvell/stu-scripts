@@ -1,5 +1,6 @@
 ﻿using Sandbox.Game.WorldEnvironment.Modules;
 using System;
+using System.Runtime.CompilerServices;
 using VRageMath;
 
 namespace IngameScript {
@@ -10,8 +11,9 @@ namespace IngameScript {
             {
                 public override string Name => "Hard Stop";
 
-                private double oneTickAcceleration;
                 private STUFlightController FC;
+
+                private double oneTickAcceleration;
 
                 public HardStop(STUFlightController thisFlightController)
                 {
