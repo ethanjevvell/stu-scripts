@@ -73,8 +73,6 @@ namespace IngameScript {
                 Runtime = runtime;
 
                 LoadRemoteController(grid);
-                LoadThrusters(grid);
-                LoadGyros(grid);
                 LoadBatteries(grid);
                 LoadFuelTanks(grid);
                 LoadWarheads(grid);
@@ -112,15 +110,8 @@ namespace IngameScript {
                     TerminalStage.ToggleLateralThrusters(false);
                 }
 
-                List<IMyThrust> activeThrusters = new List<IMyThrust>();
-
-                foreach (IMyThrust thruster in AllThrusters) {
-                    if (thruster.Enabled) {
-                        activeThrusters.Add(thruster);
-                    }
-                }
-
-                FlightController = new STUFlightController(grid, RemoteControl, activeThrusters.ToArray(), Gyros);
+                FlightController = new STUFlightController(grid, RemoteControl, Me);
+                AllThrusters = FlightController.ActiveThrusters;
                 LaunchCoordinates = FlightController.CurrentPosition;
                 InterceptCalculator = new STUFlightController.STUInterceptCalculator();
 
@@ -137,38 +128,6 @@ namespace IngameScript {
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
                 CreateOkBroadcast("Remote control... nominal");
-            }
-
-            private static void LoadThrusters(IMyGridTerminalSystem grid) {
-
-                List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == Me.CubeGrid);
-                if (thrusterBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No thrusters found on grid");
-                }
-
-                IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
-
-                for (int i = 0; i < thrusterBlocks.Count; i++) {
-                    allThrusters[i] = thrusterBlocks[i] as IMyThrust;
-                }
-
-                CreateOkBroadcast("Thrusters... nominal");
-                AllThrusters = allThrusters;
-            }
-
-            private static void LoadGyros(IMyGridTerminalSystem grid) {
-                List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == Me.CubeGrid);
-                if (gyroBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No gyros found on grid");
-                }
-                IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
-                for (int i = 0; i < gyroBlocks.Count; i++) {
-                    gyros[i] = gyroBlocks[i] as IMyGyro;
-                }
-                CreateOkBroadcast("Gyros... nominal");
-                Gyros = gyros;
             }
 
             private static void LoadBatteries(IMyGridTerminalSystem grid) {

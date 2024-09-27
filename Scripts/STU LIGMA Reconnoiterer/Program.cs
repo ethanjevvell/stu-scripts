@@ -61,8 +61,8 @@ namespace IngameScript {
                 }
             }
 
-            float distance = 20;
-            float fov = 90;
+            float distance = 10;
+            float fov = 45;
             uint width = 80;
             uint height = 80;
 

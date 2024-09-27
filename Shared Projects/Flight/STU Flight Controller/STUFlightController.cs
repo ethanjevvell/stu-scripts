@@ -44,10 +44,10 @@ namespace IngameScript {
             /// Be sure to orient the Remote Control block so that its forward direction is the direction you want to be considered the "forward" direction of your ship.
             /// Also orient the Remote Control block so that its up direction is the direction you want to be considered the "up" direction of your ship.
             /// </summary>
-            public STUFlightController(IMyGridTerminalSystem grid, IMyRemoteControl remoteControl, IMyThrust[] allThrusters, IMyGyro[] allGyros) {
+            public STUFlightController(IMyGridTerminalSystem grid, IMyRemoteControl remoteControl, IMyTerminalBlock me) {
                 RemoteControl = remoteControl;
-                AllGyroscopes = allGyros;
-                ActiveThrusters = allThrusters;
+                ActiveThrusters = FindThrusters(grid, me);
+                AllGyroscopes = FindGyros(grid, me);
                 TargetVelocity = 0;
                 VelocityController = new STUVelocityController(RemoteControl, ActiveThrusters);
                 OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
@@ -441,6 +441,33 @@ namespace IngameScript {
                 }
             }
 
+            IMyThrust[] FindThrusters(IMyGridTerminalSystem grid, IMyTerminalBlock me) {
+                List<IMyTerminalBlock> thrusterBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyThrust>(thrusterBlocks, block => block.CubeGrid == me.CubeGrid);
+                if (thrusterBlocks.Count == 0) {
+                    CreateFatalFlightLog("No thrusters found on grid");
+                }
+                IMyThrust[] allThrusters = new IMyThrust[thrusterBlocks.Count];
+                for (int i = 0; i < thrusterBlocks.Count; i++) {
+                    allThrusters[i] = thrusterBlocks[i] as IMyThrust;
+                }
+                CreateOkFlightLog("Thrusters loaded successfully");
+                return allThrusters;
+            }
+
+            IMyGyro[] FindGyros(IMyGridTerminalSystem grid, IMyTerminalBlock me) {
+                List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyGyro>(gyroBlocks, block => block.CubeGrid == me.CubeGrid);
+                if (gyroBlocks.Count == 0) {
+                    CreateFatalFlightLog("No gyros found on grid");
+                }
+                IMyGyro[] gyros = new IMyGyro[gyroBlocks.Count];
+                for (int i = 0; i < gyroBlocks.Count; i++) {
+                    gyros[i] = gyroBlocks[i] as IMyGyro;
+                }
+                CreateOkFlightLog("Gyros loaded successfully");
+                return gyros;
+            }
 
         }
     }

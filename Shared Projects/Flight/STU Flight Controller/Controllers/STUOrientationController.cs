@@ -29,8 +29,6 @@ namespace IngameScript {
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
 
-                    CBT.AddToLogQueue($"rotationAngle: {rotationAngle}", STULogType.INFO);
-
                     if (Math.Abs(rotationAngle) < Math.Abs(ANGLE_ERROR_TOLERANCE)) {
                         foreach (var gyro in Gyros) {
                             gyro.Pitch = 0;
@@ -44,7 +42,7 @@ namespace IngameScript {
                     rotationAxis.Normalize();
 
                     double proportionalError = rotationAngle * -1.8;
-                    
+
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
                     Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);

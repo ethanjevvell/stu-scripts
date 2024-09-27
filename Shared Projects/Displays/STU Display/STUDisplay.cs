@@ -151,7 +151,7 @@ namespace IngameScript {
             private Color GetPixelColorFromDistance(float distance, double minDistance, double maxDistance) {
                 double redIntensity;
                 double blueIntensity;
-                if (distance == float.PositiveInfinity) {
+                if (distance == -1) {
                     redIntensity = 0;
                     blueIntensity = 0;
                 } else {

@@ -159,7 +159,7 @@ namespace IngameScript {
                         MyDetectedEntityInfo hit = Camera.Raycast(distance, currentPitch, currentYaw);
 
                         STUImage.Pixel pixel = new STUImage.Pixel {
-                            distanceVal = hit.IsEmpty() ? float.PositiveInfinity : (float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition())
+                            distanceVal = hit.IsEmpty() ? -1 : (float)Vector3D.Distance(hit.HitPosition.Value, Camera.GetPosition())
                         };
 
                         row.Add(pixel);
