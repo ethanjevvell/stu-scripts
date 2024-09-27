@@ -30,6 +30,9 @@ namespace IngameScript {
         Dictionary<string, Action> commands;
         string minerMainState;
 
+        IMyGasTank[] hydrogenTanks;
+        IMyBatteryBlock[] batteries;
+
         // Getters and setters
         #region
         STUFlightController FlightController {
@@ -98,17 +101,40 @@ namespace IngameScript {
                 minerName = value;
             }
         }
+        IMyShipConnector Connector {
+            get {
+                return connector;
+            }
+            set {
+                connector = value;
+            }
+        }
+        IMyGasTank[] HydrogenTanks {
+            get {
+                return hydrogenTanks;
+            }
+            set {
+                hydrogenTanks = value;
+            }
+        }
+        IMyBatteryBlock[] Batteries {
+            get {
+                return batteries;
+            }
+            set {
+                batteries = value;
+            }
+        }
         #endregion
 
         public Program() {
-            // For now, just get the first character of the random entityid; would be cool to have a name generator
-            MinerName = Me.CustomData;
-            if (MinerName.Length == 0) {
-                throw new Exception("Miner name not set in custom data");
-            }
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             MinerMainState = MinerState.INITIALIZE;
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
+            // Get hydrogen tanks
+            GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
+            // Get batteries
+            GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             Commands = new Dictionary<string, Action> {
@@ -128,9 +154,8 @@ namespace IngameScript {
             switch (MinerMainState) {
 
                 case MinerState.INITIALIZE:
-                    if (InitializeMiner()) {
-                        MinerMainState = MinerState.IDLE;
-                    }
+                    InitializeMiner();
+                    MinerMainState = MinerState.IDLE;
                     break;
 
             }
@@ -154,9 +179,21 @@ namespace IngameScript {
             return true;
         }
 
-        bool InitializeMiner() {
-            // If we aren't connected to a connector, fail
-            return true;
+        void InitializeMiner() {
+            if (!Connector.IsConnected) {
+                CreateFatalErrorBroadcast("Miner not connected to base; exiting");
+            }
+            // Establish the home base
+            HomeBase = Connector.GetPosition();
+            // For now, just get the first character of the random entityid; would be cool to have a name generator
+            MinerName = Me.CustomData;
+            if (MinerName.Length == 0) {
+                CreateFatalErrorBroadcast("Miner name not set in custom data");
+            }
+            // Turn all tanks to stockpile
+            Array.ForEach(HydrogenTanks, tank => tank.Stockpile = true);
+            // Put all batteries in recharge mode
+            Array.ForEach(Batteries, battery => battery.ChargeMode = ChargeMode.Recharge);
         }
 
         // Broadcast utilities
