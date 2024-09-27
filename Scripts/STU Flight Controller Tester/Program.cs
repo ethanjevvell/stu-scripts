@@ -15,15 +15,15 @@ namespace IngameScript {
             Thrusters = FindThrusters();
             RemoteControl = FindRemoteControl();
             Gyros = FindGyros();
-            LogScreen = FindLogScreen();
-            FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Thrusters, Gyros);
-            Runtime.UpdateFrequency = UpdateFrequency.Update1;
+            LogScreen = new LogLCD(Me, 0, "Monospace", 0.7f);
+            FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             FlightController.RelinquishGyroControl();
         }
 
         public void Main() {
             FlightController.UpdateState();
-            FlightController.AlignShipToTarget(new VRageMath.Vector3D(0, 0, 0));
+            FlightController.HardStopManeuver.RunStateMachine();
             if (STUFlightController.FlightLogs.Count > 0) {
                 while (STUFlightController.FlightLogs.Count > 0) {
                     LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());

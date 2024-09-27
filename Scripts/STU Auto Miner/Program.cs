@@ -11,13 +11,13 @@ namespace IngameScript {
 
         string minerName;
 
-        enum MinerState {
-            INITIALIZE,
-            IDLE,
-            REFUELING,
-            MINING,
-            RTB,
-            HARD_FAILURE
+        class MinerState {
+            public const string INITIALIZE = "INITIALIZE";
+            public const string IDLE = "IDLE";
+            public const string REFUELING = "REFUELING";
+            public const string MINING = "MINING";
+            public const string RTB = "RTB";
+            public const string HARD_FAILURE = "HARD_FAILURE";
         }
 
         STUFlightController flightController;
@@ -28,7 +28,7 @@ namespace IngameScript {
         Vector3 jobSite;
         Vector3 homeBase;
         Dictionary<string, Action> commands;
-        MinerState minerMainState;
+        string minerMainState;
 
         // Getters and setters
         #region
@@ -82,7 +82,7 @@ namespace IngameScript {
                 commands = value;
             }
         }
-        MinerState MinerMainState {
+        string MinerMainState {
             get {
                 return minerMainState;
             }
@@ -112,19 +112,8 @@ namespace IngameScript {
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             Commands = new Dictionary<string, Action> {
-                { "START", Start },
-                { "SET_JOB_SITE", SetJobSite },
-                { "STOP", Stop },
-                { "RTB", ReturnToBase },
+                // commands go here
             };
-        }
-
-        // Miner phases
-        static class Phases {
-            public const string IDLE = "IDLE";
-            public const string REFUELING = "REFUELING";
-            public const string MINING = "MINING";
-            // etc
         }
 
         public void Main(string command) {
@@ -155,22 +144,14 @@ namespace IngameScript {
             return null;
         }
 
-        void Start() {
-            // todo; here we need to list out the possible starting states and what we want to do
-            // I think if the miner isn't sitting on the base connector to start, we just exit
-
+        bool SetJobSite() {
+            // todo
+            return true;
         }
 
-        void SetJobSite() {
+        bool Stop() {
             // todo
-        }
-
-        void Stop() {
-            // todo
-        }
-
-        void ReturnToBase() {
-            // todo
+            return true;
         }
 
         bool InitializeMiner() {

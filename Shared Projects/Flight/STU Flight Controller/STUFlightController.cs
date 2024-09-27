@@ -8,6 +8,9 @@ namespace IngameScript {
 
         public partial class STUFlightController {
 
+            // Maneuver classes
+            public HardStop HardStopManeuver { get; private set; }
+
             public static Queue<STULog> FlightLogs = new Queue<STULog>();
             private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
             private const string FLIGHT_CONTROLLER_STANDARD_OUTPUT_TAG = "FLIGHT_CONTROLLER_STANDARD_OUTPUT";
@@ -56,6 +59,10 @@ namespace IngameScript {
                 PlanetOrbitController = new STUPlanetOrbitController(this);
                 HasGyroControl = true;
                 StandardOutputDisplays = FindStandardOutputDisplays(grid);
+
+                // Initialize maneuvers
+                HardStopManeuver = new HardStop(this);
+
                 UpdateState();
                 CreateOkFlightLog("Flight controller initialized.");
             }

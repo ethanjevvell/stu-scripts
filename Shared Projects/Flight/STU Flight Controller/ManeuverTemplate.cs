@@ -1,49 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace IngameScript
-{
-    partial class Program
-    {
-        public partial class STUFlightController
-        {
-            public abstract class ManeuverTemplate
-            {
+﻿namespace IngameScript {
+    partial class Program {
+        public partial class STUFlightController {
+            public abstract class ManeuverTemplate {
                 public abstract string Name { get; }
 
-                public enum InternalStates
-                {
+                public enum InternalStates {
                     Init,
                     Run,
                     Closeout,
                     Done,
                 }
 
-                public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
-                public abstract bool Init();
-                public abstract bool Run();
-                public abstract bool Closeout();
+                protected virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
+                protected abstract bool Init();
+                protected abstract bool Run();
+                protected abstract bool Closeout();
 
-                public virtual void Update()
-                {
-                    switch (CurrentInternalState)
-                    {
+                /// <summary>
+                /// Call this method to run the maneuver's state machine
+                /// </summary>
+                public virtual void RunStateMachine() {
+                    switch (CurrentInternalState) {
                         case InternalStates.Init:
-                            if (Init())
-                            {
+                            if (Init()) {
                                 CurrentInternalState = InternalStates.Run;
                             }
                             break;
                         case InternalStates.Run:
-                            if (Run())
-                            {
+                            if (Run()) {
                                 CurrentInternalState = InternalStates.Closeout;
                             }
                             break;
                         case InternalStates.Closeout:
-                            if (Closeout())
-                            {
+                            if (Closeout()) {
                                 CurrentInternalState = InternalStates.Done;
                             }
                             break;
