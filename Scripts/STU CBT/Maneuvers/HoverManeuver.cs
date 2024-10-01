@@ -10,7 +10,7 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public class HoverManeuver : CBTManeuver
+            public class HoverManeuver : STUStateMachine
             {
                 public override string Name => "Hover";
                 public HoverManeuver(CBT cbt)

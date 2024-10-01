@@ -158,7 +158,7 @@ namespace IngameScript
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
 
-                FlightController = new STUFlightController(grid, RemoteControl, Thrusters, Gyros);
+                FlightController = new STUFlightController(grid, RemoteControl, me);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }

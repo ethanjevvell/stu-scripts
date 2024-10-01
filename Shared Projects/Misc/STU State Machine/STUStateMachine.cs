@@ -14,7 +14,6 @@ namespace IngameScript {
             }
 
             public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
-            // params object[] args is a placeholder for any arguments that the state machine might need to run
             public abstract bool Init();
             public abstract bool Run();
             public abstract bool Closeout();

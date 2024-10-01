@@ -10,7 +10,7 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public class AbortManeuver : CBTManeuver
+            public class AbortManeuver : STUStateMachine
             {
                 public override string Name => "Hover";
                 public AbortManeuver(CBT cbt)

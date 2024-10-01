@@ -10,7 +10,7 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public class GenericManeuver : CBTManeuver
+            public class GenericManeuver : STUStateMachine
             {
                 public override string Name => "Generic";
                 public double InternalForwardVelocity { get; set; }

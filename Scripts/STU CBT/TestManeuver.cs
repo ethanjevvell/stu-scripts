@@ -11,7 +11,7 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public class TestManeuver : CBTManeuver
+            public class TestManeuver : STUStateMachine
             {
                 public override string Name => "Test";
                 public Vector3D PointToLookAt { get; set; }
