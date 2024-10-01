@@ -5,7 +5,7 @@ namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
 
-            public class HardStop : ManeuverTemplate {
+            public class HardStop : STUStateMachine {
                 public override string Name => "Hard Stop";
 
                 private STUFlightController FC;
