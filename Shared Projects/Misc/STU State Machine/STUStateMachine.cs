@@ -1,7 +1,9 @@
 ﻿
 namespace IngameScript {
     partial class Program {
+
         public abstract class STUStateMachine {
+
             public abstract string Name { get; }
 
             public enum InternalStates {
@@ -11,10 +13,11 @@ namespace IngameScript {
                 Done,
             }
 
-            protected virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
-            protected abstract bool Init();
-            protected abstract bool Run();
-            protected abstract bool Closeout();
+            public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
+            // params object[] args is a placeholder for any arguments that the state machine might need to run
+            public abstract bool Init();
+            public abstract bool Run();
+            public abstract bool Closeout();
 
             /// <summary>
             /// Call this method to run the maneuver's state machine

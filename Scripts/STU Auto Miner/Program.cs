@@ -9,157 +9,88 @@ namespace IngameScript {
 
         const string MINER_LOGGING_CHANNEL = "STU_AUTO_MINER_LOGGING_CHANNEL";
 
-        string minerName;
+        static string MinerName;
 
         class MinerState {
             public const string INITIALIZE = "INITIALIZE";
             public const string IDLE = "IDLE";
+            public const string FLY_TO_JOB_SITE = "FLY_TO_JOB_SITE";
             public const string REFUELING = "REFUELING";
             public const string MINING = "MINING";
             public const string RTB = "RTB";
             public const string HARD_FAILURE = "HARD_FAILURE";
         }
 
-        STUFlightController flightController;
-        STUMasterLogBroadcaster logBroadcaster;
-        IMyRemoteControl remoteControl;
-        IMyShipConnector connector;
+        static STUMasterLogBroadcaster LogBroadcaster { get; set; }
+        STUFlightController FlightController { get; set; }
+        IMyRemoteControl RemoteControl { get; set; }
+        IMyShipConnector Connector { get; set; }
 
-        Vector3 jobSite;
-        Vector3 homeBase;
-        Dictionary<string, Action> commands;
-        string minerMainState;
+        Vector3 JobSite { get; set; }
+        Vector3 HomeBase { get; set; }
+        Dictionary<string, Action> Commands { get; set; }
+        string MinerMainState { get; set; }
 
-        IMyGasTank[] hydrogenTanks;
-        IMyBatteryBlock[] batteries;
+        List<IMyGasTank> HydrogenTanks { get; set; }
+        List<IMyBatteryBlock> Batteries { get; set; }
 
-        // Getters and setters
-        #region
-        STUFlightController FlightController {
-            get {
-                return flightController;
-            }
-            set {
-                flightController = value;
-            }
-        }
-
-        STUMasterLogBroadcaster LogBroadcaster {
-            get {
-                return logBroadcaster;
-            }
-            set {
-                logBroadcaster = value;
-            }
-        }
-
-        IMyRemoteControl RemoteControl {
-            get {
-                return remoteControl;
-            }
-            set {
-                remoteControl = value;
-            }
-        }
-        Vector3 JobSite {
-            get {
-                return jobSite;
-            }
-            set {
-                jobSite = value;
-            }
-        }
-        Vector3 HomeBase {
-            get {
-                return homeBase;
-            }
-            set {
-                homeBase = value;
-            }
-        }
-        Dictionary<string, Action> Commands {
-            get {
-                return commands;
-            }
-            set {
-                commands = value;
-            }
-        }
-        string MinerMainState {
-            get {
-                return minerMainState;
-            }
-            set {
-                minerMainState = value;
-            }
-        }
-        string MinerName {
-            get {
-                return minerName;
-            }
-            set {
-                minerName = value;
-            }
-        }
-        IMyShipConnector Connector {
-            get {
-                return connector;
-            }
-            set {
-                connector = value;
-            }
-        }
-        IMyGasTank[] HydrogenTanks {
-            get {
-                return hydrogenTanks;
-            }
-            set {
-                hydrogenTanks = value;
-            }
-        }
-        IMyBatteryBlock[] Batteries {
-            get {
-                return batteries;
-            }
-            set {
-                batteries = value;
-            }
-        }
-        #endregion
+        // Subroutine declarations
+        FlyToJobSite FlyToJobSiteStateMachine { get; set; }
 
         public Program() {
+            HydrogenTanks = new List<IMyGasTank>();
+            Batteries = new List<IMyBatteryBlock>();
+            MinerName = Me.CustomData;
+            if (MinerName.Length == 0) {
+                CreateFatalErrorBroadcast("Miner name not set in custom data");
+            }
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             MinerMainState = MinerState.INITIALIZE;
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
-            // Get hydrogen tanks
+            Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
             GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
-            // Get batteries
             GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             Commands = new Dictionary<string, Action> {
                 // commands go here
             };
+            // Subroutine State Machines
+            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries);
         }
 
         public void Main(string command) {
 
-            FlightController.UpdateState();
+            try {
+                FlightController.UpdateState();
 
-            Action commandAction = ParseCommand(command);
-            if (commandAction != null) {
-                commandAction();
+                Action commandAction = ParseCommand(command);
+                if (commandAction != null) {
+                    commandAction();
+                }
+
+                switch (MinerMainState) {
+
+                    case MinerState.INITIALIZE:
+                        InitializeMiner();
+                        MinerMainState = MinerState.IDLE;
+                        break;
+
+                    case MinerState.IDLE:
+                        MinerMainState = MinerState.FLY_TO_JOB_SITE;
+                        Vector3 testJobSite = new Vector3(-38110, -39108, -28123);
+                        FlyToJobSiteStateMachine.JobSite = testJobSite;
+                        break;
+
+                    case MinerState.FLY_TO_JOB_SITE:
+                        FlyToJobSiteStateMachine.RunStateMachine();
+                        break;
+
+                }
+
+            } catch (Exception e) {
+                CreateFatalErrorBroadcast(e.Message);
             }
-
-            switch (MinerMainState) {
-
-                case MinerState.INITIALIZE:
-                    InitializeMiner();
-                    MinerMainState = MinerState.IDLE;
-                    break;
-
-            }
-
         }
 
         Action ParseCommand(string command) {
@@ -180,49 +111,45 @@ namespace IngameScript {
         }
 
         void InitializeMiner() {
-            if (!Connector.IsConnected) {
-                CreateFatalErrorBroadcast("Miner not connected to base; exiting");
-            }
-            // Establish the home base
-            HomeBase = Connector.GetPosition();
-            // For now, just get the first character of the random entityid; would be cool to have a name generator
-            MinerName = Me.CustomData;
-            if (MinerName.Length == 0) {
-                CreateFatalErrorBroadcast("Miner name not set in custom data");
-            }
-            // Turn all tanks to stockpile
-            Array.ForEach(HydrogenTanks, tank => tank.Stockpile = true);
-            // Put all batteries in recharge mode
-            Array.ForEach(Batteries, battery => battery.ChargeMode = ChargeMode.Recharge);
+            //if (!Connector.IsConnected) {
+            //    CreateFatalErrorBroadcast("Miner not connected to base; exiting");
+            //}
+            //// Establish the home base
+            //HomeBase = Connector.GetPosition();
+            //// For now, just get the first character of the random entityid; would be cool to have a name generator
+            //// Turn all tanks to stockpile
+            //HydrogenTanks.ForEach(tank => tank.Stockpile = true);
+            //// Put all batteries in recharge mode
+            //Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
         }
 
         // Broadcast utilities
         #region
-        void CreateBroadcast(string message, string type) {
-            logBroadcaster.Log(new STULog() {
+        static void CreateBroadcast(string message, string type) {
+            LogBroadcaster.Log(new STULog() {
                 Message = message,
                 Type = type,
-                Sender = Me.CustomName
+                Sender = MinerName
             });
         }
 
-        void CreateOkBroadcast(string message) {
+        static void CreateOkBroadcast(string message) {
             CreateBroadcast(message, STULogType.OK);
         }
 
-        void CreateWarningBroadcast(string message) {
+        static void CreateWarningBroadcast(string message) {
             CreateBroadcast(message, STULogType.WARNING);
         }
 
-        void CreateErrorBroadcast(string message) {
+        static void CreateErrorBroadcast(string message) {
             CreateBroadcast(message, STULogType.ERROR);
         }
 
-        void CreateInfoBroadcast(string message) {
+        static void CreateInfoBroadcast(string message) {
             CreateBroadcast(message, STULogType.INFO);
         }
 
-        void CreateFatalErrorBroadcast(string message) {
+        static void CreateFatalErrorBroadcast(string message) {
             CreateBroadcast(message, STULogType.ERROR);
             throw new Exception(message);
         }

@@ -1,7 +1,7 @@
 ﻿namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
-            public class StopOnADime : ManeuverTemplate {
+            public class StopOnADime : STUStateMachine {
                 public override string Name => "Stop On A Dime";
 
                 private double oneTickAcceleration;
@@ -12,15 +12,15 @@
                     FC = thisFlightController;
                 }
 
-                protected override bool Init() {
+                public override bool Init() {
                     return true;
                 }
 
-                protected override bool Run() {
+                public override bool Run() {
                     return true;
                 }
 
-                protected override bool Closeout() {
+                public override bool Closeout() {
                     return true;
                 }
             }

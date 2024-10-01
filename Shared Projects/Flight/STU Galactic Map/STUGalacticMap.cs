@@ -34,6 +34,26 @@ namespace IngameScript {
                    }
                 }
             };
+
+            /// <summary>
+            /// Finds the planet that contains the given point, with a default detection buffer of 1000m
+            /// Returns null if no planet contains the point
+            /// </summary>
+            /// <param name="point"></param>
+            /// <param name="detectionBuffer"></param>
+            /// <returns></returns>
+            public static Planet? GetPlanetOfPoint(Vector3D point, double detectionBuffer = 1000) {
+                foreach (var kvp in CelestialBodies) {
+                    Planet planet = kvp.Value;
+                    BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
+                    // if the point is inside the planet's detection sphere or intersects it, it is on the planet
+                    if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
+                        return planet;
+                    }
+                }
+                return null;
+            }
+
         }
     }
 }
