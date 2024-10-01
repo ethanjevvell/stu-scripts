@@ -10,7 +10,7 @@ namespace IngameScript
     {
         public partial class CBT
         {
-            public class FastStopManeuver : CBTManeuver
+            public class FastStopManeuver : STUStateMachine
             {
                 public override string Name => "Fast Stop";
                 public FastStopManeuver(CBT cbt)

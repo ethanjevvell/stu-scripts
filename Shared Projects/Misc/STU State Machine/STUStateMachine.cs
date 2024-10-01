@@ -11,10 +11,10 @@ namespace IngameScript {
                 Done,
             }
 
-            protected virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
-            protected abstract bool Init();
-            protected abstract bool Run();
-            protected abstract bool Closeout();
+            public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
+            public abstract bool Init();
+            public abstract bool Run();
+            public abstract bool Closeout();
 
             /// <summary>
             /// Call this method to run the maneuver's state machine
