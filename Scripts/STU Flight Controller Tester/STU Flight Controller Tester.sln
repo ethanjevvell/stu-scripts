@@ -19,6 +19,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display Type", "..\..\S
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Image", "..\..\Shared Projects\Displays\STU Image\STU Image.shproj", "{7D53F862-DF1C-4FC4-92F8-49568E15C32B}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU State Machine", "..\..\Shared Projects\Misc\STU State Machine\STU State Machine.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -36,6 +38,7 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{23e2d3a8-97cd-4e45-889c-1798f06f4240}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13
+		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display Draw Mapper\STU_Display_Draw_Mapper.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
@@ -44,6 +47,7 @@ Global
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{794cb642-6246-49d0-9cba-48763b8a83e5}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{7d53f862-df1c-4fc4-92f8-49568e15c32b}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{83207d78-9012-4ea3-ac3f-5fea6193e59a}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13

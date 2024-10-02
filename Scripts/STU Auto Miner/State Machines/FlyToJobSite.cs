@@ -19,16 +19,19 @@ namespace IngameScript {
             List<IMyGasTank> HydrogenTanks { get; set; }
             List<IMyBatteryBlock> Batteries { get; set; }
             RunStates RunState { get; set; }
-            Vector3[] CruiseWaypoints { get; set; }
+            List<Vector3> CruiseWaypoints { get; set; }
             int CurrentWaypoint { get; set; }
             public Vector3 JobSite { get; set; }
+            public int CruiseAltitude { get; set; }
 
-            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries) {
+            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries, Vector3 jobSite, int cruiseAltitude) {
                 FlightController = fc;
                 Connector = connector;
                 HydrogenTanks = hydrogenTanks;
                 Batteries = batteries;
                 RunState = RunStates.ASCEND;
+                JobSite = jobSite;
+                CruiseAltitude = cruiseAltitude;
             }
 
             public override string Name => "Fly To Job Site";
@@ -40,9 +43,12 @@ namespace IngameScript {
                 if (JobSite == null) {
                     CreateFatalErrorBroadcast("No job site loaded into memory; did you forget to set this.JobSite?");
                 }
-                CruiseWaypoints = CalculateCruiseWaypoints(JobSite);
-                if (CruiseWaypoints == null || CruiseWaypoints.Length == 0) {
-                    CreateFatalErrorBroadcast($"Failed to calculate cruise waypoints; cruise waypoints length: {CruiseWaypoints.Length}");
+                CruiseWaypoints = CalculateCruiseWaypoints(JobSite, 10, CruiseAltitude);
+                if (CruiseWaypoints == null || CruiseWaypoints.Count == 0) {
+                    CreateFatalErrorBroadcast($"Failed to calculate cruise waypoints; cruise waypoints length: {CruiseWaypoints.Count}");
+                }
+                for (int i = 0; i < CruiseWaypoints.Count; i++) {
+                    CreateInfoBroadcast($"Waypoint {i}: {CruiseWaypoints[i]}");
                 }
                 return true;
             }
@@ -52,7 +58,7 @@ namespace IngameScript {
                 return true;
             }
 
-            Vector3[] CalculateCruiseWaypoints(Vector3 jobSite) {
+            List<Vector3> CalculateCruiseWaypoints(Vector3 jobSite, int n, int cruiseAltitude) {
                 // Get current planet
                 Vector3 currentLocation = FlightController.CurrentPosition;
                 Vector3 planetCenter = STUGalacticMap.GetPlanetOfPoint(currentLocation).Value.Center;
@@ -67,14 +73,16 @@ namespace IngameScript {
                 PJ.Normalize();
 
                 Vector3 rotationAxis = Vector3.Cross(PC, PJ);
-                double angle = Math.Acos(Vector3.Dot(PC, PJ));
+                rotationAxis.Normalize();
 
-                Vector3[] waypoints = new Vector3[10];
-                for (int i = 0; i < waypoints.Length; i++) {
-                    double t = (double)i / (waypoints.Length - 1); // Ensures inclusion of endpoint
-                    double radius = radius1 + t * (radius2 - radius1);
+                double angle = Math.Acos(Vector3.Dot(PC, PJ));
+                double cruiseRadius = radius1 + cruiseAltitude;
+
+                List<Vector3> waypoints = new List<Vector3>();
+                for (int i = 0; i < n; i++) {
+                    double t = (double)i / (n - 1); // Ensures inclusion of endpoint
                     Vector3D rotatedPC = Vector3D.Transform(PC, MatrixD.CreateFromAxisAngle(rotationAxis, angle * t));
-                    waypoints[i] = planetCenter + rotatedPC * radius;
+                    waypoints.Add(planetCenter + rotatedPC * cruiseRadius);
                 }
                 return waypoints;
             }
@@ -92,8 +100,9 @@ namespace IngameScript {
 
                     case RunStates.CRUISE:
                         // Cruise to job site
-                        if (CurrentWaypoint == CruiseWaypoints.Length) {
+                        if (CurrentWaypoint == CruiseWaypoints.Count) {
                             RunState = RunStates.DESCEND;
+                            CreateWarningBroadcast("Reached final waypoint; descending to job site");
                             break;
                         }
 
@@ -116,8 +125,9 @@ namespace IngameScript {
             }
 
             private bool FlyToWaypoint(Vector3 waypoint) {
-                FlightController.SetStableForwardVelocity(25);
+                FlightController.SetStableForwardVelocity(5);
                 FlightController.AlignShipToTarget(waypoint);
+                CreateInfoBroadcast($"{Vector3D.Distance(FlightController.CurrentPosition, waypoint)}");
                 if (Vector3D.Distance(FlightController.CurrentPosition, waypoint) < 10) {
                     return true;
                 }

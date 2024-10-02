@@ -403,6 +403,10 @@ namespace IngameScript {
             }
 
             public void WriteWrappableLogs(Queue<STULog> logs, Func<STULog, string> logFormatter = null) {
+                // If there are no logs, don't bother writing anything
+                if (logs.Count == 0) {
+                    return;
+                }
                 Cursor = TopLeft;
                 if (logFormatter == null) {
                     logFormatter = DefaultLogFormatter;

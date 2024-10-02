@@ -34,6 +34,10 @@ namespace IngameScript {
         List<IMyGasTank> HydrogenTanks { get; set; }
         List<IMyBatteryBlock> Batteries { get; set; }
 
+        Queue<STULog> FlightLogs { get; set; }
+
+        static LogLCD LogScreen { get; set; }
+
         // Subroutine declarations
         FlyToJobSite FlyToJobSiteStateMachine { get; set; }
 
@@ -52,17 +56,27 @@ namespace IngameScript {
             GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
             Commands = new Dictionary<string, Action> {
                 // commands go here
             };
-            // Subroutine State Machines
-            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries);
         }
 
         public void Main(string command) {
 
             try {
                 FlightController.UpdateState();
+
+                // Logging
+                LogScreen.StartFrame();
+                if (STUFlightController.FlightLogs.Count > 0) {
+                    while (STUFlightController.FlightLogs.Count > 0) {
+                        LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+                    }
+                }
+
+                LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+                LogScreen.EndAndPaintFrame();
 
                 Action commandAction = ParseCommand(command);
                 if (commandAction != null) {
@@ -74,12 +88,14 @@ namespace IngameScript {
                     case MinerState.INITIALIZE:
                         InitializeMiner();
                         MinerMainState = MinerState.IDLE;
+                        CreateOkBroadcast("Miner initialized");
                         break;
 
                     case MinerState.IDLE:
                         MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         Vector3 testJobSite = new Vector3(-38110, -39108, -28123);
-                        FlyToJobSiteStateMachine.JobSite = testJobSite;
+                        FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 100);
+                        CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
                         break;
 
                     case MinerState.FLY_TO_JOB_SITE:
@@ -131,6 +147,11 @@ namespace IngameScript {
                 Type = type,
                 Sender = MinerName
             });
+            LogScreen.FlightLogs.Enqueue(new STULog() {
+                Message = message,
+                Type = type,
+                Sender = MinerName
+            });
         }
 
         static void CreateOkBroadcast(string message) {
@@ -151,6 +172,8 @@ namespace IngameScript {
 
         static void CreateFatalErrorBroadcast(string message) {
             CreateBroadcast(message, STULogType.ERROR);
+            LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+            LogScreen.EndAndPaintFrame();
             throw new Exception(message);
         }
         #endregion
