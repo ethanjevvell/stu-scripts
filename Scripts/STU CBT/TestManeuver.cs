@@ -24,7 +24,7 @@ namespace IngameScript
                 public override bool Init()
                 {
                     // ensure we have access to the thrusters, gyros, and dampeners are off
-                    SetAutopilotControl(7);
+                    SetAutopilotControl(true, true, false);
                     return true;
                 }
 
@@ -35,7 +35,6 @@ namespace IngameScript
 
                 public override bool Closeout()
                 {
-                    SetAutopilotControl(0);
                     return true;
                 }
             }

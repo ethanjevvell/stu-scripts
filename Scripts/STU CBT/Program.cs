@@ -122,11 +122,11 @@ namespace IngameScript
             {
                 case "HALT":
                     CBT.AddToLogQueue("Queueing a Hover maneuver", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.HoverManeuver(CBTShip));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
                     return true;
                 case "STOP":
                     CBT.AddToLogQueue("Queueing a fast stop maneuver", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.FastStopManeuver(CBTShip));
+                    ManeuverQueue.Enqueue(new STUFlightController.HardStop(CBT.FlightController));
                     return true;
                 case "RESETAP":
                     CBT.AddToLogQueue("Resetting autopilot...", STULogType.INFO);
@@ -142,7 +142,9 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.TestManeuver(new Vector3D(98636.19, 158249.34, 5853864.81)));
+                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, new Vector3D(99756.85, 158304.72, 5859075.56)));
+                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(20, 0, 0, 0, 0, 0));
+                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, new Vector3D(100033.4,158844.99,5858882.1)));
                     return true;
 
                 case "GANGWAY":
@@ -166,8 +168,8 @@ namespace IngameScript
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
                     CBT.AddToLogQueue("HALT - Executes a hover maneuver.", STULogType.OK);
                     CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation before firing thrusters to best counterract the current trajectory.", STULogType.OK);
-                    CBT.AddToLogQueue("RESETAP - Resets the autopilot and clears the maneuver queue.", STULogType.OK);
-                    CBT.AddToLogQueue("PARK - Orients the CBT to align with the Dock Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
+                    CBT.AddToLogQueue("RESETAP - Resets the autopilot 'manually' (outisde of the maneuver queue) and clears the maneuver queue.", STULogType.OK);
+                    CBT.AddToLogQueue("PARK - Orients the CBT to align with the Hyperdrive Ring and pulls forward to allow the pilot to manually dock.", STULogType.OK);
                     CBT.AddToLogQueue("AC130 - Not implemented yet.", STULogType.OK);
                     CBT.AddToLogQueue("TEST - Executes hard-coded maneuver parameters. FOR TESTING PURPOSES ONLY.", STULogType.OK);
                     CBT.AddToLogQueue("(enter 'helpp' to see an explanation of Generic Maneuvers)", STULogType.OK);
@@ -225,7 +227,7 @@ namespace IngameScript
                     string command = CommandLineParser.Argument(i);
                     if (command.Length < 2)
                     {
-                        CBT.AddToLogQueue($"Command: {command} is too short to be valid. Skipping...", STULogType.WARNING);
+                        CBT.AddToLogQueue($"Command '{command}' is too short to be valid. Skipping...", STULogType.WARNING);
                         continue;
                     }
 
@@ -239,7 +241,7 @@ namespace IngameScript
                     {
                         Echo($"EXCEPTION: {e.Message}");
                         CBT.AddToLogQueue($"EXCEPTION: {e.Message}");
-                        continue;
+                        break;
                     }
                     float result;
                     float value = float.TryParse(command.Substring(1), out result) ? result : 0;
@@ -248,7 +250,7 @@ namespace IngameScript
                     {
                         case 'F':
                             CBT.UserInputForwardVelocity = value;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity,
                                 CBT.UserInputRightVelocity,
                                 CBT.UserInputUpVelocity,
@@ -259,7 +261,7 @@ namespace IngameScript
 
                         case 'B':
                             CBT.UserInputForwardVelocity = (value) * -1;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip, 
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity, 
                                 CBT.UserInputRightVelocity, 
                                 CBT.UserInputUpVelocity, 
@@ -270,7 +272,7 @@ namespace IngameScript
 
                         case 'U':
                             CBT.UserInputUpVelocity = value;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity,
                                 CBT.UserInputRightVelocity,
                                 CBT.UserInputUpVelocity,
@@ -281,7 +283,7 @@ namespace IngameScript
 
                         case 'D':
                             CBT.UserInputUpVelocity = (value) * -1;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity,
                                 CBT.UserInputRightVelocity,
                                 CBT.UserInputUpVelocity,
@@ -292,7 +294,7 @@ namespace IngameScript
 
                         case 'R':
                             CBT.UserInputRightVelocity = value;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity,
                                 CBT.UserInputRightVelocity,
                                 CBT.UserInputUpVelocity,
@@ -303,7 +305,7 @@ namespace IngameScript
 
                         case 'L':
                             CBT.UserInputRightVelocity = (value) * -1;
-                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
+                            ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                 CBT.UserInputForwardVelocity,
                                 CBT.UserInputRightVelocity,
                                 CBT.UserInputUpVelocity,
@@ -316,107 +318,102 @@ namespace IngameScript
                             if (-1 <= value && value <= 1) 
                             { 
                                 CBT.UserInputPitchVelocity = value * 3.14f * 0.5f;
-
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'H':
                             if (-1 <= value && value <= 1) 
                             { 
                                 CBT.UserInputPitchVelocity = value * 3.14f * 0.5f * -1;
-
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Pitch value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'O':
                             if (-1 <= value && value <= Math.PI) 
                             { 
                                 CBT.UserInputRollVelocity = value * 3.14f;
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'Q':
                             if (-1 <= value && value <= 1) 
                             { 
                                 CBT.UserInputRollVelocity = value * 3.14f * -1;
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Roll value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'Y':
                             if (-1 <= value && value <= 1) 
                             { 
                                 CBT.UserInputYawVelocity = value * 3.14f;
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'W':
                             if (-1 <= value && value <= 1) 
                             { 
                                 CBT.UserInputYawVelocity = value * 3.14f * -1;
-                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(CBTShip,
-                                CBT.UserInputForwardVelocity,
-                                CBT.UserInputRightVelocity,
-                                CBT.UserInputUpVelocity,
-                                CBT.UserInputRollVelocity,
-                                CBT.UserInputPitchVelocity,
-                                CBT.UserInputYawVelocity));
+                                ManeuverQueue.Enqueue(new CBT.GenericManeuver(
+                                    CBT.UserInputForwardVelocity,
+                                    CBT.UserInputRightVelocity,
+                                    CBT.UserInputUpVelocity,
+                                    CBT.UserInputRollVelocity,
+                                    CBT.UserInputPitchVelocity,
+                                    CBT.UserInputYawVelocity));
                             }
-                            else { CBT.AddToLogQueue($"Yaw value {value} is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'A':
                             if (0 <= value) { 
                                 CBT.AddToLogQueue($"Setting cruising altitude to {value}m", STULogType.INFO);
                                 CBT.SetCruisingAltitude(value); }
-                            else { CBT.AddToLogQueue($"Altitude value {value} is out of range. Must be greater than 0. Skipping...", STULogType.WARNING);                    }
+                            else { CBT.AddToLogQueue($"Altitude value '{value}' is out of range. Must be greater than 0. Skipping...", STULogType.WARNING);                    }
                             break;
 
                         case 'C':
-                            CBT.AddToLogQueue($"Setting cruising speed to {value} m/s", STULogType.INFO);
-                            CBT.UserInputForwardVelocity = value;
-                            CBT.FlightController.RelinquishGyroControl();
-                            maneuver = CBT.SetCruisingSpeed;
-                            CBT.CurrentPhase = CBT.Phase.Executing;
+                            CBT.AddToLogQueue($"Setting cruising speed to {value}m/s", STULogType.INFO);
+                            ManeuverQueue.Enqueue(new CBT.CruisingSpeedManeuver(value));
                             break;
 
                         case 'G':
@@ -427,7 +424,7 @@ namespace IngameScript
                             }
                             else
                             {
-                                CBT.AddToLogQueue($"Gangway command value {value} is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
+                                CBT.AddToLogQueue($"Gangway command value '{value}' is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
                             }
                             break;
 

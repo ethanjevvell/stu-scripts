@@ -730,15 +730,6 @@ namespace IngameScript
                 UserInputYawVelocity = 0;
             }
 
-            public static bool SetCruisingSpeed()
-            {
-                SetAutopilotControl(true, false, false);
-                bool stable = FlightController.SetVz(UserInputForwardVelocity);
-                bool VxStable = FlightController.SetVx(0);
-                bool VyStable = FlightController.SetVy(0);
-                return stable && VxStable && VyStable;
-            }
-
             public static void SetCruisingAltitude(double altitude)
             {
                 SetAutopilotControl(true, false, false);

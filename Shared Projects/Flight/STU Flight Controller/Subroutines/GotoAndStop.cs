@@ -1,13 +1,13 @@
 ﻿namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
-            public class StopOnADime : STUStateMachine {
-                public override string Name => "Stop On A Dime";
+            public class GotoAndStop : STUStateMachine {
+                public override string Name => "Goto And Stop";
 
                 private double oneTickAcceleration;
                 private STUFlightController FC;
 
-                public StopOnADime(STUFlightController thisFlightController) {
+                public GotoAndStop(STUFlightController thisFlightController) {
                     oneTickAcceleration = 0;
                     FC = thisFlightController;
                 }
