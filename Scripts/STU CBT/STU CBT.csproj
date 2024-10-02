@@ -38,13 +38,12 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
-    <Compile Include="Maneuvers\AbortManeuver.cs" />
+    <Compile Include="Maneuvers\CruisingSpeedManeuver.cs" />
     <Compile Include="CBT Displays\Log LCDs\Adapters\FlightSeat.cs" />
     <Compile Include="CBT.cs" />
     <Compile Include="CBT Displays\Log LCDs\CBTLogLCD.cs" />
     <Compile Include="CBTAutopilotLCD.cs" />
     <Compile Include="CBTGangway.cs" />
-    <Compile Include="Maneuvers\FastStopManeuver.cs" />
     <Compile Include="Maneuvers\HoverManeuver.cs" />
     <Compile Include="Maneuvers\GenericManeuver.cs" />
     <Compile Include="CBTRearDock.cs" />

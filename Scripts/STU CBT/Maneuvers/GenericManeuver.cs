@@ -20,7 +20,7 @@ namespace IngameScript
                 public double InternalPitchVelocity { get; set; }
                 public double InternalYawVelocity { get; set; }
 
-                public GenericManeuver(CBT cbt, double forwardVelocity, double rightVelocity, double upVelocity, double rollVelocity, double pitchVelocity, double yawVelocity)
+                public GenericManeuver(double forwardVelocity, double rightVelocity, double upVelocity, double rollVelocity, double pitchVelocity, double yawVelocity)
                 {
                     InternalForwardVelocity = forwardVelocity;
                     InternalRightVelocity = rightVelocity;
