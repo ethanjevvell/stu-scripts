@@ -52,7 +52,7 @@ namespace IngameScript {
                             double stoppingDistance = FC.CalculateForwardStoppingDistance();
                             double distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
                             if (distanceToTargetPos <= stoppingDistance) {
-                                CreateWarningBroadcast($"Decelerating at {stoppingDistance + (1.0 / 6.0) * FC.VelocityMagnitude}");
+                                CreateWarningFlightLog($"Decelerating at {stoppingDistance + (1.0 / 6.0) * FC.VelocityMagnitude}");
                                 CurrentState = GotoStates.DECELERATE;
                             }
                             break;
@@ -62,13 +62,13 @@ namespace IngameScript {
                             aligned = FC.AlignShipToTarget(TargetPos);
                             distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
                             if (cruising && distanceToTargetPos < STOPPING_DISTANCE_ERROR_TOLERANCE) {
-                                CreateOkFlightLog(MinerName + " has reached target position " + TargetPos);
+                                CreateOkFlightLog("reached target position " + TargetPos);
                                 return true;
                             } else if (cruising) {
                                 // If we're still cruising but we're not close enough to the target, we're going too fast
                                 CruiseVelocity /= 2;
                                 CurrentState = GotoStates.ORIENT;
-                                CreateWarningBroadcast($"Recalculating cruise velocity to {CruiseVelocity}");
+                                CreateWarningFlightLog($"Recalculating cruise velocity to {CruiseVelocity}");
                             }
                             break;
                     }

@@ -49,6 +49,7 @@ namespace IngameScript
             public static List<IMyTerminalBlock> AllTerminalBlocks = new List<IMyTerminalBlock>();
             public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
             public static List<CBTAutopilotLCD> AutopilotStatusChannel = new List<CBTAutopilotLCD>();
+            public static List<CBTManeuverQueueLCD> ManeuverQueueChannel = new List<CBTManeuverQueueLCD>();
             public static STUFlightController FlightController { get; set; }
             public static CBTGangway Gangway { get; set; }
             public static CBTRearDock RearDock { get; set; }
@@ -152,6 +153,7 @@ namespace IngameScript
                 LoadGangwayActuators(grid);
                 LoadCamera(grid);
                 AddAutopilotIndicatorSubscribers(grid);
+                AddManeuverQueueSubscribers(grid);
                 LoadMedicalRoom(grid);
                 LoadH2O2Generators(grid);
                 LoadOxygenTanks(grid);
@@ -222,6 +224,17 @@ namespace IngameScript
                 }
             }
 
+            public static void UpdateManeuverQueueScreens()
+            {
+                foreach (var screen in ManeuverQueueChannel)
+                {
+                    screen.StartFrame();
+                    // logic to gather all the necessary data to pass into screen.LoadManeuverQueueData()
+                    screen.LoadManeuverQueueData();
+                    screen.EndAndPaintFrame();
+                }
+            }
+
             /// initialize hardware on the CBT
 
 
@@ -275,6 +288,25 @@ namespace IngameScript
                             string[] kvp = line.Split(':');
                             CBTAutopilotLCD screen = new CBTAutopilotLCD(echo, block, int.Parse(kvp[1]));
                             AutopilotStatusChannel.Add(screen);
+                        }
+                    }
+                }
+            }
+
+            private static void AddManeuverQueueSubscribers(IMyGridTerminalSystem grid)
+            {
+                grid.GetBlocks(AllTerminalBlocks);
+                foreach (var block in AllTerminalBlocks)
+                {
+                    string CustomDataRawText = block.CustomData;
+                    string[] CustomDataLines = CustomDataRawText.Split('\n');
+                    foreach (var line in CustomDataLines)
+                    {
+                        if (line.Contains("CBT_MANEUVER_QUEUE"))
+                        {
+                            string[] kvp = line.Split(':');
+                            CBTManeuverQueueLCD screen = new CBTManeuverQueueLCD(echo, block, int.Parse(kvp[1]));
+                            ManeuverQueueChannel.Add(screen); 
                         }
                     }
                 }
@@ -634,14 +666,6 @@ namespace IngameScript
             {
                 // load sensors
             }
-
-            
-            /// <summary>
-            /// flight modes and power management modes will be defined here for now until I figure out how to generalize them for future, generic aircraft
-            /// All flight modes must behave as a state machine, returning a boolean value to indicate whether the mode is complete or not.
-            /// </summary>
-            /// <returns></returns>
-            /// 
 
             public static int GetAutopilotState()
             {

@@ -31,7 +31,6 @@ namespace IngameScript
         CBT CBTShip;
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser = new MyCommandLine();
-        Func<bool> maneuver;
         Queue<STUStateMachine> ManeuverQueue = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
         
@@ -91,8 +90,7 @@ namespace IngameScript
                         break;
 
                     case CBT.Phase.Executing:
-                        CurrentManeuver.RunStateMachine();
-                        if (CurrentManeuver.CurrentInternalState == STUStateMachine.InternalStates.Done)
+                        if (CurrentManeuver.RunStateMachine())
                         {
                             CurrentManeuver = null;
                             CBT.CurrentPhase = CBT.Phase.Idle;
