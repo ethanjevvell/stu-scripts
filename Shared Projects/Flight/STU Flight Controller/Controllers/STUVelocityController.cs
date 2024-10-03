@@ -417,7 +417,7 @@ namespace IngameScript {
 
                         Vector3D outputVector = desiredThrust + counterGravityThrustLocal;
                         // We can bypass the scaling function here because we've already done it
-                        ExertVectorForce_LocalFrame(outputVector, outputVector.Length(), true);
+                        ExertVectorForce_LocalFrame(outputVector.Normalized(), outputVector.Length(), true);
                         return;
                     }
 
