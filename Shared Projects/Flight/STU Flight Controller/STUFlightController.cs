@@ -10,6 +10,7 @@ namespace IngameScript {
 
             // Maneuver classes
             public HardStop HardStopManeuver { get; private set; }
+            public GotoAndStop GotoAndStopManeuver { get; set; }
 
             public static Queue<STULog> FlightLogs = new Queue<STULog>();
             private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
@@ -474,6 +475,10 @@ namespace IngameScript {
                 }
                 CreateOkFlightLog("Gyros loaded successfully");
                 return gyros;
+            }
+
+            public void ToggleDampeners(bool on) {
+                RemoteControl.DampenersOverride = on;
             }
 
         }

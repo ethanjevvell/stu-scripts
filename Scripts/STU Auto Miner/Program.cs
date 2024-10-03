@@ -94,7 +94,7 @@ namespace IngameScript {
                     case MinerState.IDLE:
                         MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         Vector3 testJobSite = new Vector3(-38110, -39108, -28123);
-                        FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 100);
+                        FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 100, 5);
                         CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
                         break;
 

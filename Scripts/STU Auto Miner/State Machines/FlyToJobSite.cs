@@ -10,7 +10,11 @@ namespace IngameScript {
 
             public enum RunStates {
                 ASCEND,
+                ORIENT,
+                ADJUST_VELOCITY,
+                ADJUST_ALTITUDE,
                 CRUISE,
+                DECELERATE,
                 DESCEND,
             }
 
@@ -19,12 +23,13 @@ namespace IngameScript {
             List<IMyGasTank> HydrogenTanks { get; set; }
             List<IMyBatteryBlock> Batteries { get; set; }
             RunStates RunState { get; set; }
-            List<Vector3> CruiseWaypoints { get; set; }
-            int CurrentWaypoint { get; set; }
             public Vector3 JobSite { get; set; }
             public int CruiseAltitude { get; set; }
+            public int CruiseVelocity { get; set; }
+            Vector3D CruisePhaseDestination { get; set; }
+            STUGalacticMap.Planet? CurrentPlanet { get; set; }
 
-            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries, Vector3 jobSite, int cruiseAltitude) {
+            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries, Vector3 jobSite, int cruiseAltitude, int cruiseVelocity) {
                 FlightController = fc;
                 Connector = connector;
                 HydrogenTanks = hydrogenTanks;
@@ -32,6 +37,7 @@ namespace IngameScript {
                 RunState = RunStates.ASCEND;
                 JobSite = jobSite;
                 CruiseAltitude = cruiseAltitude;
+                CruiseVelocity = cruiseVelocity;
             }
 
             public override string Name => "Fly To Job Site";
@@ -40,51 +46,21 @@ namespace IngameScript {
                 Connector.Disconnect();
                 HydrogenTanks.ForEach(tank => tank.Stockpile = true);
                 Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
-                if (JobSite == null) {
-                    CreateFatalErrorBroadcast("No job site loaded into memory; did you forget to set this.JobSite?");
-                }
-                CruiseWaypoints = CalculateCruiseWaypoints(JobSite, 10, CruiseAltitude);
-                if (CruiseWaypoints == null || CruiseWaypoints.Count == 0) {
-                    CreateFatalErrorBroadcast($"Failed to calculate cruise waypoints; cruise waypoints length: {CruiseWaypoints.Count}");
-                }
-                for (int i = 0; i < CruiseWaypoints.Count; i++) {
-                    CreateInfoBroadcast($"Waypoint {i}: {CruiseWaypoints[i]}");
-                }
+                CurrentPlanet = STUGalacticMap.GetPlanetOfPoint(FlightController.CurrentPosition);
+
+                // Calculate the cruise phase destination
+                Vector3D jobSiteVector = JobSite - CurrentPlanet.Value.Center;
+                jobSiteVector.Normalize();
+                Vector3D cruiseDestination = CurrentPlanet.Value.Center + jobSiteVector * (Vector3D.Distance(CurrentPlanet.Value.Center, JobSite) + CruiseAltitude);
+                CruisePhaseDestination = cruiseDestination;
+                CreateInfoBroadcast($"Cruise phase destination: {CruisePhaseDestination}");
+                FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, CruisePhaseDestination, CruiseVelocity);
                 return true;
             }
 
             public override bool Closeout() {
                 // TODO
                 return true;
-            }
-
-            List<Vector3> CalculateCruiseWaypoints(Vector3 jobSite, int n, int cruiseAltitude) {
-                // Get current planet
-                Vector3 currentLocation = FlightController.CurrentPosition;
-                Vector3 planetCenter = STUGalacticMap.GetPlanetOfPoint(currentLocation).Value.Center;
-
-                Vector3 PC = currentLocation - planetCenter;
-                Vector3 PJ = jobSite - planetCenter;
-
-                double radius1 = PC.Length();
-                double radius2 = PJ.Length();
-
-                PC.Normalize();
-                PJ.Normalize();
-
-                Vector3 rotationAxis = Vector3.Cross(PC, PJ);
-                rotationAxis.Normalize();
-
-                double angle = Math.Acos(Vector3.Dot(PC, PJ));
-                double cruiseRadius = radius1 + cruiseAltitude;
-
-                List<Vector3> waypoints = new List<Vector3>();
-                for (int i = 0; i < n; i++) {
-                    double t = (double)i / (n - 1); // Ensures inclusion of endpoint
-                    Vector3D rotatedPC = Vector3D.Transform(PC, MatrixD.CreateFromAxisAngle(rotationAxis, angle * t));
-                    waypoints.Add(planetCenter + rotatedPC * cruiseRadius);
-                }
-                return waypoints;
             }
 
             public override bool Run() {
@@ -94,20 +70,62 @@ namespace IngameScript {
                     case RunStates.ASCEND:
                         // Ascend to 100m
                         if (FlightController.MaintainSurfaceAltitude(100)) {
+                            RunState = RunStates.ORIENT;
+                            CreateInfoBroadcast("Reached 100m altitude");
+                        }
+                        break;
+
+                    case RunStates.ORIENT:
+                        Vector3D headingVector = GetGreatCircleCruiseVector(FlightController.CurrentPosition, CruisePhaseDestination, CurrentPlanet.Value);
+                        bool aligned = FlightController.AlignShipToTarget(headingVector);
+                        bool stable = FlightController.SetStableForwardVelocity(0);
+                        if (aligned && stable) {
+                            CreateInfoBroadcast("Oriented to cruise heading");
+                            RunState = RunStates.ADJUST_VELOCITY;
+                        }
+                        break;
+
+                    case RunStates.ADJUST_VELOCITY:
+                        if (FlightController.SetStableForwardVelocity(CruiseVelocity)) {
+                            CreateInfoBroadcast($"Accelerating to {CruiseVelocity} m/s");
+                            RunState = RunStates.CRUISE;
+                        }
+                        break;
+
+                    case RunStates.ADJUST_ALTITUDE:
+                        if (FlightController.MaintainSurfaceAltitude(CruiseAltitude)) {
+                            CreateInfoBroadcast($"Adjusted altitude to {CruiseAltitude}m");
                             RunState = RunStates.CRUISE;
                         }
                         break;
 
                     case RunStates.CRUISE:
                         // Cruise to job site
-                        if (CurrentWaypoint == CruiseWaypoints.Count) {
-                            RunState = RunStates.DESCEND;
-                            CreateWarningBroadcast("Reached final waypoint; descending to job site");
+                        if (Vector3D.Distance(FlightController.CurrentPosition, CruisePhaseDestination) < CruiseVelocity * 10) {
+                            CreateInfoBroadcast("Approaching job site");
+                            RunState = RunStates.DECELERATE;
                             break;
                         }
 
-                        if (FlyToWaypoint(CruiseWaypoints[CurrentWaypoint])) {
-                            CurrentWaypoint++;
+                        if (FlightController.VelocityMagnitude < 0.9 * CruiseVelocity
+                            || FlightController.VelocityMagnitude > 1.1 * CruiseVelocity) {
+                            CreateInfoBroadcast($"Re-establishing cruising velocity");
+                            RunState = RunStates.ADJUST_VELOCITY;
+                            break;
+                        }
+
+                        if (Math.Abs(FlightController.GetCurrentSurfaceAltitude() - CruiseAltitude) < 5) {
+                            CreateInfoBroadcast($"Re-establishing cruising altitude");
+                            RunState = RunStates.ADJUST_ALTITUDE;
+                            break;
+                        }
+
+                        break;
+
+                    case RunStates.DECELERATE:
+                        if (FlightController.GotoAndStopManeuver.Run()) {
+                            CreateInfoBroadcast("Decelerated to 0 m/s");
+                            RunState = RunStates.DESCEND;
                         }
                         break;
 
@@ -124,16 +142,29 @@ namespace IngameScript {
 
             }
 
-            private bool FlyToWaypoint(Vector3 waypoint) {
-                FlightController.SetStableForwardVelocity(5);
-                FlightController.AlignShipToTarget(waypoint);
-                CreateInfoBroadcast($"{Vector3D.Distance(FlightController.CurrentPosition, waypoint)}");
-                if (Vector3D.Distance(FlightController.CurrentPosition, waypoint) < 10) {
-                    return true;
-                }
-                return false;
-            }
+            private Vector3D GetGreatCircleCruiseVector(Vector3D currentPos, Vector3D targetPos, STUGalacticMap.Planet planet) {
+                Vector3D PC = currentPos - planet.Center; // Vector from planet center to current position
+                Vector3D PT = targetPos - planet.Center;  // Vector from planet center to target position
 
+                PC.Normalize(); // Normalize to unit vector
+                PT.Normalize(); // Normalize to unit vector
+
+                // Compute the normal vector to the plane defined by PC and PT (great circle plane)
+                Vector3D greatCircleNormal = Vector3D.Cross(PC, PT);
+
+                // Compute the heading vector that is tangent to the sphere at currentPos
+                Vector3D headingVector = Vector3D.Cross(greatCircleNormal, PC);
+
+                headingVector.Normalize(); // Normalize the heading vector
+
+                // Choose a reasonable distance ahead along the heading vector
+                double distanceAhead = planet.Radius * 0.1; // Adjust the scalar as needed (e.g., 10% of planet's radius)
+
+                // Calculate the target point in space ahead along the heading direction
+                Vector3D targetPoint = currentPos + headingVector * distanceAhead;
+
+                return targetPoint; // Return the point in space for AlignShipToTarget
+            }
         }
     }
 }
