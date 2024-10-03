@@ -120,6 +120,13 @@ namespace IngameScript
         {
             switch (arg)
             {
+                case "CLOSEOUT":
+                    CBT.AddToLogQueue($"Cancelling maneuver '{CurrentManeuver.Name}'...", STULogType.INFO);
+                    if (CurrentManeuver != null)
+                    {
+                        CurrentManeuver.CurrentInternalState = STUStateMachine.InternalStates.Closeout;
+                    }
+                    return true;
                 case "HALT":
                     CBT.AddToLogQueue("Queueing a Hover maneuver", STULogType.INFO);
                     ManeuverQueue.Enqueue(new CBT.HoverManeuver());
@@ -142,9 +149,8 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, new Vector3D(99756.85, 158304.72, 5859075.56)));
                     ManeuverQueue.Enqueue(new CBT.GenericManeuver(20, 0, 0, 0, 0, 0));
-                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, new Vector3D(100033.4,158844.99,5858882.1)));
+                    ManeuverQueue.Enqueue(new STUFlightController.HardStop(CBT.FlightController));
                     return true;
 
                 case "GANGWAY":
@@ -166,6 +172,7 @@ namespace IngameScript
                     return true;
                 case "HELP":
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
+                    CBT.AddToLogQueue("CLOSEOUT - Immediately goes to the 'closeout' state of the current maneuver.", STULogType.OK);
                     CBT.AddToLogQueue("HALT - Executes a hover maneuver.", STULogType.OK);
                     CBT.AddToLogQueue("STOP - Same as HALT, but changes the ship's orientation before firing thrusters to best counterract the current trajectory.", STULogType.OK);
                     CBT.AddToLogQueue("RESETAP - Resets the autopilot 'manually' (outisde of the maneuver queue) and clears the maneuver queue.", STULogType.OK);
