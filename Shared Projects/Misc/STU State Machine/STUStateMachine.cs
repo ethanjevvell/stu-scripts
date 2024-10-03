@@ -10,7 +10,6 @@ namespace IngameScript {
                 Init,
                 Run,
                 Closeout,
-                Done,
             }
 
             public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
@@ -21,7 +20,7 @@ namespace IngameScript {
             /// <summary>
             /// Call this method to run the maneuver's state machine
             /// </summary>
-            public virtual void RunStateMachine() {
+            public virtual bool RunStateMachine() {
                 switch (CurrentInternalState) {
                     case InternalStates.Init:
                         if (Init()) {
@@ -35,12 +34,12 @@ namespace IngameScript {
                         break;
                     case InternalStates.Closeout:
                         if (Closeout()) {
-                            CurrentInternalState = InternalStates.Done;
+                            return true;
                         }
                         break;
-                    case InternalStates.Done:
-                        break;
+
                 }
+                return false;
             }
         }
     }
