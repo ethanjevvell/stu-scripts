@@ -20,7 +20,7 @@ namespace IngameScript {
             /// <summary>
             /// Call this method to run the maneuver's state machine
             /// </summary>
-            public virtual bool RunStateMachine() {
+            public virtual bool ExecuteStateMachine() {
                 switch (CurrentInternalState) {
                     case InternalStates.Init:
                         if (Init()) {

@@ -31,6 +31,9 @@ namespace IngameScript {
                 public override bool Init() {
                     FC.ReinstateGyroControl();
                     FC.ReinstateThrusterControl();
+                    // If we're already moving, jump to cruise phase
+                    CurrentState = FC.CurrentVelocity == Vector3D.Zero ? GotoStates.ORIENT : GotoStates.CRUISE;
+                    CreateWarningFlightLog($"{CurrentState}");
                     return true;
                 }
 
@@ -39,6 +42,10 @@ namespace IngameScript {
                     switch (CurrentState) {
 
                         case GotoStates.ORIENT:
+                            double distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
+                            if (distanceToTargetPos < STOPPING_DISTANCE_ERROR_TOLERANCE) {
+                                return true;
+                            }
                             if (FC.AlignShipToTarget(TargetPos)) {
                                 CurrentState = GotoStates.CRUISE;
                                 CreateOkFlightLog($"Oriented to target position {TargetPos}");
@@ -50,8 +57,9 @@ namespace IngameScript {
                             bool cruising = FC.SetStableForwardVelocity(CruiseVelocity);
                             bool aligned = FC.AlignShipToTarget(TargetPos);
                             double stoppingDistance = FC.CalculateForwardStoppingDistance();
-                            double distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
-                            if (distanceToTargetPos <= stoppingDistance) {
+                            distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
+                            CreateInfoFlightLog($"Distance to target: {distanceToTargetPos}");
+                            if (distanceToTargetPos <= stoppingDistance + (1.0 / 6.0) * FC.VelocityMagnitude) {
                                 CreateWarningFlightLog($"Decelerating at {stoppingDistance + (1.0 / 6.0) * FC.VelocityMagnitude}");
                                 CurrentState = GotoStates.DECELERATE;
                             }
@@ -77,9 +85,15 @@ namespace IngameScript {
                 }
 
                 public override bool Closeout() {
-                    FC.RelinquishGyroControl();
-                    FC.RelinquishThrusterControl();
-                    return true;
+                    FC.ToggleDampeners(true);
+                    if (FC.CurrentVelocity.IsZero()) {
+                        CreateOkFlightLog("Returning controls to user");
+                        FC.RelinquishGyroControl();
+                        FC.RelinquishThrusterControl();
+                        FC.ToggleDampeners(false);
+                        return true;
+                    }
+                    return false;
                 }
             }
         }

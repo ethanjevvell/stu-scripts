@@ -59,23 +59,30 @@ namespace IngameScript {
             }
 
             public override bool Closeout() {
-                // TODO
-                return true;
+                if (FlightController.SetStableForwardVelocity(0)) {
+                    return true;
+                }
+                return false;
             }
 
             public override bool Run() {
+
 
                 switch (RunState) {
 
                     case RunStates.ASCEND:
                         // Ascend to 100m
-                        if (FlightController.MaintainSurfaceAltitude(100)) {
+                        if (FlightController.MaintainSurfaceAltitude(CruiseAltitude)) {
                             RunState = RunStates.ORIENT;
                             CreateInfoBroadcast("Reached 100m altitude");
                         }
                         break;
 
                     case RunStates.ORIENT:
+                        if (ApproachingDestination()) {
+                            RunState = RunStates.DECELERATE;
+                            break;
+                        }
                         Vector3D headingVector = GetGreatCircleCruiseVector(FlightController.CurrentPosition, CruisePhaseDestination, CurrentPlanet.Value);
                         bool aligned = FlightController.AlignShipToTarget(headingVector);
                         bool stable = FlightController.SetStableForwardVelocity(0);
@@ -86,6 +93,10 @@ namespace IngameScript {
                         break;
 
                     case RunStates.ADJUST_VELOCITY:
+                        if (ApproachingDestination()) {
+                            RunState = RunStates.DECELERATE;
+                            break;
+                        }
                         if (FlightController.SetStableForwardVelocity(CruiseVelocity)) {
                             CreateInfoBroadcast($"Accelerating to {CruiseVelocity} m/s");
                             RunState = RunStates.CRUISE;
@@ -93,6 +104,10 @@ namespace IngameScript {
                         break;
 
                     case RunStates.ADJUST_ALTITUDE:
+                        if (ApproachingDestination()) {
+                            RunState = RunStates.DECELERATE;
+                            break;
+                        }
                         if (FlightController.MaintainSurfaceAltitude(CruiseAltitude)) {
                             CreateInfoBroadcast($"Adjusted altitude to {CruiseAltitude}m");
                             RunState = RunStates.CRUISE;
@@ -100,9 +115,7 @@ namespace IngameScript {
                         break;
 
                     case RunStates.CRUISE:
-                        // Cruise to job site
-                        if (Vector3D.Distance(FlightController.CurrentPosition, CruisePhaseDestination) < CruiseVelocity * 10) {
-                            CreateInfoBroadcast("Approaching job site");
+                        if (ApproachingDestination()) {
                             RunState = RunStates.DECELERATE;
                             break;
                         }
@@ -123,7 +136,7 @@ namespace IngameScript {
                         break;
 
                     case RunStates.DECELERATE:
-                        if (FlightController.GotoAndStopManeuver.Run()) {
+                        if (FlightController.GotoAndStopManeuver.ExecuteStateMachine()) {
                             CreateInfoBroadcast("Decelerated to 0 m/s");
                             RunState = RunStates.DESCEND;
                         }
@@ -140,6 +153,10 @@ namespace IngameScript {
 
                 return false;
 
+            }
+
+            private bool ApproachingDestination() {
+                return Vector3D.Distance(FlightController.CurrentPosition, CruisePhaseDestination) < CruiseVelocity * 10;
             }
 
             private Vector3D GetGreatCircleCruiseVector(Vector3D currentPos, Vector3D targetPos, STUGalacticMap.Planet planet) {
