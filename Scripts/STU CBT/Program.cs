@@ -90,7 +90,7 @@ namespace IngameScript
                         break;
 
                     case CBT.Phase.Executing:
-                        if (CurrentManeuver.RunStateMachine())
+                        if (CurrentManeuver.ExecuteStateMachine())
                         {
                             CurrentManeuver = null;
                             CBT.CurrentPhase = CBT.Phase.Idle;
@@ -147,8 +147,8 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(20, 0, 0, 0, 0, 0));
-                    ManeuverQueue.Enqueue(new STUFlightController.HardStop(CBT.FlightController));
+                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, new Vector3D(99756.85,158304.72,5859075.56), 20));
+                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, new Vector3D(100033.4,158844.99,5858882.1), 20));
                     return true;
 
                 case "GANGWAY":
