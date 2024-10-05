@@ -70,7 +70,7 @@ namespace IngameScript {
                             aligned = FC.AlignShipToTarget(TargetPos);
                             distanceToTargetPos = Vector3D.Distance(FC.CurrentPosition, TargetPos);
                             if (cruising && distanceToTargetPos < STOPPING_DISTANCE_ERROR_TOLERANCE) {
-                                CreateOkFlightLog(MinerName + " has reached target position " + TargetPos);
+                                CreateOkFlightLog("reached target position " + TargetPos);
                                 return true;
                             } else if (cruising) {
                                 // If we're still cruising but we're not close enough to the target, we're going too fast

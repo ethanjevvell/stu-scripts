@@ -21,26 +21,6 @@ namespace IngameScript
                 echo = Echo;
             }
 
-            //public void SetupDrawSurface(IMyTextSurface surface, bool enabled)
-            //{
-            //    if (enabled) {
-            //        // Draw background color
-            //        //  surface.ScriptBackgroundColor = new Color(0, 121, 0, 255);
-            //        // Set content type
-            //        surface.ContentType = ContentType.SCRIPT;
-            //        // Set script to none
-            //        surface.Script = "";
-            //    }
-            //    else {
-            //        // Draw background color
-            //        //  surface.ScriptBackgroundColor = new Color(106, 0, 0, 255);
-            //        // Set content type
-            //        surface.ContentType = ContentType.SCRIPT;
-            //        // Set script to none
-            //        surface.Script = "";
-            //    }
-            //}
-
             public void DrawAutopilotEnabledSprite(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
             {
                 MySprite background_sprite = new MySprite()
