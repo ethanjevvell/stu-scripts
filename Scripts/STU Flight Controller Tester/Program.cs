@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using VRageMath;
 
@@ -16,25 +17,41 @@ namespace IngameScript {
             Thrusters = FindThrusters();
             RemoteControl = FindRemoteControl();
             Gyros = FindGyros();
-            LogScreen = new LogLCD(Me, 0, "Monospace", 0.7f);
+            LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             FlightController.RelinquishGyroControl();
         }
 
         public void Main() {
-            FlightController.UpdateState();
-            Vector3D desiredVelocity = new Vector3D(0, 0, 0) - FlightController.CurrentPosition;
-            desiredVelocity.Normalize();
-            desiredVelocity *= 10;
-            FlightController.SetV_WorldFrame(FlightController.CurrentVelocity, desiredVelocity);
-            if (STUFlightController.FlightLogs.Count > 0) {
-                while (STUFlightController.FlightLogs.Count > 0) {
-                    LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+            try {
+                FlightController.UpdateState();
+                FlightController.ReinstateThrusterControl();
+                Vector3D desiredVelocity = new Vector3D(0, 0, 0) - FlightController.CurrentPosition;
+                desiredVelocity.Normalize();
+                desiredVelocity *= 10;
+                STUFlightController.CreateWarningFlightLog(desiredVelocity.Length().ToString());
+                FlightController.SetV_WorldFrame(FlightController.CurrentVelocity, desiredVelocity);
+                if (STUFlightController.FlightLogs.Count > 0) {
+                    while (STUFlightController.FlightLogs.Count > 0) {
+                        Echo("Running");
+                        LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+                    }
+                    LogScreen.StartFrame();
+                    LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+                    LogScreen.EndAndPaintFrame();
                 }
-                LogScreen.StartFrame();
-                LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-                LogScreen.EndAndPaintFrame();
+            } catch (Exception e) {
+                Echo("Ex");
+                if (STUFlightController.FlightLogs.Count > 0) {
+                    while (STUFlightController.FlightLogs.Count > 0) {
+                        LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+                    }
+                    LogScreen.StartFrame();
+                    LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+                    LogScreen.EndAndPaintFrame();
+                }
+                throw e;
             }
         }
 
