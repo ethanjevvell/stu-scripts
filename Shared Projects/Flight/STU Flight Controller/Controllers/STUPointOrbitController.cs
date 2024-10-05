@@ -71,7 +71,7 @@ namespace IngameScript {
                         Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
                         Vector3D transposedKickstartThrust = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, kickstartThrust);
                         Vector3D outputVector = transposedKickstartThrust + counterGravityForceVector;
-                        FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
+                        FlightController.VelocityController.Accelerate_LocalFrame(outputVector, outputVector.Length());
                         return false;
                     }
 
@@ -97,7 +97,7 @@ namespace IngameScript {
 
                     Vector3D outputVector = centripetalForceVector + counterGravityForceVector;
 
-                    FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
+                    FlightController.VelocityController.Accelerate_LocalFrame(outputVector, outputVector.Length());
 
                 }
 

@@ -34,7 +34,7 @@ namespace IngameScript {
 
                 public override bool Run() {
                     Vector3D worldLinearVelocity = FC.RemoteControl.GetShipVelocities().LinearVelocity;
-                    FC.VelocityController.ExertVectorForce_WorldFrame(-worldLinearVelocity, float.PositiveInfinity);
+                    FC.VelocityController.Accelerate_WorldFrame(-worldLinearVelocity, float.PositiveInfinity);
                     FC.OrientationController.AlignCounterVelocity(worldLinearVelocity, FC.VelocityController.MaximumThrustVector);
                     if (worldLinearVelocity.Length() < oneTickAcceleration) {
                         CreateOkFlightLog("Hard stop complete! Returning controls to user");

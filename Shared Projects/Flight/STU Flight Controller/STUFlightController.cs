@@ -164,7 +164,7 @@ namespace IngameScript {
             }
 
             public void Hover() {
-                VelocityController.ExertVectorForce_WorldFrame(Vector3D.Zero, 0);
+                VelocityController.Accelerate_WorldFrame(Vector3D.Zero, 0);
             }
 
             /// <summary>

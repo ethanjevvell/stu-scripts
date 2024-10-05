@@ -314,7 +314,7 @@ namespace IngameScript {
 
                 }
 
-                public void ExertVectorForce_LocalFrame(Vector3D direction, double magnitude, bool alreadyScaled = false) {
+                public void Accelerate_LocalFrame(Vector3D direction, double magnitude, bool alreadyScaled = false) {
                     // Normalize just in case user does not provide a unit vector
                     direction.Normalize();
                     Vector3D outputVector = direction * magnitude;
@@ -324,6 +324,49 @@ namespace IngameScript {
                     SetFx(outputVector.X);
                     SetFy(outputVector.Y);
                     SetFz(outputVector.Z);
+                }
+
+                public bool SetV_WorldFrame(Vector3D V_c, Vector3D V_d) {
+
+                    // V_c = current velocity in terms of world frame
+                    // V_d = desired velocity in terms of world frame
+                    // V_e = how fast we want to go minus how fast we're going
+                    double V_e = V_d.Length() - V_c.Length();
+                    // the dot product measures how much two vectors are pointing in the same direction
+                    // for unit vectors, the dot product ranges from -1 to 1
+                    // 1 means the vectors are perfectly aligned; -1 means they are pointing directly opposite one another; 0 means they are perpendicular
+                    double dotProduct = Vector3D.Dot(V_c.Normalized(), V_d.Normalized());
+                    // I normalize the dot product from 0 to 1. Now, 1 means they are perfectly aligned; 0 means they are parallel; 1/2 means they are perpendicular
+                    // This will make more sense in a second
+                    double dotProduct_N = (dotProduct + 1) / 2;
+
+                    // Normalize both of the vectors; earlier we did V_c.Normalized(), which *returns* a new normalized vector. V_c.Normalize() updates the vector in place
+                    V_c.Normalize();
+                    V_d.Normalize();
+
+                    // We need to do two things: 1) counteract our current velocity (the ship could be moving in any arbitrary direction when this routine starts;
+                    // 2) we want to drive the ship toward the desired velocity vector
+                    // If the dot product is 1, the vectors are perfectly aligned; this means we can disregard requirement (1), because we've already negated whatever motion
+                    // the ship had when the routine started
+                    V_d *= dotProduct_N;
+                    // But if the dot product is not 1, we will distribute some portion of the total thrust (1 - dotProduct) to countering our current velocity, 
+                    // and the rest to achieving V_d
+                    V_c *= 1 - dotProduct_N;
+
+                    // We need to *negate* V_c (our current velocity vector), because we want to get rid of whatever motion the ship had when the routine started
+                    // that isn't in the direction of the desired velocity
+                    // Then we want to make sure we try to achieve the desired velocity
+                    Vector3D outputVector = V_d - V_c;
+
+                    // Finally, scale output vector by the velocity error. Note that as velocity error approaches 0, so to does the output vector
+                    outputVector *= V_e;
+
+                    // This simply accelerates us in the direction of outputVector, with the magnitude of the vector
+                    Accelerate_WorldFrame(outputVector, outputVector.Length());
+
+                    // If velocity error is very low AND we're aligned with the target vector in world space, we've reached the desired velocity state
+                    return Math.Abs(V_e) < 0.1 && dotProduct == 1;
+
                 }
 
                 /// <summary>
@@ -361,7 +404,7 @@ namespace IngameScript {
 
                 }
 
-                public void ExertVectorForce_WorldFrame(Vector3D worldDirection, double magnitude) {
+                public void Accelerate_WorldFrame(Vector3D worldDirection, double magnitude) {
 
                     worldDirection.Normalize();
 
@@ -417,11 +460,11 @@ namespace IngameScript {
 
                         Vector3D outputVector = desiredThrust + counterGravityThrustLocal;
                         // We can bypass the scaling function here because we've already done it
-                        ExertVectorForce_LocalFrame(outputVector.Normalized(), outputVector.Length(), true);
+                        Accelerate_LocalFrame(outputVector.Normalized(), outputVector.Length(), true);
                         return;
                     }
 
-                    ExertVectorForce_LocalFrame(STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, worldDirection), magnitude);
+                    Accelerate_LocalFrame(STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, worldDirection), magnitude);
                 }
 
                 public Vector3D CalculateAccelerationVectors() {
