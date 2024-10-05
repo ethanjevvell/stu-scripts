@@ -155,6 +155,10 @@ namespace IngameScript {
                 return VelocityController.SetVz(CurrentVelocity.Z, desiredVelocity);
             }
 
+            public bool SetV_WorldFrame(Vector3D direction, Vector3D desiredVelocity) {
+                return VelocityController.SetV_WorldFrame(direction, desiredVelocity);
+            }
+
             /// <summary>
             /// Sets the ship's roll. Positive values roll the ship clockwise, negative values roll the ship counterclockwise.
             /// </summary>

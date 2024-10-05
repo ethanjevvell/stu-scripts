@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -23,7 +24,10 @@ namespace IngameScript {
 
         public void Main() {
             FlightController.UpdateState();
-            FlightController.HardStopManeuver.RunStateMachine();
+            Vector3D desiredVelocity = new Vector3D(0, 0, 0) - FlightController.CurrentPosition;
+            desiredVelocity.Normalize();
+            desiredVelocity *= 10;
+            FlightController.SetV_WorldFrame(FlightController.CurrentVelocity, desiredVelocity);
             if (STUFlightController.FlightLogs.Count > 0) {
                 while (STUFlightController.FlightLogs.Count > 0) {
                     LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
