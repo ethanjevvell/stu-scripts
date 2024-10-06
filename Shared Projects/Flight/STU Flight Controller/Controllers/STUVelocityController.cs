@@ -327,66 +327,44 @@ namespace IngameScript {
                     SetFz(outputVector.Z);
                 }
 
-                public bool SetV_WorldFrame(Vector3D V_c, Vector3D V_d) {
+                public bool SetV_WorldFrame(Vector3D targetPos, Vector3D currentVelocity, Vector3D currentPos, double desiredVelocity) {
 
-                    // V_c = current velocity in terms of world frame
-                    // V_d = desired velocity in terms of world frame
-                    // V_e = how fast we want to go minus how fast we're going
-                    double V_e = V_d.Length() - V_c.Length();
-                    CreateWarningFlightLog(V_e.ToString());
-                    CreateWarningFlightLog($"V_c len: {V_c.Length().ToString()}");
-                    // the dot product measures how much two vectors are pointing in the same direction
-                    // for unit vectors, the dot product ranges from -1 to 1
-                    // 1 means the vectors are perfectly aligned; -1 means they are pointing directly opposite one another; 0 means they are perpendicular
-                    double dotProduct = Vector3D.Dot(V_c.Normalized(), V_d.Normalized());
-                    if (double.IsNaN(dotProduct)) {
-                        dotProduct = 1;
-                    }
-                    CreateWarningFlightLog($"Dot Product: {dotProduct.ToString()}");
-                    // I normalize the dot product from 0 to 1. Now, 1 means they are perfectly aligned; 0 means they are parallel; 1/2 means they are perpendicular
-                    // This will make more sense in a second
-                    double dotProduct_N = (dotProduct + 1) / 2;
+                    Vector3D V_c = currentVelocity;
+                    Vector3D V_d = Vector3D.Normalize(targetPos - currentPos) * desiredVelocity;
 
-                    // Normalize both of the vectors; earlier we did V_c.Normalized(), which *returns* a new normalized vector. V_c.Normalize() updates the vector in place
-                    V_c.Normalize();
-                    V_d.Normalize();
+                    Vector3D outputVector;
 
-                    CreateWarningFlightLog($"Normalized V_C: {V_c.Length().ToString()}");
-                    CreateWarningFlightLog($"Normalized V_D: {V_d.Length().ToString()}");
+                    // Calculate the velocity error vector
+                    Vector3D V_e_vec = V_d - V_c;
+                    double V_e = V_e_vec.Length();
 
-                    // We need to do two things: 1) counteract our current velocity (the ship could be moving in any arbitrary direction when this routine starts;
-                    // 2) we want to drive the ship toward the desired velocity vector
-                    // If the dot product is 1, the vectors are perfectly aligned; this means we can disregard requirement (1), because we've already negated whatever motion
-                    // the ship had when the routine started
-                    V_d *= dotProduct_N;
-                    // But if the dot product is not 1, we will distribute some portion of the total thrust (1 - dotProduct) to countering our current velocity, 
-                    // and the rest to achieving V_d
-                    V_c *= 1 - dotProduct_N;
-
-                    // edge case: if the ship is not moving, V_c.Length() will be NaN, which will cause problems
-                    if (double.IsNaN(V_c.Length())) {
-                        V_c = Vector3D.Zero;
+                    // Edge case: if we're not moving, we can't calculate a normalized vector
+                    if (V_c.IsZero()) {
+                        outputVector = V_e_vec * ShipMass;
+                        Accelerate_WorldFrame(outputVector, outputVector.Length());
+                        return V_e < 0.1;
                     }
 
-                    // We need to *negate* V_c (our current velocity vector), because we want to get rid of whatever motion the ship had when the routine started
-                    // that isn't in the direction of the desired velocity
-                    // Then we want to make sure we try to achieve the desired velocity
-                    CreateInfoFlightLog(V_d.Length().ToString());
-                    CreateInfoFlightLog(V_c.Length().ToString());
-                    Vector3D outputVector = V_d - V_c;
+                    // Edge case: If the desired velocity is zero, we can just stop the ship with standard velocity controls
+                    if (V_d.IsZero()) {
+                        bool stableX = SetVx(V_c.X, 0);
+                        bool stableY = SetVy(V_c.Y, 0);
+                        bool stableZ = SetVz(V_c.Z, 0);
+                        return stableX && stableY && stableZ;
+                    }
+
+                    // Normalize the velocity error vector
+                    outputVector = V_e_vec;
                     outputVector.Normalize();
 
-                    // Finally, scale output vector by the velocity error. Note that as velocity error approaches 0, so to does the output vector
+                    // Scale the output vector by the magnitude of the velocity error and ship mass
                     outputVector *= V_e * ShipMass;
-                    CreateOkFlightLog(outputVector.Length().ToString());
 
-
-                    // This simply accelerates us in the direction of outputVector, with the magnitude of the vector
+                    // Accelerate along the output vector
                     Accelerate_WorldFrame(outputVector, outputVector.Length());
 
-                    // If velocity error is very low AND we're aligned with the target vector in world space, we've reached the desired velocity state
-                    return Math.Abs(V_e) < 0.1 && dotProduct == 1;
-
+                    // Check if we've reached the desired velocity state
+                    return V_e < 0.1;
                 }
 
                 /// <summary>

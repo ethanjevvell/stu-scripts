@@ -19,30 +19,22 @@ namespace IngameScript {
             Gyros = FindGyros();
             LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             FlightController.RelinquishGyroControl();
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
+            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, new Vector3D(-33058, 61356, -18555), 10);
         }
 
         public void Main() {
             try {
                 FlightController.UpdateState();
                 FlightController.ReinstateThrusterControl();
-                Vector3D desiredVelocity = new Vector3D(0, 0, 0) - FlightController.CurrentPosition;
-                desiredVelocity.Normalize();
-                desiredVelocity *= 10;
-                STUFlightController.CreateWarningFlightLog(desiredVelocity.Length().ToString());
-                FlightController.SetV_WorldFrame(FlightController.CurrentVelocity, desiredVelocity);
-                if (STUFlightController.FlightLogs.Count > 0) {
-                    while (STUFlightController.FlightLogs.Count > 0) {
-                        Echo("Running");
-                        LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
-                    }
-                    LogScreen.StartFrame();
-                    LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-                    LogScreen.EndAndPaintFrame();
-                }
+                FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                //Vector3D desiredVector = Vector3D.Normalize(new Vector3D(-33058, 61356, -18555) - FlightController.CurrentPosition) * 10;
+                //FlightController.SetV_WorldFrame(FlightController.CurrentVelocity_WorldFrame, desiredVector);
             } catch (Exception e) {
-                Echo("Ex");
+                STUFlightController.CreateFatalFlightLog(e.Message);
+            } finally {
                 if (STUFlightController.FlightLogs.Count > 0) {
                     while (STUFlightController.FlightLogs.Count > 0) {
                         LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
@@ -51,7 +43,6 @@ namespace IngameScript {
                     LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
                     LogScreen.EndAndPaintFrame();
                 }
-                throw e;
             }
         }
 

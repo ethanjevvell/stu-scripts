@@ -58,7 +58,7 @@ namespace IngameScript {
 
                 private bool EnterOrbit(Vector3D targetPos) {
 
-                    double velocity = FlightController.CurrentVelocity.Length();
+                    double velocity = FlightController.CurrentVelocity_LocalFrame.Length();
                     Vector3D nonColinearVector;
 
                     // If we're in gravity, use the gravity vector as the non-colinear vector
@@ -83,7 +83,7 @@ namespace IngameScript {
 
                     double altitude = FlightController.AltitudeController.GetSeaLevelAltitude();
                     double mass = STUVelocityController.ShipMass;
-                    double velocity = FlightController.CurrentVelocity.Length();
+                    double velocity = FlightController.CurrentVelocity_LocalFrame.Length();
                     double velocitySquared = velocity * velocity;
                     double radius = Vector3D.Distance(GetClosestPointOnOrbitalAxis(), RemoteControl.CenterOfMass);
 

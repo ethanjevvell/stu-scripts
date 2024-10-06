@@ -24,9 +24,12 @@ namespace IngameScript {
             public bool HasGyroControl { get; set; }
             public bool HasThrusterControl { get; set; }
 
+            public Vector3D Offset = Vector3D.Zero;
+
             public double TargetVelocity { get; set; }
             public double VelocityMagnitude { get; set; }
-            public Vector3D CurrentVelocity { get; set; }
+            public Vector3D CurrentVelocity_LocalFrame { get; set; }
+            public Vector3D CurrentVelocity_WorldFrame { get; set; }
             public Vector3D AccelerationComponents { get; set; }
 
             public Vector3D CurrentPosition { get; set; }
@@ -74,12 +77,9 @@ namespace IngameScript {
             }
 
             public void MeasureCurrentVelocity() {
-                Vector3D worldVelocity = RemoteControl.GetShipVelocities().LinearVelocity;
-                Vector3D localVelocity = Vector3D.TransformNormal(worldVelocity, MatrixD.Transpose(CurrentWorldMatrix));
-                // Space Engineers considers the missile's forward direction (the direction it's facing) to be in the negative Z direction
-                // We reverse that by convention because it's easier to think about
-                CurrentVelocity = localVelocity *= new Vector3D(1, 1, -1);
-                VelocityMagnitude = CurrentVelocity.Length();
+                CurrentVelocity_WorldFrame = RemoteControl.GetShipVelocities().LinearVelocity;
+                CurrentVelocity_LocalFrame = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, CurrentVelocity_WorldFrame);
+                VelocityMagnitude = CurrentVelocity_LocalFrame.Length();
             }
 
             public void MeasureCurrentAcceleration() {
@@ -103,7 +103,7 @@ namespace IngameScript {
 
             public float CalculateForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
-                float velocity = (float)CurrentVelocity.Z;
+                float velocity = (float)CurrentVelocity_LocalFrame.Z;
                 float maxReverseAcceleration = VelocityController.GetMaximumReverseAcceleration();
                 float dx = (velocity * velocity) / (2 * maxReverseAcceleration); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
@@ -134,7 +134,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVx(double desiredVelocity) {
-                return VelocityController.SetVx(CurrentVelocity.X, desiredVelocity);
+                return VelocityController.SetVx(CurrentVelocity_LocalFrame.X, desiredVelocity);
             }
 
             /// <summary>
@@ -143,7 +143,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVy(double desiredVelocity) {
-                return VelocityController.SetVy(CurrentVelocity.Y, desiredVelocity);
+                return VelocityController.SetVy(CurrentVelocity_LocalFrame.Y, desiredVelocity);
             }
 
             /// <summary>
@@ -152,11 +152,28 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVz(double desiredVelocity) {
-                return VelocityController.SetVz(CurrentVelocity.Z, desiredVelocity);
+                return VelocityController.SetVz(CurrentVelocity_LocalFrame.Z, desiredVelocity);
             }
 
-            public bool SetV_WorldFrame(Vector3D direction, Vector3D desiredVelocity) {
-                return VelocityController.SetV_WorldFrame(direction, desiredVelocity);
+            /// <summary>
+            /// Attempts to reach desiredVelocity in the world frame. Pass in a reference block to align that block with targetPos. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <param name="desiredVelocity"></param>
+            /// <param name="reference"></param>
+            /// <returns></returns>
+            public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity, IMyTerminalBlock reference) {
+                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, reference.GetPosition(), desiredVelocity);
+            }
+
+            /// <summary>
+            /// Attempts to reach desiredVelocity in the world frame. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <param name="desiredVelocity"></param>
+            /// <returns></returns>
+            public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity) {
+                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, CurrentPosition, desiredVelocity);
             }
 
             /// <summary>
@@ -268,7 +285,7 @@ namespace IngameScript {
             /// <returns></returns>
             private Vector3D GetInertiaHeadingNormal(Vector3D targetPos) {
                 // ship inertia vector
-                Vector3D worldVelocity = Vector3D.Normalize(Vector3D.TransformNormal(CurrentVelocity, CurrentWorldMatrix));
+                Vector3D worldVelocity = Vector3D.Normalize(Vector3D.TransformNormal(CurrentVelocity_LocalFrame, CurrentWorldMatrix));
                 // ship-to-target vector
                 Vector3D ST = Vector3D.Normalize(targetPos - CurrentPosition);
                 // normal vector of plane containing SI and ST
