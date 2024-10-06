@@ -165,6 +165,8 @@ namespace IngameScript
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }
 
+            // high-level software interoperability methods and helpers
+            #region High-Level Software Control Methods
             public static void EchoPassthru(string text)
             {
                 echo(text);
@@ -196,7 +198,10 @@ namespace IngameScript
                     });
                 }
             }
+            #endregion
 
+            // screen update methods
+            #region Screen Update Methods
             // define the method to pull logs from the queue and display them on the screens
             // this will be called on every loop in Program.cs
             public static void UpdateLogScreens()
@@ -224,20 +229,20 @@ namespace IngameScript
                 }
             }
 
-            public static void UpdateManeuverQueueScreens()
+            public static void UpdateManeuverQueueScreens(ManeuverQueueData maneuverQueueData)
             {
                 foreach (var screen in ManeuverQueueChannel)
                 {
                     screen.StartFrame();
-                    // logic to gather all the necessary data to pass into screen.LoadManeuverQueueData()
-                    screen.LoadManeuverQueueData();
+                    screen.LoadManeuverQueueData(maneuverQueueData);
+                    screen.BuildManeuverQueueScreen(screen.CurrentFrame, screen.Center);
                     screen.EndAndPaintFrame();
                 }
             }
+            #endregion
 
-            /// initialize hardware on the CBT
-
-
+            // initialize hardware on the CBT
+            #region Hardware Initialization
             // generate a list of the display blocks on the CBT that are subscribed to the flight log
             // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
             private static void AddLogSubscribers(IMyGridTerminalSystem grid)
@@ -667,6 +672,10 @@ namespace IngameScript
                 // load sensors
             }
 
+            #endregion
+
+            // CBT-specific methods
+            #region CBT Methods
             public static int GetAutopilotState()
             {
                 int autopilotState = 0;
@@ -759,6 +768,7 @@ namespace IngameScript
                 SetAutopilotControl(true, false, false);
                 FlightController.MaintainSeaLevelAltitude(altitude);
             }
+            #endregion
         }
     }
 }

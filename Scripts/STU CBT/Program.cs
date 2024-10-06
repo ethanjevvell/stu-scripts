@@ -30,9 +30,22 @@ namespace IngameScript
 
         CBT CBTShip;
         STUMasterLogBroadcaster Broadcaster;
+        IMyBroadcastListener Listener;
         MyCommandLine CommandLineParser = new MyCommandLine();
         Queue<STUStateMachine> ManeuverQueue = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
+        public struct ManeuverQueueData
+        {
+            public string CurrentManeuverName;
+            public bool CurrentManeuverInitStatus;
+            public bool CurrentManeuverRunStatus;
+            public bool CurrentManeuverCloseoutStatus;
+            public string FirstManeuverName;
+            public string SecondManeuverName;
+            public string ThirdManeuverName;
+            public string FourthManeuverName;
+            public bool Continuation;
+        }
         
         public Program()
         {
@@ -40,6 +53,8 @@ namespace IngameScript
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
             CBT.SetAutopilotControl(true, true, false);
+
+            ResetAutopilot();
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
             // I'm pretty sure the user input buffer is empty as far as the program is concerned whenever you hit recompile, even if there is text in the box.
@@ -104,6 +119,7 @@ namespace IngameScript
                 CBT.RearDock.UpdateRearDock(CBT.UserInputRearDockState);
                 CBT.UpdateAutopilotScreens();
                 CBT.UpdateLogScreens();
+                CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
             }
 
             catch (Exception e)
@@ -112,6 +128,30 @@ namespace IngameScript
                 CBT.AddToLogQueue($"Caught exception: {e}", STULogType.ERROR);
                 CBT.UpdateLogScreens();
             }
+        }
+
+        public ManeuverQueueData GatherManeuverQueueData()
+        {
+            ManeuverQueueData data = new ManeuverQueueData();
+            data.CurrentManeuverName = CurrentManeuver?.Name;
+            data.CurrentManeuverInitStatus = CurrentManeuver?.CurrentInternalState == STUStateMachine.InternalStates.Init;
+            data.CurrentManeuverRunStatus = CurrentManeuver?.CurrentInternalState == STUStateMachine.InternalStates.Run;
+            data.CurrentManeuverCloseoutStatus = CurrentManeuver?.CurrentInternalState == STUStateMachine.InternalStates.Closeout;
+            data.FirstManeuverName = ManeuverQueue.Count > 0 ? ManeuverQueue.ElementAt(0).Name : null;
+            data.SecondManeuverName = ManeuverQueue.Count > 1 ? ManeuverQueue.ElementAt(1).Name : null;
+            data.ThirdManeuverName = ManeuverQueue.Count > 2 ? ManeuverQueue.ElementAt(2).Name : null;
+            data.FourthManeuverName = ManeuverQueue.Count > 3 ? ManeuverQueue.ElementAt(3).Name : null;
+            data.Continuation = ManeuverQueue.Count > 4;
+            return data;
+        }
+
+        public void ResetAutopilot()
+        {
+            CBT.SetAutopilotControl(false, false, true);
+            ManeuverQueue.Clear();
+            CBT.ResetUserInputVelocities();
+            CurrentManeuver = null;
+            CBT.CurrentPhase = CBT.Phase.Idle;
         }
 
         public bool CheckSpecialCommandWord(string arg)
@@ -135,11 +175,7 @@ namespace IngameScript
                     return true;
                 case "RESETAP":
                     CBT.AddToLogQueue("Resetting autopilot...", STULogType.INFO);
-                    CBT.SetAutopilotControl(false, false, true);
-                    ManeuverQueue.Clear();
-                    CBT.ResetUserInputVelocities();
-                    CurrentManeuver = null;
-                    CBT.CurrentPhase = CBT.Phase.Idle;
+                    ResetAutopilot();
                     return true;
                 case "AC130":
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
@@ -147,8 +183,16 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, new Vector3D(99756.85,158304.72,5859075.56), 20));
-                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, new Vector3D(100033.4,158844.99,5858882.1), 20));
+                    ManeuverQueue.Enqueue(new CBT.CruisingSpeedManeuver(20));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
+                    ManeuverQueue.Enqueue(new CBT.CruisingSpeedManeuver(10));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
+                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(0,0,0,0.5,0,0));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
+                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(0,0,0,0,0.5,0));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
+                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
+                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
 
                 case "GANGWAY":

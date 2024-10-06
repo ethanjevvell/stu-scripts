@@ -21,47 +21,186 @@ namespace IngameScript
                 echo = Echo;
             }
 
-            private MySprite CurrentManeuverName = new MySprite();
-            private MySprite CurrentManeuverInitStatus = new MySprite();
-            private MySprite CurrentManeuverRunStatus = new MySprite();
-            private MySprite CurrentManeuverCloseoutStatus = new MySprite();
-            private MySprite FirstManeuverName = new MySprite();
-            private MySprite SecondManeuverName = new MySprite();
-            private MySprite ThirdManeuverName = new MySprite();
-            private MySprite FourthManeuverName = new MySprite();
-            private MySprite Continuation = new MySprite();
-            private MySprite EndOfQueue = new MySprite();
+            public ManeuverQueueData ManeuverQueueData;
 
+            private MySprite CurrentManeuverName;
+            private MySprite CurrentManeuverInitStatus;
+            private MySprite CurrentManeuverRunStatus;
+            private MySprite CurrentManeuverCloseoutStatus;
+            private MySprite FirstManeuverName;
+            private MySprite SecondManeuverName;
+            private MySprite ThirdManeuverName;
+            private MySprite FourthManeuverName;
+            private MySprite Continuation;
+
+            #region Build Sprites
             public void BuildCurrentManeuverName(string currentManeuverName)
             {
-                if (currentManeuverName == null)
-                {
-                    currentManeuverName = "Queue empty.";
-                }
                 CurrentManeuverName = new MySprite()
                 {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
                     Data = currentManeuverName,
-                    Position = new Vector2(0f, -100f),
+                    Position = new Vector2(0, -218f), //  irrelevant due to AlignTopWithinParent
                     Color = new Color(255, 255, 255, 255),
-                    FontId = "Debug",
-                    RotationOrScale = 1f
+                    FontId = "Monospace",
+                    RotationOrScale = 0.75f
                 };
             }
-
-            public void LoadManeuverQueueData(
-                string currentManeuverName = null,
-                bool currentManeuverInitStatus = false,
-                bool currentManeuverRunStatus = false,
-                bool currentManeuverCloseoutStatus = false,
-                string firstManeuverName = null,
-                string secondManeuverName = null,
-                string thirdManeuverName = null,
-                string fourthManeuverName = null,
-                bool hasMoreInTheQueue = false)
+            public void BuildCurrentManeuverInitStatus(bool currentManeuverInitStatus)
             {
-                if (currentManeuverName != null) { BuildCurrentManeuverName(currentManeuverName); }
+                Color color;
+                if (currentManeuverInitStatus)
+                    color = new Color(255, 255, 255, 255);
+                else 
+                    color = new Color(64, 64, 64, 255);
+                CurrentManeuverInitStatus = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Alignment = TextAlignment.CENTER,
+                    Data = "SquareSimple",
+                    Position = new Vector2(48f, 74f),
+                    Size = new Vector2(64f, 7f),
+                    Color = color,
+                    RotationOrScale = 0f
+                };
+            }
+            public void BuildCurrentManeuverRunStatus(bool currentManeuverRunStatus)
+            {
+                Color color;
+                if (currentManeuverRunStatus)
+                    color = new Color(255, 255, 255, 255);
+                else 
+                    color = new Color(64, 64, 64, 255);
+                CurrentManeuverRunStatus = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Alignment = TextAlignment.CENTER,
+                    Data = "SquareSimple",
+                    Position = new Vector2(128f, 74f),
+                    Size = new Vector2(64f, 7f),
+                    Color = color,
+                    RotationOrScale = 0f
+                };
+            }
+            public void BuildCurrentManeuverCloseoutStatus(bool currentManeuverCloseoutStatus)
+            {
+                Color color;
+                if (currentManeuverCloseoutStatus)
+                    color = new Color(255, 255, 255, 255);
+                else 
+                    color = new Color(64, 64, 64, 255);
+                CurrentManeuverCloseoutStatus = new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Alignment = TextAlignment.CENTER,
+                    Data = "SquareSimple",
+                    Position = new Vector2(208f, 74f),
+                    Size = new Vector2(64f, 7f),
+                    Color = color,
+                    RotationOrScale = 0f
+                };
+            }
+            public void BuildFirstManeuverName(string firstManeuverName)
+            {
+                FirstManeuverName = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.LEFT,
+                    Data = firstManeuverName,
+                    Position = new Vector2(16f, 90f),
+                    Color = new Color(255, 255, 255, 255),
+                    FontId = "Monospace",
+                    RotationOrScale = 0.6f
+                };
+            }
+            public void BuildSecondManeuverName(string secondManeuverName)
+            {
+                SecondManeuverName = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.LEFT,
+                    Data = secondManeuverName,
+                    Position = new Vector2(16f, 110f),
+                    Color = new Color(255, 255, 255, 255),
+                    FontId = "Monospace",
+                    RotationOrScale = 0.6f
+                };
+            }
+            public void BuildThirdManeuverName(string thirdManeuverName)
+            {
+                ThirdManeuverName = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.LEFT,
+                    Data = thirdManeuverName,
+                    Position = new Vector2(16f, 130f),
+                    Color = new Color(255, 255, 255, 255),
+                    FontId = "Monospace",
+                    RotationOrScale = 0.6f
+                };
+            }
+            public void BuildFourthManeuverName(string fourthManeuverName)
+            {
+                FourthManeuverName = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.LEFT,
+                    Data = fourthManeuverName,
+                    Position = new Vector2(16f, 150f),
+                    Color = new Color(255, 255, 255, 255),
+                    FontId = "Monospace",
+                    RotationOrScale = 0.6f
+                };
+            }
+            // if continuation is true, make the sprite say "..."
+            // if false, make the sprite say "End of Queue"
+            public void BuildContinuation(string str)
+            {
+                Continuation = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.LEFT,
+                    Data = str,
+                    Position = new Vector2(16f, 170f), 
+                    Color = new Color(64, 64, 64, 255),
+                    FontId = "Monospace",
+                    RotationOrScale = 0.5f
+                };
+            }
+            #endregion
+
+            public void LoadManeuverQueueData(ManeuverQueueData data)
+            {
+                BuildCurrentManeuverName(data.CurrentManeuverName);
+                BuildCurrentManeuverInitStatus(data.CurrentManeuverInitStatus);
+                BuildCurrentManeuverRunStatus(data.CurrentManeuverRunStatus);
+                BuildCurrentManeuverCloseoutStatus(data.CurrentManeuverCloseoutStatus);
+
+                // determine what to pass into the first maneuver name
+                if(data.FirstManeuverName != null) { BuildFirstManeuverName($"1. {data.FirstManeuverName}"); }
+                else if (data.FirstManeuverName == null && data.CurrentManeuverName != null) { BuildFirstManeuverName("-- END OF QUEUE --"); }
+                else { BuildFirstManeuverName(data.FirstManeuverName); }
+
+                // determine what to pass into the second maneuver name
+                if (data.SecondManeuverName != null) { BuildSecondManeuverName($"2. {data.SecondManeuverName}"); }
+                else if (data.SecondManeuverName == null && data.FirstManeuverName != null) { BuildSecondManeuverName("-- END OF QUEUE --"); }
+                else { BuildSecondManeuverName(data.SecondManeuverName); }
+
+                // determine what to pass into the third maneuver name
+                if (data.ThirdManeuverName != null) { BuildThirdManeuverName($"3. {data.ThirdManeuverName}"); }
+                else if (data.ThirdManeuverName == null && data.SecondManeuverName != null) { BuildThirdManeuverName("-- END OF QUEUE --"); }
+                else { BuildThirdManeuverName(data.ThirdManeuverName); }
+
+                // determine what to pass into the fourth maneuver name
+                if (data.FourthManeuverName != null) { BuildFourthManeuverName($"4. {data.FourthManeuverName}"); }
+                else if (data.FourthManeuverName == null && data.ThirdManeuverName != null) { BuildFourthManeuverName("-- END OF QUEUE --"); }
+                else { BuildFourthManeuverName(data.FourthManeuverName); }
+
+                // determine what to pass in for the continuation field
+                if (data.Continuation == true) { BuildContinuation("(CONTINUED)"); }
+                else if (data.Continuation == false && data.FourthManeuverName != null) { BuildContinuation("-- END OF QUEUE --"); }
+                else { BuildContinuation(""); }
             }
 
             public void BuildManeuverQueueScreen(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
@@ -76,24 +215,20 @@ namespace IngameScript
                     Color = new Color(0, 0, 0, 255),
                     RotationOrScale = 0f
                 };
-                MySprite title = new MySprite()
-                {
-                    Type = SpriteType.TEXT,
-                    Alignment = TextAlignment.CENTER,
-                    Data = "Maneuver Queue",
-                    Position = new Vector2(0f, -100f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
-                    Color = new Color(255, 255, 255, 255),
-                    FontId = "Debug",
-                    RotationOrScale = 2f * scale
-                };
 
-                AlignCenterWithinParent(background_sprite, ref title);
+                AlignTopWithinParent(background_sprite, ref CurrentManeuverName);
 
                 frame.Add(background_sprite);
-                frame.Add(title);
+                frame.Add(CurrentManeuverName);
+                frame.Add(CurrentManeuverInitStatus);
+                frame.Add(CurrentManeuverRunStatus);
+                frame.Add(CurrentManeuverCloseoutStatus);
+                frame.Add(FirstManeuverName);
+                frame.Add(SecondManeuverName);
+                frame.Add(ThirdManeuverName);
+                frame.Add(FourthManeuverName);
+                frame.Add(Continuation);
             }
-
         }
     }
-
 }
