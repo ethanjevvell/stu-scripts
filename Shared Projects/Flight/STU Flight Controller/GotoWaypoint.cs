@@ -19,11 +19,14 @@
 
                 public override bool Init()
                 {
+                    FC.ReinstateThrusterControl();
+                    FC.ReinstateGyroControl();
                     return true;
                 }
 
                 public override bool Run()
                 {
+                    
                     return true;
                 }
 

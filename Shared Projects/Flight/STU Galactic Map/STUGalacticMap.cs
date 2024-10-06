@@ -5,6 +5,12 @@ namespace IngameScript {
     partial class Program {
         public class STUGalacticMap {
 
+            public static Dictionary<string, Vector3D> Waypoints = new Dictionary<string, Vector3D>
+            {
+                { "CBT", new Vector3D(99756.85,158304.72,5859075.56) },
+                { "CBT2", new Vector3D(100033.4,158844.99,5858882.1) },
+            };
+
             public struct Planet {
                 public string Name;
                 public double Radius;

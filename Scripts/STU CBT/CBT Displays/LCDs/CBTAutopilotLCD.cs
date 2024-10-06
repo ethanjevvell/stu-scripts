@@ -89,7 +89,7 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
-                    Data = "M",
+                    Data = "0",
                     Position = new Vector2(-57f, -84f) * scale + centerPos, // this line is irrelevant because of AlignCenterWithinParent
                     Color = new Color(255, 0, 0, 255),
                     FontId = "Debug",
@@ -103,8 +103,6 @@ namespace IngameScript
                 frame.Add(circle);
                 frame.Add(letter_M);
             }
-
         }
     }
-    
 }
