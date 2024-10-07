@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner Recon", "STU Auto Miner Recon.csproj", "{ACA12186-2062-4B42-A1B7-3420AADB2D19}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.ActiveCfg = Debug|x64
+		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4463E03-D298-47BF-97D7-24F424F38332}
+	EndGlobalSection
+EndGlobal

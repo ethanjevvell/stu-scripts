@@ -69,6 +69,10 @@ namespace IngameScript {
                 return Camera.Raycast(RaycastDistance, RaycastPitch, RaycastYaw);
             }
 
+            public void ToggleRaycast(bool on) {
+                Camera.EnableRaycast = on;
+            }
+
             public void ToggleRaycast() {
                 Camera.EnableRaycast = !Camera.EnableRaycast;
             }

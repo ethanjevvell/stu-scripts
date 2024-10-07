@@ -10,7 +10,6 @@ namespace IngameScript {
 
         IMyTerminalBlock Cockpit;
         STUDisplay CockpitDisplay;
-        STUDisplay ImageDisplay;
         STURaycaster Raycaster;
         STUMasterLogBroadcaster Broadcaster;
         MyCommandLine CommandLineParser;
@@ -21,7 +20,6 @@ namespace IngameScript {
 
             Cockpit = GetMainCockpit();
             CockpitDisplay = InitCockpitDisplay(Cockpit);
-            ImageDisplay = InitImageDisplay(Cockpit);
             Raycaster = InitRaycaster();
             Raycaster.RaycastDistance = 10000;
             Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_RECONNOITERER_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
@@ -59,35 +57,6 @@ namespace IngameScript {
                 foreach (var command in ProgramCommands.Keys) {
                     Echo($"\t{command}\n");
                 }
-            }
-
-            float distance = 10;
-            float fov = 45;
-            uint width = 80;
-            uint height = 80;
-
-            double minDistance = 0.1;
-            double maxDistance = distance;
-
-            try {
-                Echo($"Estimated wait: {width * height * distance / 2000 / 60} mins");
-                Raycaster.TakeImageOverTime(distance, fov, width, height, Echo);
-                Echo($"width = {width}, height = {height}");
-                Echo($"Image size: {Raycaster.Image.Width} x {Raycaster.Image.Height}");
-                Echo($"Progress: {(float)Raycaster.Image.Height / height * 100}%");
-                if (Raycaster.FinishedTakingImage) {
-                    Echo("Drawing...");
-                    ImageDisplay.DrawCustomImageOverTime(Raycaster.Image, width, height, minDistance, maxDistance, Echo);
-                    if (ImageDisplay.FinishedDrawingCustomImage) {
-                        Echo("Exporting...");
-                        Raycaster.Image.ExportOverTime(Raycaster.Camera);
-                        if (Raycaster.Image.FinishedExporting) {
-                            Echo("Done");
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                Echo("Error in image capture: " + e.Message);
             }
 
         }
@@ -150,15 +119,6 @@ namespace IngameScript {
             } else {
                 throw new Exception($"No camera found with name {cameraName}. Be sure to enter the name of the camera you want as the raycaster in the PB's Custom Data field");
             }
-        }
-
-        public STUDisplay InitImageDisplay(IMyTerminalBlock cockpit) {
-            var block = GridTerminalSystem.GetBlockWithName("LogLCD") as IMyTextPanel;
-            if (block == null) {
-                throw new Exception("No block found with name LogLCD");
-            }
-            var display = new STUDisplay(block, 0);
-            return display;
         }
 
         public string FormatCoordinates(string coordinateString) {
