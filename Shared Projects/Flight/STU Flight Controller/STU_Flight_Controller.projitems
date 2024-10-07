@@ -16,7 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\STUVelocityController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Displays\PlanetOrbitModeAdapters\SmallBuggyCockpit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Displays\StandardOutput.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)GotoWaypoint.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Subroutines\GotoAndKeepGoing.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Subroutines\PointAtTarget.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Subroutines\GotoAndStop.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)STUFlightController.cs" />

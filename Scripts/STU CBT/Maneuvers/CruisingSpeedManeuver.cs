@@ -35,7 +35,7 @@ namespace IngameScript
 
                 public override bool Closeout()
                 {
-                    AddToLogQueue("Cruising Speed achieve");
+                    AddToLogQueue("Cruising Speed achieved");
                     return true;
                 }
             }

@@ -67,12 +67,11 @@ namespace IngameScript {
                 }
 
                 public override bool Closeout() {
+                    FC.RelinquishThrusterControl();
                     FC.ToggleDampeners(true);
                     if (FC.CurrentVelocity_WorldFrame.IsZero()) {
                         CreateOkFlightLog("Returning controls to user");
                         FC.RelinquishGyroControl();
-                        FC.RelinquishThrusterControl();
-                        FC.ToggleDampeners(false);
                         return true;
                     }
                     return false;
