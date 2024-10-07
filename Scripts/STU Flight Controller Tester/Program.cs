@@ -22,7 +22,7 @@ namespace IngameScript {
             FlightController.RelinquishGyroControl();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
 
-            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, new Vector3D(-33058, 61356, -18555), 10);
+            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, new Vector3D(-1739, 3223, -963), 10);
         }
 
         public void Main() {
@@ -30,8 +30,6 @@ namespace IngameScript {
                 FlightController.UpdateState();
                 FlightController.ReinstateThrusterControl();
                 FlightController.GotoAndStopManeuver.ExecuteStateMachine();
-                //Vector3D desiredVector = Vector3D.Normalize(new Vector3D(-33058, 61356, -18555) - FlightController.CurrentPosition) * 10;
-                //FlightController.SetV_WorldFrame(FlightController.CurrentVelocity_WorldFrame, desiredVector);
             } catch (Exception e) {
                 STUFlightController.CreateFatalFlightLog(e.Message);
             } finally {

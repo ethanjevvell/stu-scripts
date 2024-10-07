@@ -53,7 +53,6 @@ namespace IngameScript {
                 jobSiteVector.Normalize();
                 Vector3D cruiseDestination = CurrentPlanet.Value.Center + jobSiteVector * (Vector3D.Distance(CurrentPlanet.Value.Center, JobSite) + CruiseAltitude);
                 CruisePhaseDestination = cruiseDestination;
-                CreateInfoBroadcast($"Cruise phase destination: {CruisePhaseDestination}");
                 FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, CruisePhaseDestination, CruiseVelocity);
                 return true;
             }
@@ -74,7 +73,6 @@ namespace IngameScript {
                         // Ascend to 100m
                         if (FlightController.MaintainSurfaceAltitude(CruiseAltitude)) {
                             RunState = RunStates.ORIENT;
-                            CreateInfoBroadcast("Reached 100m altitude");
                         }
                         break;
 
@@ -87,7 +85,6 @@ namespace IngameScript {
                         bool aligned = FlightController.AlignShipToTarget(headingVector);
                         bool stable = FlightController.SetStableForwardVelocity(0);
                         if (aligned && stable) {
-                            CreateInfoBroadcast("Oriented to cruise heading");
                             RunState = RunStates.ADJUST_VELOCITY;
                         }
                         break;
@@ -98,7 +95,6 @@ namespace IngameScript {
                             break;
                         }
                         if (FlightController.SetStableForwardVelocity(CruiseVelocity)) {
-                            CreateInfoBroadcast($"Accelerating to {CruiseVelocity} m/s");
                             RunState = RunStates.CRUISE;
                         }
                         break;
@@ -109,7 +105,6 @@ namespace IngameScript {
                             break;
                         }
                         if (FlightController.MaintainSurfaceAltitude(CruiseAltitude)) {
-                            CreateInfoBroadcast($"Adjusted altitude to {CruiseAltitude}m");
                             RunState = RunStates.CRUISE;
                         }
                         break;
@@ -122,13 +117,11 @@ namespace IngameScript {
 
                         if (FlightController.VelocityMagnitude < 0.9 * CruiseVelocity
                             || FlightController.VelocityMagnitude > 1.1 * CruiseVelocity) {
-                            CreateInfoBroadcast($"Re-establishing cruising velocity");
                             RunState = RunStates.ADJUST_VELOCITY;
                             break;
                         }
 
                         if (Math.Abs(FlightController.GetCurrentSurfaceAltitude() - CruiseAltitude) < 5) {
-                            CreateInfoBroadcast($"Re-establishing cruising altitude");
                             RunState = RunStates.ADJUST_ALTITUDE;
                             break;
                         }
@@ -137,14 +130,14 @@ namespace IngameScript {
 
                     case RunStates.DECELERATE:
                         if (FlightController.GotoAndStopManeuver.ExecuteStateMachine()) {
-                            CreateInfoBroadcast("Decelerated to 0 m/s");
+                            CreateInfoBroadcast("Starting descent to job site");
                             RunState = RunStates.DESCEND;
                         }
                         break;
 
                     case RunStates.DESCEND:
                         // Descend to 100m
-                        if (FlightController.MaintainSurfaceAltitude(10)) {
+                        if (FlightController.MaintainSurfaceAltitude(Connector.CubeGrid.WorldVolume.Radius + 10)) {
                             return true;
                         }
                         break;

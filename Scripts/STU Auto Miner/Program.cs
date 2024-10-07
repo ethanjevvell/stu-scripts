@@ -23,10 +23,12 @@ namespace IngameScript {
 
         static STUMasterLogBroadcaster LogBroadcaster { get; set; }
         STUFlightController FlightController { get; set; }
+        STURaycaster Raycaster { get; set; }
         IMyRemoteControl RemoteControl { get; set; }
         IMyShipConnector Connector { get; set; }
 
         Vector3 JobSite { get; set; }
+        PlaneD JobPlane { get; set; }
         Vector3 HomeBase { get; set; }
         Dictionary<string, Action> Commands { get; set; }
         string MinerMainState { get; set; }
@@ -40,6 +42,7 @@ namespace IngameScript {
 
         // Subroutine declarations
         FlyToJobSite FlyToJobSiteStateMachine { get; set; }
+        DrillRoutine DrillRoutineStateMachine { get; set; }
 
         public Program() {
             HydrogenTanks = new List<IMyGasTank>();
@@ -50,6 +53,9 @@ namespace IngameScript {
             }
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             MinerMainState = MinerState.INITIALIZE;
+
+            Raycaster = new STURaycaster(GridTerminalSystem.GetBlockWithName("Raycaster") as IMyCameraBlock);
+            Raycaster.ToggleRaycast(true);
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
             Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
             GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
@@ -99,7 +105,17 @@ namespace IngameScript {
                         break;
 
                     case MinerState.FLY_TO_JOB_SITE:
-                        FlyToJobSiteStateMachine.ExecuteStateMachine();
+                        if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
+                            CreateInfoBroadcast("Arrived at job site; starting drill routine");
+                            DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, JobSite, JobPlane);
+                            MinerMainState = MinerState.MINING;
+                        }
+                        break;
+
+                    case MinerState.MINING:
+                        if (DrillRoutineStateMachine.ExecuteStateMachine()) {
+                            CreateInfoBroadcast("Drill routine complete; returning to base");
+                        }
                         break;
 
                 }
@@ -125,6 +141,7 @@ namespace IngameScript {
             // todo
             return true;
         }
+
 
         void InitializeMiner() {
             //if (!Connector.IsConnected) {

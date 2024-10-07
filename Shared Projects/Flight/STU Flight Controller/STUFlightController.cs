@@ -109,6 +109,13 @@ namespace IngameScript {
                 return dx;
             }
 
+            public double CalculateStoppingDistance(double acceleration, double velocity) {
+                double mass = STUVelocityController.ShipMass;
+                double maxReverseAcceleration = acceleration;
+                double dx = (velocity * velocity) / (2 * maxReverseAcceleration); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
+                return dx;
+            }
+
             /// <summary>
             /// Updates various aspects of the ship's state, including velocity, acceleration, position, and orientation.
             /// This must be called on every tick to ensure that the ship's state is up-to-date!
@@ -156,6 +163,17 @@ namespace IngameScript {
             }
 
             /// <summary>
+            /// Attempts to reach desiredVelocity in the world frame. Pass in a reference position to align the ship with that position. Returns true if the ship's velocity is stable.
+            /// </summary>
+            /// <param name="targetPos"></param>
+            /// <param name="desiredVelocity"></param>
+            /// <param name="referencePos"></param>
+            /// <returns></returns>
+            public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity, Vector3D referencePos) {
+                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, referencePos, desiredVelocity);
+            }
+
+            /// <summary>
             /// Attempts to reach desiredVelocity in the world frame. Pass in a reference block to align that block with targetPos. Returns true if the ship's velocity is stable.
             /// </summary>
             /// <param name="targetPos"></param>
@@ -185,7 +203,7 @@ namespace IngameScript {
             }
 
             public void Hover() {
-                VelocityController.Accelerate_WorldFrame(Vector3D.Zero, 0);
+                VelocityController.ExertVectorForce_WorldFrame(Vector3D.Zero, 0);
             }
 
             /// <summary>

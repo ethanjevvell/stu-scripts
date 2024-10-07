@@ -314,14 +314,13 @@ namespace IngameScript {
 
                 }
 
-                public void Accelerate_LocalFrame(Vector3D direction, double magnitude, bool alreadyScaled = false) {
+                public void ExertVectorForce_LocalFrame(Vector3D direction, double magnitude, bool alreadyScaled = false) {
                     // Normalize just in case user does not provide a unit vector
                     direction.Normalize();
                     Vector3D outputVector = direction * magnitude;
                     if (!alreadyScaled) {
                         outputVector = GetScaledLocalOutputVector(direction, magnitude);
                     }
-                    CreateOkFlightLog($"About to exert: {outputVector.Length().ToString()}");
                     SetFx(outputVector.X);
                     SetFy(outputVector.Y);
                     SetFz(outputVector.Z);
@@ -341,7 +340,7 @@ namespace IngameScript {
                     // Edge case: if we're not moving, we can't calculate a normalized vector
                     if (V_c.IsZero()) {
                         outputVector = V_e_vec * ShipMass;
-                        Accelerate_WorldFrame(outputVector, outputVector.Length());
+                        ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
                         return V_e < 0.1;
                     }
 
@@ -361,7 +360,7 @@ namespace IngameScript {
                     outputVector *= V_e * ShipMass;
 
                     // Accelerate along the output vector
-                    Accelerate_WorldFrame(outputVector, outputVector.Length());
+                    ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
 
                     // Check if we've reached the desired velocity state
                     return V_e < 0.1;
@@ -402,7 +401,7 @@ namespace IngameScript {
 
                 }
 
-                public void Accelerate_WorldFrame(Vector3D worldDirection, double magnitude) {
+                public void ExertVectorForce_WorldFrame(Vector3D worldDirection, double magnitude) {
 
                     worldDirection.Normalize();
 
@@ -458,11 +457,11 @@ namespace IngameScript {
 
                         Vector3D outputVector = desiredThrust + counterGravityThrustLocal;
                         // We can bypass the scaling function here because we've already done it
-                        Accelerate_LocalFrame(outputVector.Normalized(), outputVector.Length(), true);
+                        ExertVectorForce_LocalFrame(outputVector.Normalized(), outputVector.Length(), true);
                         return;
                     }
 
-                    Accelerate_LocalFrame(STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, worldDirection), magnitude);
+                    ExertVectorForce_LocalFrame(STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, worldDirection), magnitude);
                 }
 
                 public Vector3D CalculateAccelerationVectors() {
