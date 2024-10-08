@@ -76,16 +76,6 @@ namespace IngameScript {
 
             InventoryEnumerator.EnumerateInventories();
 
-            if (InventoryEnumerator.GetItemTotals().Count > 0) {
-                foreach (KeyValuePair<string, double> kvp in InventoryEnumerator.GetItemTotals()) {
-                    Echo(kvp.Key + ": " + kvp.Value);
-                }
-            }
-
-            LogScreen.StartFrame();
-            LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-            LogScreen.EndAndPaintFrame();
-
             //try {
             //    FlightController.UpdateState();
 

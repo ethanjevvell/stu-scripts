@@ -121,6 +121,7 @@ namespace IngameScript {
             Dictionary<string, double> MostRecentItemTotals = new Dictionary<string, double>();
 
             IEnumerator<bool> InventoryEnumeratorStateMachine;
+            float InventoryIndex;
 
             public STUInventoryEnumerator(IMyGridTerminalSystem grid, IMyProgrammableBlock me) {
                 List<IMyTerminalBlock> gridBlocks = new List<IMyTerminalBlock>();
@@ -149,18 +150,11 @@ namespace IngameScript {
 
             public void EnumerateInventories() {
 
-                if (Tanks == null) {
-                    throw new System.Exception("Tanks list is null. Did you forget to pass it to the constructor?");
-                }
-
-                if (Inventories == null) {
-                    throw new System.Exception("Inventories list is null. Did you forget to pass it to the constructor?");
-                }
-
                 if (InventoryEnumeratorStateMachine == null) {
                     InventoryEnumeratorStateMachine = EnumerateInventoriesCoroutine(Inventories, Tanks).GetEnumerator();
                     // Clear the item totals if we're starting a new enumeration
                     RunningItemTotals.Clear();
+                    InventoryIndex = 0;
                 }
 
                 // Process inventories incrementally
@@ -174,23 +168,27 @@ namespace IngameScript {
             }
 
             IEnumerable<bool> EnumerateInventoriesCoroutine(List<IMyInventory> inventories, List<IMyGasTank> tanks) {
+
                 var items = new List<MyInventoryItem>();
+
                 foreach (IMyInventory inventory in inventories) {
                     items.Clear();
                     inventory.GetItems(items);
                     foreach (MyInventoryItem item in items) {
-                        // Process the item (e.g., tally quantities, categorize, etc.)
                         ProcessItem(item);
-                        // Yield control to prevent long execution
                     }
+                    InventoryIndex++;
                     yield return true;
                 }
 
                 foreach (IMyGasTank tank in tanks) {
                     ProcessTank(tank);
+                    InventoryIndex++;
+                    yield return true;
                 }
 
                 MostRecentItemTotals = RunningItemTotals;
+
             }
 
             void ProcessItem(MyInventoryItem item) {
@@ -233,6 +231,14 @@ namespace IngameScript {
                 return MostRecentItemTotals;
             }
 
+            public float GetProgress() {
+                // Ensure we don't divide by zero
+                int totalCount = Inventories.Count + Tanks.Count;
+                if (totalCount == 0)
+                    return 1;
+
+                return InventoryIndex / totalCount;
+            }
         }
     }
 }
