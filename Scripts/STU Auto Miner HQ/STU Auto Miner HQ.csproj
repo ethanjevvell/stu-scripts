@@ -50,6 +50,10 @@
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Displays\LogLCD\" />
+    <Folder Include="Displays\MainLCD\" />
+  </ItemGroup>
   <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Log\STU_Log.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />

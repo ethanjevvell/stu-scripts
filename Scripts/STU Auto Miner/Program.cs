@@ -44,6 +44,9 @@ namespace IngameScript {
         FlyToJobSite FlyToJobSiteStateMachine { get; set; }
         DrillRoutine DrillRoutineStateMachine { get; set; }
 
+        // Inventory enumerator
+        STUInventoryEnumerator InventoryEnumerator { get; set; }
+
         public Program() {
             HydrogenTanks = new List<IMyGasTank>();
             Batteries = new List<IMyBatteryBlock>();
@@ -63,6 +66,7 @@ namespace IngameScript {
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
+            InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
             Commands = new Dictionary<string, Action> {
                 // commands go here
             };
@@ -70,59 +74,71 @@ namespace IngameScript {
 
         public void Main(string command) {
 
-            try {
-                FlightController.UpdateState();
+            InventoryEnumerator.EnumerateInventories();
 
-                // Logging
-                LogScreen.StartFrame();
-                if (STUFlightController.FlightLogs.Count > 0) {
-                    while (STUFlightController.FlightLogs.Count > 0) {
-                        LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
-                    }
+            if (InventoryEnumerator.GetItemTotals().Count > 0) {
+                foreach (KeyValuePair<string, double> kvp in InventoryEnumerator.GetItemTotals()) {
+                    Echo(kvp.Key + ": " + kvp.Value);
                 }
-
-                LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-                LogScreen.EndAndPaintFrame();
-
-                Action commandAction = ParseCommand(command);
-                if (commandAction != null) {
-                    commandAction();
-                }
-
-                switch (MinerMainState) {
-
-                    case MinerState.INITIALIZE:
-                        InitializeMiner();
-                        MinerMainState = MinerState.IDLE;
-                        CreateOkBroadcast("Miner initialized");
-                        break;
-
-                    case MinerState.IDLE:
-                        MinerMainState = MinerState.FLY_TO_JOB_SITE;
-                        Vector3 testJobSite = new Vector3(-37990, -39137, -28245);
-                        FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 30, 5);
-                        CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
-                        break;
-
-                    case MinerState.FLY_TO_JOB_SITE:
-                        if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
-                            CreateInfoBroadcast("Arrived at job site; starting drill routine");
-                            DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, JobSite, JobPlane);
-                            MinerMainState = MinerState.MINING;
-                        }
-                        break;
-
-                    case MinerState.MINING:
-                        if (DrillRoutineStateMachine.ExecuteStateMachine()) {
-                            CreateInfoBroadcast("Drill routine complete; returning to base");
-                        }
-                        break;
-
-                }
-
-            } catch (Exception e) {
-                CreateFatalErrorBroadcast(e.Message);
             }
+
+            LogScreen.StartFrame();
+            LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+            LogScreen.EndAndPaintFrame();
+
+            //try {
+            //    FlightController.UpdateState();
+
+            //    // Logging
+            //    LogScreen.StartFrame();
+            //    if (STUFlightController.FlightLogs.Count > 0) {
+            //        while (STUFlightController.FlightLogs.Count > 0) {
+            //            LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+            //        }
+            //    }
+
+            //    LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+            //    LogScreen.EndAndPaintFrame();
+
+            //    Action commandAction = ParseCommand(command);
+            //    if (commandAction != null) {
+            //        commandAction();
+            //    }
+
+            //    switch (MinerMainState) {
+
+            //        case MinerState.INITIALIZE:
+            //            InitializeMiner();
+            //            MinerMainState = MinerState.IDLE;
+            //            CreateOkBroadcast("Miner initialized");
+            //            break;
+
+            //        case MinerState.IDLE:
+            //            MinerMainState = MinerState.FLY_TO_JOB_SITE;
+            //            Vector3 testJobSite = new Vector3(-37990, -39137, -28245);
+            //            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 30, 5);
+            //            CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
+            //            break;
+
+            //        case MinerState.FLY_TO_JOB_SITE:
+            //            if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
+            //                CreateInfoBroadcast("Arrived at job site; starting drill routine");
+            //                DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, JobSite, JobPlane);
+            //                MinerMainState = MinerState.MINING;
+            //            }
+            //            break;
+
+            //        case MinerState.MINING:
+            //            if (DrillRoutineStateMachine.ExecuteStateMachine()) {
+            //                CreateInfoBroadcast("Drill routine complete; returning to base");
+            //            }
+            //            break;
+
+            //    }
+
+            //} catch (Exception e) {
+            //    CreateFatalErrorBroadcast(e.Message);
+            //}
         }
 
         Action ParseCommand(string command) {

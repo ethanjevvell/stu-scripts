@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner HQ", "..\STU
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Auto Miner Variables", "..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU Auto Miner Variables.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STUInventoryEnumerator", "..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.shproj", "{9543D945-4F12-4CD2-9B70-938AE33C98C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -58,6 +60,7 @@ Global
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
@@ -67,6 +70,7 @@ Global
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{7d53f862-df1c-4fc4-92f8-49568e15c32b}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{83207d78-9012-4ea3-ac3f-5fea6193e59a}*SharedItemsImports = 13
+		..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems*{9543d945-4f12-4cd2-9b70-938ae33c98c7}*SharedItemsImports = 13
 		..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU_Auto_Miner_Variables.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
