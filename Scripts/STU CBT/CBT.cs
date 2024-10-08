@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI.Ingame;
+using VRage.ObjectBuilders;
 using VRageMath;
 
 namespace IngameScript
@@ -50,6 +52,7 @@ namespace IngameScript
             public static List<CBTLogLCD> LogChannel = new List<CBTLogLCD>();
             public static List<CBTAutopilotLCD> AutopilotStatusChannel = new List<CBTAutopilotLCD>();
             public static List<CBTManeuverQueueLCD> ManeuverQueueChannel = new List<CBTManeuverQueueLCD>();
+            public static List<CBTAmmoLCD> AmmoChannel = new List<CBTAmmoLCD>();
             public static STUFlightController FlightController { get; set; }
             public static CBTGangway Gangway { get; set; }
             public static CBTRearDock RearDock { get; set; }
@@ -77,11 +80,17 @@ namespace IngameScript
             public static IMyGasTank[] HydrogenTanks { get; set; }
             public static IMyLandingGear[] LandingGear { get; set; }
             public static IMyGasTank[] OxygenTanks { get; set; }
+            public static IMyCargoContainer[] CargoContainers { get; set; }
 
             public static IMyMedicalRoom MedicalRoom { get; set; }
             public static IMyGasGenerator[] H2O2Generators { get; set; }
             public static IMyPowerProducer[] HydrogenEngines { get; set; }
             public static IMyGravityGenerator[] GravityGenerators { get; set; }
+            public static IMySensorBlock[] Sensors { get; set; }
+            public static IMyInteriorLight[] InteriorLights { get; set; }
+            public static IMyUserControllableGun[] GatlingTurrets { get; set; }
+            public static IMyUserControllableGun[] AssaultCannons { get; set; }
+            public static IMyUserControllableGun[] Railguns { get; set; }
 
             /// <summary>
             /// establish fuel and power levels
@@ -90,21 +99,15 @@ namespace IngameScript
             public static double CurrentPower { get; set; }
             public static double FuelCapacity { get; set; }
             public static double PowerCapacity { get; set; }
+
             public static bool LandingGearState { get; set; }
 
-            // enumerate flight modes for the CBT, similar to how the LIGMA has flight plans / phases
-            public enum Mode
-            {
-                AC130,
-                Hover,
-            }
-
+            
             // define generic phases for executing flight plans, essentially a state machine
             public enum Phase
             {
                 Idle,
                 Executing,
-                GracefulExit,
             }
 
             public enum PowerStates
@@ -119,6 +122,7 @@ namespace IngameScript
                 LifeSupport,
                 Radio,
                 Production,
+                Weaponry,
                 Other,
             }
 
@@ -128,10 +132,11 @@ namespace IngameScript
                 { HardwareClassificationLevels.LifeSupport, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.Radio, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.Production, new List<IMyTerminalBlock> { } },
+                { HardwareClassificationLevels.Weaponry, new List<IMyTerminalBlock> { } },
                 { HardwareClassificationLevels.Other, new List<IMyTerminalBlock> { } },
             };
 
-            // define the CBT object for the CBT model in game
+            // CBT object instantiation
             public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
@@ -154,11 +159,16 @@ namespace IngameScript
                 LoadCamera(grid);
                 AddAutopilotIndicatorSubscribers(grid);
                 AddManeuverQueueSubscribers(grid);
+                AddAmmoScreens(grid);
                 LoadMedicalRoom(grid);
                 LoadH2O2Generators(grid);
                 LoadOxygenTanks(grid);
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
+                LoadCargoContainers(grid);
+                LoadGatlingGuns(grid);
+                LoadAssaultCannonTurrets(grid);
+                LoadRailguns(grid);
 
                 FlightController = new STUFlightController(grid, RemoteControl, me);
 
@@ -186,13 +196,13 @@ namespace IngameScript
 
             // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
             // actually pulling those messages from the queue and displaying them is done in UpdateLogScreens()
-            public static void AddToLogQueue(string message, string type = STULogType.INFO)
+            public static void AddToLogQueue(string message, string type = STULogType.INFO, string sender = CBT_VARIABLES.CBT_VEHICLE_NAME)
             {
                 foreach (var screen in LogChannel)
                 {
                     screen.FlightLogs.Enqueue(new STULog
                     {
-                        Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
+                        Sender = sender,
                         Message = message,
                         Type = type,
                     });
@@ -206,6 +216,14 @@ namespace IngameScript
             // this will be called on every loop in Program.cs
             public static void UpdateLogScreens()
             {
+                // get any logs generated by the flight controller and add them to the queue
+                while (STUFlightController.FlightLogs.Count > 0)
+                {
+                    STULog log = STUFlightController.FlightLogs.Dequeue();
+                    AddToLogQueue(log.Message, log.Type, log.Sender);
+                }
+
+                // update all the screens that are subscribed to the flight log, which each have their own queue of logs
                 foreach (var screen in LogChannel)
                 {
                     screen.StartFrame();
@@ -239,10 +257,22 @@ namespace IngameScript
                     screen.EndAndPaintFrame();
                 }
             }
+
+            public static void UpdateAmmoScreens()
+            {
+                foreach (var screen in AmmoChannel)
+                {
+                    screen.StartFrame();
+                    screen.LoadAmmoData(GetAmmoLevel("NATO_25x184mm"), GetAmmoLevel("LargeCalibreAmmo"), GetAmmoLevel("LargeRailgunAmmo"));
+                    screen.BuildScreen(screen.CurrentFrame, screen.Center);
+                    screen.EndAndPaintFrame();
+                }
+            }
             #endregion
 
             // initialize hardware on the CBT
             #region Hardware Initialization
+            #region Screens
             // generate a list of the display blocks on the CBT that are subscribed to the flight log
             // do this by searching through all the blocks on the CBT and finding the ones whose custom data says they are subscribed
             private static void AddLogSubscribers(IMyGridTerminalSystem grid)
@@ -317,7 +347,27 @@ namespace IngameScript
                 }
             }
 
-            // load remote controller
+            private static void AddAmmoScreens(IMyGridTerminalSystem grid)
+            {
+                grid.GetBlocks(AllTerminalBlocks);
+                foreach (var block in AllTerminalBlocks)
+                {
+                    string CustomDataRawText = block.CustomData;
+                    string[] CustomDataLines = CustomDataRawText.Split('\n');
+                    foreach (var line in CustomDataLines)
+                    {
+                        if (line.Contains("CBT_AMMO"))
+                        {
+                            string[] kvp = line.Split(':');
+                            CBTAmmoLCD screen = new CBTAmmoLCD(echo, block, int.Parse(kvp[1]));
+                            AmmoChannel.Add(screen);
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            #region Flight Critical
             private static void LoadRemoteController(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> remoteControlBlocks = new List<IMyTerminalBlock>();
@@ -329,12 +379,11 @@ namespace IngameScript
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
                 List<IMyTerminalBlock> existingList;
-                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Radio, out existingList);
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.FlightCritical, out existingList);
                 existingList.Add(RemoteControl);
-                PowerStateLookupTable[HardwareClassificationLevels.Radio] = existingList;
+                PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Remote control ... loaded", STULogType.INFO);
             }
-
             // load main flight seat BY NAME. Name must be "CBT Flight Seat"
             private static void LoadFlightSeat(IMyGridTerminalSystem grid)
             {
@@ -346,7 +395,6 @@ namespace IngameScript
                 }
                 AddToLogQueue("Main flight seat ... loaded", STULogType.INFO);
             }
-
             // load ALL thrusters of ALL types
             // in later versions, fix this to have a list of ALL thrusters, plus subdivided groups of JUST ions and JUST hydros. 
             // even more generalized version of a ship's class should allow for atmo, but the CBT doesn't have atmo.
@@ -374,8 +422,6 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Thrusters ... loaded", STULogType.INFO);
             }
-
-            // load gyroscopes
             private static void LoadGyros(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> gyroBlocks = new List<IMyTerminalBlock>();
@@ -399,8 +445,6 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Gyros ... loaded", STULogType.INFO);
             }
-
-            // load batteries
             private static void LoadBatteries(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> batteryBlocks = new List<IMyTerminalBlock>();
@@ -418,10 +462,12 @@ namespace IngameScript
                 }
 
                 Batteries = batteries;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.FlightCritical, out existingList);
+                existingList.AddRange(Batteries);
+                PowerStateLookupTable[HardwareClassificationLevels.FlightCritical] = existingList;
                 AddToLogQueue("Batteries ... loaded", STULogType.INFO);
             }
-
-            // load fuel tanks
             private static void LoadFuelTanks(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
@@ -441,6 +487,7 @@ namespace IngameScript
                 HydrogenTanks = fuelTanks;
                 AddToLogQueue("Fuel tanks ... loaded", STULogType.INFO);
             }
+            #endregion Flight Critical
 
             // load landing gear
             private static void LoadLandingGear(IMyGridTerminalSystem grid)
@@ -555,7 +602,7 @@ namespace IngameScript
                 AddToLogQueue("Camera and actuator assembly ... loaded", STULogType.INFO);
             }
 
-            // load med bay
+            #region Life Support
             private static void LoadMedicalRoom(IMyGridTerminalSystem grid)
             {
                 MedicalRoom = grid.GetBlockWithName("CBT Medical Room") as IMyMedicalRoom;
@@ -570,8 +617,6 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.LifeSupport] = existingList;
                 AddToLogQueue("Medical Room ... loaded", STULogType.INFO);
             }
-
-            // load H2O2 generators
             private static void LoadH2O2Generators(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> generatorBlocks = new List<IMyTerminalBlock>();
@@ -595,8 +640,6 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.Production] = existingList;
                 AddToLogQueue("H2O2 generators ... loaded", STULogType.INFO);
             }
-
-            // load oxygen tanks
             private static void LoadOxygenTanks(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
@@ -620,8 +663,6 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.LifeSupport] = existingList;
                 AddToLogQueue("Oxygen tanks ... loaded", STULogType.INFO);
             }
-
-            // load hydrogen engines
             private static void LoadHydrogenEngines(IMyGridTerminalSystem grid)
             {
                 List<IMyTerminalBlock> hydrogenEngineBlocks = new List<IMyTerminalBlock>();
@@ -641,6 +682,7 @@ namespace IngameScript
                 HydrogenEngines = hydrogenEngines;
                 AddToLogQueue("Hydrogen engines ... loaded", STULogType.INFO);
             }
+            #endregion Life Support
 
             // load gravity generators
             private static void LoadGravityGenerators(IMyGridTerminalSystem grid)
@@ -666,16 +708,152 @@ namespace IngameScript
                 PowerStateLookupTable[HardwareClassificationLevels.Other] = existingList;
                 AddToLogQueue("Gravity generators ... loaded", STULogType.INFO);
             }
-
             private static void LoadSensors(IMyGridTerminalSystem grid)
             {
                 // load sensors
             }
+            private static void LoadInteriorLights(IMyGridTerminalSystem grid)
+            {
+                // load interior lights
+            }
+            #region Weaponry
+            private static void LoadGatlingGuns(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> gatlingGunBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyUserControllableGun>(gatlingGunBlocks, block => block.CubeGrid == Me.CubeGrid);
+                foreach (var block in gatlingGunBlocks)
+                {
+                    if (block.BlockDefinition.SubtypeId != "LargeGatlingTurret")
+                        gatlingGunBlocks.Remove(block);
+                }
+                if (gatlingGunBlocks.Count == 0)
+                {
+                    AddToLogQueue("No gatling guns found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyUserControllableGun[] gatlingGuns = new IMyUserControllableGun[gatlingGunBlocks.Count];
+                for (int i = 0; i < gatlingGunBlocks.Count; ++i)
+                {
+                    gatlingGuns[i] = gatlingGunBlocks[i] as IMyUserControllableGun;
+                }
+
+                GatlingTurrets = gatlingGuns;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Weaponry, out existingList);
+                existingList.AddRange(GatlingTurrets);
+                PowerStateLookupTable[HardwareClassificationLevels.Weaponry] = existingList;
+                AddToLogQueue("Gatling guns ... loaded", STULogType.INFO);
+            }
+            private static void LoadAssaultCannonTurrets(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> assaultCannonBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyUserControllableGun>(assaultCannonBlocks, block => block.CubeGrid == Me.CubeGrid);
+                foreach (var block in assaultCannonBlocks)
+                {
+                    if (block.BlockDefinition.SubtypeId != "LargeMissileTurret/LargeBlockMediumCalibreTurret")
+                        assaultCannonBlocks.Remove(block);
+                }
+                if (assaultCannonBlocks.Count == 0)
+                {
+                    AddToLogQueue("No assault cannons found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyUserControllableGun[] assaultCannons = new IMyUserControllableGun[assaultCannonBlocks.Count];
+                for (int i = 0; i < assaultCannonBlocks.Count; ++i)
+                {
+                    assaultCannons[i] = assaultCannonBlocks[i] as IMyUserControllableGun;
+                }
+
+                AssaultCannons = assaultCannons;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Weaponry, out existingList);
+                existingList.AddRange(AssaultCannons);
+                PowerStateLookupTable[HardwareClassificationLevels.Weaponry] = existingList;
+                AddToLogQueue("Assault cannons ... loaded", STULogType.INFO);
+            }
+            private static void LoadRailguns(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> railgunBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyUserControllableGun>(railgunBlocks, block => block.CubeGrid == Me.CubeGrid);
+                foreach (var block in railgunBlocks)
+                {
+                    if (block.BlockDefinition.SubtypeId != "SmallMissileLauncherReload/LargeRailgun")
+                        railgunBlocks.Remove(block);
+                }
+                if (railgunBlocks.Count == 0)
+                {
+                    AddToLogQueue("No railguns found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyUserControllableGun[] railguns = new IMyUserControllableGun[railgunBlocks.Count];
+                for (int i = 0; i < railgunBlocks.Count; ++i)
+                {
+                    railguns[i] = railgunBlocks[i] as IMyUserControllableGun;
+                }
+
+                Railguns = railguns;
+                List<IMyTerminalBlock> existingList;
+                PowerStateLookupTable.TryGetValue(HardwareClassificationLevels.Weaponry, out existingList);
+                existingList.AddRange(Railguns);
+                PowerStateLookupTable[HardwareClassificationLevels.Weaponry] = existingList;
+                AddToLogQueue("Railguns ... loaded", STULogType.INFO);
+            }
+            #endregion Weaponry
+            #endregion Hardware Initialization
+
+            // inventory management methods
+            #region Inventory Management
+            private static void LoadCargoContainers(IMyGridTerminalSystem grid)
+            {
+                List<IMyTerminalBlock> cargoContainerBlocks = new List<IMyTerminalBlock>();
+                grid.GetBlocksOfType<IMyCargoContainer>(cargoContainerBlocks, block => block.CubeGrid == Me.CubeGrid);
+                if (cargoContainerBlocks.Count == 0)
+                {
+                    AddToLogQueue("No cargo containers found on the CBT", STULogType.ERROR);
+                    return;
+                }
+
+                IMyCargoContainer[] cargoContainers = new IMyCargoContainer[cargoContainerBlocks.Count];
+                for (int i = 0; i < cargoContainerBlocks.Count; ++i)
+                {
+                    cargoContainers[i] = cargoContainerBlocks[i] as IMyCargoContainer;
+                }
+
+                CargoContainers = cargoContainers;
+                AddToLogQueue("Cargo containers ... loaded", STULogType.INFO);
+            }
+
+            public static int GetAmmoLevel(string ammoType)
+            {
+                int ammo = 0;
+
+                // seach cargo containers
+                foreach (var container in CargoContainers)
+                {
+                    List<MyInventoryItem> items = new List<MyInventoryItem>();
+                    container.GetInventory(0).GetItems(items);
+                    foreach (var item in items)
+                    {
+                        AddToLogQueue($"SubtypeId: {item.Type.SubtypeId}", STULogType.INFO);
+                        AddToLogQueue($"Ammo amount: {item.Amount}", STULogType.INFO);
+                        if (item.Type.SubtypeId == ammoType)
+                        {
+                            ammo += (int)item.Amount;
+                        }
+                    }
+                }
+
+                // search guns themselves
+                return ammo;
+            }
 
             #endregion
 
-            // CBT-specific methods
-            #region CBT Methods
+            // CBT helper functions
+            #region CBT Helper Functions
             public static int GetAutopilotState()
             {
                 int autopilotState = 0;

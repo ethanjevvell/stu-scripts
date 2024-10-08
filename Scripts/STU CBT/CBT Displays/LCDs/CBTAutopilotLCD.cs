@@ -85,7 +85,7 @@ namespace IngameScript
                     Color = new Color(255, 0, 0, 255),
                     RotationOrScale = 0f
                 }; // circle
-                MySprite letter_M = new MySprite()
+                MySprite ap_state = new MySprite()
                 {
                     Type = SpriteType.TEXT,
                     Alignment = TextAlignment.LEFT,
@@ -97,11 +97,11 @@ namespace IngameScript
                 }; // textM
 
                 AlignCenterWithinParent(background_sprite, ref circle);
-                AlignCenterWithinParent(background_sprite, ref letter_M);
+                AlignCenterWithinParent(background_sprite, ref ap_state);
 
                 frame.Add(background_sprite);
                 frame.Add(circle);
-                frame.Add(letter_M);
+                frame.Add(ap_state);
             }
         }
     }

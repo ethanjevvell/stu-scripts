@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
@@ -118,6 +119,9 @@ namespace IngameScript {
             }
 
             private RectangleF GetViewport() {
+                // the following line of code returns the coordinates of the top left corner of the actual writable area
+                // WITH RESPECT TO the top left corner of the texture
+                // this is important because whenever we define the position of a sprite, the coordinates that get read are with respect to the TEXTURE, not the viewable area (suface)
                 var standardViewport = new RectangleF((Surface.TextureSize - Surface.SurfaceSize) / 2f, Surface.SurfaceSize);
                 return standardViewport;
             }
@@ -184,9 +188,23 @@ namespace IngameScript {
                 return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).X;
             }
 
+            public float GetTextSpriteWidth(string s, float scale = 1f, string fontID = "Monospace")
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(s);
+                return Surface.MeasureStringInPixels(builder, fontID, scale).X;
+            }
+
             private float GetTextSpriteHeight(MySprite sprite) {
                 StringBuilder builder = new StringBuilder();
                 return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).Y;
+            }
+
+            public float GetTextSpriteHeight(string s, float scale = 1f, string fontID = "Monospace")
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(s);
+                return Surface.MeasureStringInPixels(builder, fontID, scale).Y;
             }
 
             private float GetDefaultLineHeight() {

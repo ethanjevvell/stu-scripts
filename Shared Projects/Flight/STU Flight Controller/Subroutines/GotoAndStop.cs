@@ -88,6 +88,7 @@ namespace IngameScript {
                 }
 
                 public override bool Closeout() {
+                    FC.RelinquishThrusterControl();
                     FC.ToggleDampeners(true);
                     FC.RelinquishThrusterControl();
                     if (FC.CurrentVelocity_WorldFrame.IsZero()) {

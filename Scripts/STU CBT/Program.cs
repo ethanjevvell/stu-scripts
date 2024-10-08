@@ -64,7 +64,7 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            try
+            try 
             {
                 argument = argument.Trim().ToUpper();
 
@@ -120,13 +120,16 @@ namespace IngameScript
                 CBT.UpdateAutopilotScreens();
                 CBT.UpdateLogScreens();
                 CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
+                CBT.UpdateAmmoScreens();
             }
 
             catch (Exception e)
             {
-                Echo($"Program.cs: Caught exception: {e}");
-                CBT.AddToLogQueue($"Caught exception: {e}", STULogType.ERROR);
+                Echo($"Program.cs: Caught exception: {e}\n");
+                CBT.AddToLogQueue($"Caught exception: {e}\n", STULogType.ERROR);
+                CBT.AddToLogQueue("HALTING PROGRAM EXECUTION!", STULogType.ERROR);
                 CBT.UpdateLogScreens();
+                Runtime.UpdateFrequency = UpdateFrequency.None;
             }
         }
 
@@ -183,16 +186,8 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new CBT.CruisingSpeedManeuver(20));
-                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
-                    ManeuverQueue.Enqueue(new CBT.CruisingSpeedManeuver(10));
-                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
-                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(0,0,0,0.5,0,0));
-                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
-                    ManeuverQueue.Enqueue(new CBT.GenericManeuver(0,0,0,0,0.5,0));
-                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
-                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
-                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
+                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
+                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
 
                 case "GANGWAY":
