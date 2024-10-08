@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System.Security.Authentication.ExtendedProtection;
 
 namespace IngameScript {
     partial class Program {
@@ -19,6 +20,11 @@ namespace IngameScript {
 
             public void Ping() {
                 Broadcaster.SendBroadcastMessage(Channel, "PING", Distance);
+            }
+
+            public void SendStandardMessage(string message)
+            {
+                Broadcaster.SendBroadcastMessage(Channel, message, Distance);
             }
 
         }

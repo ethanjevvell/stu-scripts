@@ -26,10 +26,11 @@ namespace IngameScript
         {
             public const string CBT_VEHICLE_NAME = "CBT";
             public const string CBT_BROADCAST_CHANNEL = "CBT";
+            public const string TEA_KEY = "SaladTossersUnited";
 
             public const double PLANETARY_DETECTION_BUFFER = 2000;
-            public const string PRIVATE_KEY = "";
-            public const string PUBLIC_KEY = "";
+            //public const string PRIVATE_KEY = "";
+            //public const string PUBLIC_KEY = "";
 
             public static class COMMANDS
             {

@@ -5,6 +5,7 @@ namespace IngameScript {
     partial class Program {
         public class TEA {
 
+            public TEA() { }
 
             public void encode(uint[] v, uint[] k) {
                 uint y = v[0];
