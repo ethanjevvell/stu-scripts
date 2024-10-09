@@ -34,6 +34,7 @@ namespace IngameScript
         MyCommandLine CommandLineParser = new MyCommandLine();
         Queue<STUStateMachine> ManeuverQueue = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
+        TEA Modem = new TEA();
         public struct ManeuverQueueData
         {
             public string CurrentManeuverName;
@@ -51,6 +52,7 @@ namespace IngameScript
         {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            Listener = IGC.RegisterBroadcastListener(CBT_VARIABLES.CBT_BROADCAST_CHANNEL);
             CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
             CBT.SetAutopilotControl(true, true, false);
 
@@ -66,6 +68,8 @@ namespace IngameScript
         {
             try 
             {
+                HandleWirelessMessages();
+                
                 argument = argument.Trim().ToUpper();
 
                 // check whether the passed argument is a special command word, if it's not, hand it off to the command parser
@@ -157,6 +161,26 @@ namespace IngameScript
             CBT.CurrentPhase = CBT.Phase.Idle;
         }
 
+        public void HandleWirelessMessages()
+        {
+            if (Listener.HasPendingMessage)
+            {
+                CBT.AddToLogQueue("Received something lol", STULogType.INFO);
+                var rawMessage = Listener.AcceptMessage();
+                string message = rawMessage.Data.ToString();
+                STULog incomingLog = STULog.Deserialize(message);
+                string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
+                
+                CBT.AddToLogQueue($"Received message: {decryptedMessage}", STULogType.INFO);
+
+                if (decryptedMessage == "PING")
+                {
+                    CBT.AddToLogQueue("PONG", STULogType.OK);
+                    CBT.CreateBroadcast("PONG", true, STULogType.OK);
+                }
+            }
+        }
+
         public bool CheckSpecialCommandWord(string arg)
         {
             switch (arg)
@@ -186,8 +210,9 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
-                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
+                    CBT.CreateBroadcast("PING", true, STULogType.OK);
+                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
+                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
 
                 case "GANGWAY":

@@ -184,14 +184,21 @@ namespace IngameScript
 
             // define the broadcaster method so that display messages can be sent throughout the world
             // (currently not implemented, just keeping this code here for future use)
-            public static void CreateBroadcast(string message, string type)
+            public static void CreateBroadcast(string message, bool encrypt = false, string type = STULogType.INFO)
             {
+                string key = null;
+                if (encrypt)
+                    key = CBT_VARIABLES.TEA_KEY;
+
                 Broadcaster.Log(new STULog
-                {
-                    Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
-                    Message = message,
-                    Type = type,
-                });
+                    {
+                        Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
+                        Message = message,
+                        Type = type,
+                    },
+                    key);
+
+                AddToLogQueue($"just now finished Create Broadcast with message: {message}, key: {key}");
             }
 
             // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
@@ -299,6 +306,7 @@ namespace IngameScript
                             }
                             catch(Exception e)
                             {
+                                echo("caught exception in AddLogSubscribers:");
                                 echo(e.Message);
                                 fontSize = 0.5f;
                             }
@@ -721,17 +729,15 @@ namespace IngameScript
             {
                 List<IMyTerminalBlock> gatlingGunBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyUserControllableGun>(gatlingGunBlocks, block => block.CubeGrid == Me.CubeGrid);
+                
+                List<IMyTerminalBlock> blocksToRemove = new List<IMyTerminalBlock>();
                 foreach (var block in gatlingGunBlocks)
                 {
                     if (block.BlockDefinition.SubtypeId != "LargeGatlingTurret")
-                        gatlingGunBlocks.Remove(block);
+                        blocksToRemove.Add(block);
                 }
-                if (gatlingGunBlocks.Count == 0)
-                {
-                    AddToLogQueue("No gatling guns found on the CBT", STULogType.ERROR);
-                    return;
-                }
-
+                foreach (var block in blocksToRemove) { gatlingGunBlocks.Remove(block); }
+                if (gatlingGunBlocks.Count == 0) { AddToLogQueue("No gatling guns found on the CBT", STULogType.ERROR); return; }
                 IMyUserControllableGun[] gatlingGuns = new IMyUserControllableGun[gatlingGunBlocks.Count];
                 for (int i = 0; i < gatlingGunBlocks.Count; ++i)
                 {
@@ -749,17 +755,15 @@ namespace IngameScript
             {
                 List<IMyTerminalBlock> assaultCannonBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyUserControllableGun>(assaultCannonBlocks, block => block.CubeGrid == Me.CubeGrid);
+                
+                List<IMyTerminalBlock> blocksToRemove = new List<IMyTerminalBlock>();
                 foreach (var block in assaultCannonBlocks)
                 {
                     if (block.BlockDefinition.SubtypeId != "LargeMissileTurret/LargeBlockMediumCalibreTurret")
-                        assaultCannonBlocks.Remove(block);
+                        blocksToRemove.Add(block);
                 }
-                if (assaultCannonBlocks.Count == 0)
-                {
-                    AddToLogQueue("No assault cannons found on the CBT", STULogType.ERROR);
-                    return;
-                }
-
+                foreach (var block in blocksToRemove) { assaultCannonBlocks.Remove(block); }
+                if (assaultCannonBlocks.Count == 0) { AddToLogQueue("No assault cannons found on the CBT", STULogType.ERROR); return; }
                 IMyUserControllableGun[] assaultCannons = new IMyUserControllableGun[assaultCannonBlocks.Count];
                 for (int i = 0; i < assaultCannonBlocks.Count; ++i)
                 {
@@ -777,17 +781,15 @@ namespace IngameScript
             {
                 List<IMyTerminalBlock> railgunBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyUserControllableGun>(railgunBlocks, block => block.CubeGrid == Me.CubeGrid);
+                
+                List<IMyTerminalBlock> blocksToRemove = new List<IMyTerminalBlock>();
                 foreach (var block in railgunBlocks)
                 {
-                    if (block.BlockDefinition.SubtypeId != "SmallMissileLauncherReload/LargeRailgun")
-                        railgunBlocks.Remove(block);
+                    if (block.BlockDefinition.SubtypeId != "LargeRailgunTurret")
+                        blocksToRemove.Add(block);
                 }
-                if (railgunBlocks.Count == 0)
-                {
-                    AddToLogQueue("No railguns found on the CBT", STULogType.ERROR);
-                    return;
-                }
-
+                foreach (var block in blocksToRemove) { railgunBlocks.Remove(block); }
+                if (railgunBlocks.Count == 0) { AddToLogQueue("No railguns found on the CBT", STULogType.ERROR); return; }
                 IMyUserControllableGun[] railguns = new IMyUserControllableGun[railgunBlocks.Count];
                 for (int i = 0; i < railgunBlocks.Count; ++i)
                 {
@@ -837,8 +839,6 @@ namespace IngameScript
                     container.GetInventory(0).GetItems(items);
                     foreach (var item in items)
                     {
-                        AddToLogQueue($"SubtypeId: {item.Type.SubtypeId}", STULogType.INFO);
-                        AddToLogQueue($"Ammo amount: {item.Amount}", STULogType.INFO);
                         if (item.Type.SubtypeId == ammoType)
                         {
                             ammo += (int)item.Amount;
