@@ -1,11 +1,160 @@
 ﻿
+using System;
+using System.Text;
+using VRageMath;
+
 namespace IngameScript {
     partial class Program {
+
         public static class AUTO_MINER_VARIABLES {
 
             public const string AUTO_MINER_RECON_NAME = "AM-R";
-            public const string AUTO_MINER_HQ_LISTENER = "AUTO_MINER_HQ_LISTENER";
+            public const string AUTO_MINER_HQ_RECON_CHANNEL = "AUTO_MINER_HQ_RECON_CHANNEL";
+            public const string AUTO_MINER_HQ_DRONE_CHANNEL = "AUTO_MINER_HQ_DRONE_CHANNEL";
+            public const string AUTO_MINER_HQ_COMMAND_CHANNEL = "AUTO_MINER_HQ_COMMAND_CHANNEL";
+            public const string AUTO_MINER_HQ_NAME = "AM-HQ";
+            public const string AUTO_MINER_LOG_SUBSCRIBER_TAG = "AUTO_MINER_LOG_SUBSCRIBER";
 
         }
+
+        public class MiningDroneData {
+
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string State { get; set; }
+            public Vector3D WorldPosition { get; set; }
+            public Vector3D WorldVelocity { get; set; }
+            public Vector3D WorldAcceleration { get; set; }
+            public double HydrogenLevel { get; set; }
+            public double BatteryLevel { get; set; }
+            public double CargoLevel { get; set; }
+            public double CargoCapacity { get; set; }
+            public PlaneD JobPlane { get; set; }
+            public Vector3D JobSite { get; set; }
+
+            public static MiningDroneData Deserialize(string s) {
+                var drone = new MiningDroneData();
+
+                var parts = s.Split(';');
+                foreach (var part in parts) {
+                    var kv = part.Split(':');
+                    if (kv.Length != 2)
+                        continue;
+
+                    var key = kv[0].Trim();
+                    var value = kv[1].Trim();
+
+                    switch (key) {
+                        case "Id":
+                            drone.Id = value;
+                            break;
+                        case "Name":
+                            drone.Name = value;
+                            break;
+                        case "State":
+                            drone.State = value;
+                            break;
+                        case "WorldPosition":
+                            drone.WorldPosition = DeserializeVector3D(value);
+                            break;
+                        case "WorldVelocity":
+                            drone.WorldVelocity = DeserializeVector3D(value);
+                            break;
+                        case "WorldAcceleration":
+                            drone.WorldAcceleration = DeserializeVector3D(value);
+                            break;
+                        case "HydrogenLevel":
+                            drone.HydrogenLevel = double.Parse(value);
+                            break;
+                        case "BatteryLevel":
+                            drone.BatteryLevel = double.Parse(value);
+                            break;
+                        case "CargoLevel":
+                            drone.CargoLevel = double.Parse(value);
+                            break;
+                        case "CargoCapacity":
+                            drone.CargoCapacity = double.Parse(value);
+                            break;
+                        case "JobPlane":
+                            drone.JobPlane = DeserializePlaneD(value);
+                            break;
+                        case "JobSite":
+                            drone.JobSite = DeserializeVector3D(value);
+                            break;
+                    }
+                }
+
+                return drone;
+            }
+
+            public static string FormatVector3D(Vector3D v) {
+                return $"({v.X}, {v.Y}, {v.Z})";
+            }
+
+            public static Vector3D DeserializeVector3D(string s) {
+                // Remove parentheses and split by comma
+                s = s.Trim('(', ')');
+                var parts = s.Split(',');
+                if (parts.Length != 3)
+                    throw new FormatException($"Invalid Vector3D format: {s}");
+
+                var x = double.Parse(parts[0]);
+                var y = double.Parse(parts[1]);
+                var z = double.Parse(parts[2]);
+
+                return new Vector3D(x, y, z);
+            }
+
+            public static PlaneD DeserializePlaneD(string s) {
+                // Remove parentheses and split by comma
+                s = s.Trim('(', ')');
+                var parts = s.Split(',');
+                if (parts.Length != 4)
+                    throw new FormatException("Invalid PlaneD format");
+
+                var x = double.Parse(parts[0]);
+                var y = double.Parse(parts[1]);
+                var z = double.Parse(parts[2]);
+                var d = double.Parse(parts[3]);
+
+                return new PlaneD(x, y, z, d);
+            }
+
+            public string Serialize() {
+                var sb = new StringBuilder();
+
+                sb.Append($"Id: {Id}; ");
+                sb.Append($"Name: {Name}; ");
+                sb.Append($"State: {State}; ");
+                sb.Append($"WorldPosition: {FormatVector3D(WorldPosition)}; ");
+                sb.Append($"WorldVelocity: {FormatVector3D(WorldVelocity)}; ");
+                sb.Append($"WorldAcceleration: {FormatVector3D(WorldAcceleration)}; ");
+                sb.Append($"HydrogenLevel: {HydrogenLevel}; ");
+                sb.Append($"BatteryLevel: {BatteryLevel}; ");
+                sb.Append($"CargoLevel: {CargoLevel}; ");
+                sb.Append($"JobSite: {FormatVector3D(JobSite)}; ");
+                sb.Append($"JobPlane: {FormatPlaneD(JobPlane)}; ");
+                sb.Append($"CargoCapacity: {CargoCapacity}");
+
+                return sb.ToString();
+            }
+
+            public static string FormatPlaneD(PlaneD p) {
+                return $"({p.Normal.X}, {p.Normal.Y}, {p.Normal.Z}, {p.D})";
+            }
+
+        }
+
+        public class MinerState {
+            public const string INITIALIZE = "INITIALIZE";
+            public const string IDLE = "IDLE";
+            public const string FLY_TO_JOB_SITE = "FLY_TO_JOB_SITE";
+            public const string REFUELING = "REFUELING";
+            public const string MINING = "MINING";
+            public const string RTB = "RTB";
+            public const string HARD_FAILURE = "HARD_FAILURE";
+            public const string MISSING = "MISSING";
+        }
+
     }
 }

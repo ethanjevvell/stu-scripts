@@ -48,6 +48,7 @@ Global
 		SolutionGuid = {06F87B3C-E3A2-48F4-9485-0F0CD862FDDB}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU_Auto_Miner_Variables.projitems*{2127a69c-7877-4afd-ada2-460648fd1e06}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{2127a69c-7877-4afd-ada2-460648fd1e06}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{2127a69c-7877-4afd-ada2-460648fd1e06}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{2127a69c-7877-4afd-ada2-460648fd1e06}*SharedItemsImports = 4

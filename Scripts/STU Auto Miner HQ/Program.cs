@@ -1,37 +1,206 @@
-﻿
-using Sandbox.ModAPI.Ingame;
+﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        IMyBroadcastListener LIGMAListener;
+        IMyBroadcastListener DroneListener;
         IMyBroadcastListener ReconListener;
-        MyIGCMessage message;
+
+        STUMasterLogBroadcaster HQToDroneBroadcaster;
+
+        MyIGCMessage Message;
 
         // MAIN LCDS
-        IMyBlockGroup mainLCDGroup;
-        List<IMyTerminalBlock> mainSubscribers = new List<IMyTerminalBlock>();
-        List<IMyTerminalBlock> auxMainSubscribers = new List<IMyTerminalBlock>();
+        List<IMyTerminalBlock> MainSubscribers = new List<IMyTerminalBlock>();
 
         // LOG LCDS
-        IMyBlockGroup logLCDGroup;
-        List<IMyTerminalBlock> logSubscribers = new List<IMyTerminalBlock>();
-        List<IMyTerminalBlock> auxLogSubscribers = new List<IMyTerminalBlock>();
-        StringBuilder telemetryRecords = new StringBuilder();
+        List<LogLCD> LogSubscribers = new List<LogLCD>();
+
+        Dictionary<string, MiningDroneData> MiningDrones = new Dictionary<string, MiningDroneData>();
+
+        StringBuilder TelemetryRecords = new StringBuilder();
 
         // Holds log data temporarily for each run
         STULog IncomingLog;
         STULog OutgoingLog;
-        Dictionary<string, string> tempMetadata;
+
+        Dictionary<string, string> TempMetadata = new Dictionary<string, string>();
+        Dictionary<string, MiningDroneData> IncomingDroneData = new Dictionary<string, MiningDroneData>();
 
         public Program() {
 
+            // Register listeners
+            DroneListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_CHANNEL);
+            ReconListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_CHANNEL);
+
+            // Initialize HQ to drone broadcaster
+            HQToDroneBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_COMMAND_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            LogSubscribers = DiscoverSubscribers(GridTerminalSystem);
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
         public void Main(string argument) {
 
+            try {
+                UpdateDroneTelemetry();
+                if (ReconListener.HasPendingMessage) {
+                    Message = ReconListener.AcceptMessage();
+                    IncomingLog = STULog.Deserialize(Message.Data.ToString());
+                    PublishExternalLog(IncomingLog.Sender, IncomingLog.Message, IncomingLog.Type);
+                    DisbatchDrone(IncomingLog);
+                }
+            } catch (Exception e) {
+                CreateHQLog($"Error in Main(): {e.Message}. Terminating script.", STULogType.ERROR);
+                Runtime.UpdateFrequency = UpdateFrequency.None;
+            } finally {
+                WriteAllLogScreens();
+            }
+
+        }
+
+        List<LogLCD> DiscoverSubscribers(IMyGridTerminalSystem grid) {
+            List<LogLCD> outputList = new List<LogLCD>();
+            List<IMyTerminalBlock> gridBlocks = new List<IMyTerminalBlock>();
+            grid.GetBlocks(gridBlocks);
+            for (int i = 0; i < gridBlocks.Count; i++) {
+                if (gridBlocks[i] is IMyTextPanel) {
+                    IMyTextPanel panel = gridBlocks[i] as IMyTextPanel;
+                    LogLCD logLCD;
+                    TryParseLogConfiguration(panel, out logLCD);
+                    if (logLCD != null) {
+                        logLCD.Clear();
+                        outputList.Add(logLCD);
+                    }
+                }
+            }
+            return outputList;
+        }
+
+        void TryParseLogConfiguration(IMyTerminalBlock block, out LogLCD logLCD) {
+
+            LogLCD output = null;
+
+            float minFontSize = 0.1f;
+            float maxFontSize = 10f;
+
+            string customData = block.CustomData;
+            string[] lines = customData.Split('\n');
+
+            foreach (var line in lines) {
+                if (line.Contains(AUTO_MINER_VARIABLES.AUTO_MINER_LOG_SUBSCRIBER_TAG)) {
+                    string[] kvp = line.Split(':');
+                    // skip lines if they don't have the right number of elements; it can't be a log configuration line in that case
+                    if (kvp.Length != 3) {
+                        continue;
+                    }
+                    float fontSize = float.Parse(kvp[2]);
+                    if (fontSize < minFontSize || fontSize > maxFontSize) {
+                        throw new Exception($"Invalid font size for {block.Name}; fontSize must be between {minFontSize} and {maxFontSize}");
+                    }
+                    output = new LogLCD(block, int.Parse(kvp[1]), "Monospace", fontSize);
+                    break;
+                }
+            }
+
+            logLCD = output;
+        }
+
+        /// <summary>
+        /// Processes incoming drone telemetry messages to determine the state of each drone, discover new drones, and update existing drones.
+        /// </summary>
+        void UpdateDroneTelemetry() {
+
+            IncomingDroneData.Clear();
+
+            while (DroneListener.HasPendingMessage) {
+                MyIGCMessage message = DroneListener.AcceptMessage();
+                try {
+                    IncomingLog = STULog.Deserialize(message.Data.ToString());
+
+                    // By convention, blank message fields mean the transmission only contains telemetry data
+                    if (!string.IsNullOrEmpty(IncomingLog.Message)) {
+                        PublishExternalLog(IncomingLog.Sender, IncomingLog.Message, STULogType.INFO);
+                        continue;
+                    }
+
+                    // Check if Metadata is not null and contains the key "MinerDroneData"
+                    if (!IncomingLog.Metadata.ContainsKey("MinerDroneData")) {
+                        CreateHQLog("Incoming log does not contain MinerDroneData", STULogType.ERROR);
+                        continue; // Skip processing this message
+                    }
+
+                    // Proceed to deserialize the drone data
+                    MiningDroneData drone = MiningDroneData.Deserialize(IncomingLog.Metadata["MinerDroneData"]);
+                    IncomingDroneData.Add(drone.Id, drone);
+
+                    // Update or add the drone to the MiningDrones dictionary
+                    if (MiningDrones.ContainsKey(drone.Id)) {
+                        if (MiningDrones[drone.Id].State == MinerState.MISSING) {
+                            CreateHQLog($"Drone {drone.Id} has returned", STULogType.OK);
+                        }
+                        MiningDrones[drone.Id] = drone;
+                    } else {
+                        CreateHQLog($"New drone detected: {drone.Id}", STULogType.INFO);
+                        MiningDrones.Add(drone.Id, drone);
+                    }
+                } catch (Exception e) {
+                    CreateHQLog($"Error processing drone telemetry messages: {e.Message}", STULogType.ERROR);
+                }
+            }
+
+        }
+
+        void WriteAllLogScreens() {
+            foreach (var screen in LogSubscribers) {
+                screen.Update();
+            }
+        }
+
+        void PublishExternalLog(string sender, string message, string type) {
+            STULog log = new STULog {
+                Sender = sender,
+                Message = message,
+                Type = type,
+            };
+            foreach (var subscriber in LogSubscribers) {
+                subscriber.FlightLogs.Enqueue(log);
+            }
+        }
+
+        void CreateHQLog(string message, string type) {
+            STULog log = new STULog {
+                Sender = AUTO_MINER_VARIABLES.AUTO_MINER_HQ_NAME,
+                Message = message,
+                Type = type,
+            };
+            foreach (var subscriber in LogSubscribers) {
+                subscriber.FlightLogs.Enqueue(log);
+            }
+        }
+
+        void DisbatchDrone(STULog log) {
+            // Find an available drone
+            CreateHQLog("Dispatching drone", STULogType.INFO);
+            foreach (var drone in MiningDrones) {
+                if (drone.Value.State == MinerState.IDLE) {
+                    // Send the drone the new job
+                    CreateHQLog($"Sending drone {drone.Key} to new job site", STULogType.INFO);
+                    HQToDroneBroadcaster.Log(new STULog {
+                        Sender = AUTO_MINER_VARIABLES.AUTO_MINER_HQ_NAME,
+                        Message = "SetJobSite",
+                        Type = STULogType.INFO,
+                        Metadata = new Dictionary<string, string> {
+                            { "JobPlane", log.Metadata["JobPlane"] },
+                            { "JobSite", log.Metadata["JobSite"] },
+                            { "DroneId", drone.Key }
+                        }
+                    });
+                    CreateHQLog($"Message sent", STULogType.OK);
+                }
+            }
         }
 
     }

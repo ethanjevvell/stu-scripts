@@ -29,7 +29,7 @@ namespace IngameScript {
             Vector3D CruisePhaseDestination { get; set; }
             STUGalacticMap.Planet? CurrentPlanet { get; set; }
 
-            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries, Vector3 jobSite, int cruiseAltitude, int cruiseVelocity) {
+            public FlyToJobSite(STUFlightController fc, IMyShipConnector connector, List<IMyGasTank> hydrogenTanks, List<IMyBatteryBlock> batteries, Vector3 jobSite, PlaneD jobPlane, int cruiseAltitude, int cruiseVelocity) {
                 FlightController = fc;
                 Connector = connector;
                 HydrogenTanks = hydrogenTanks;

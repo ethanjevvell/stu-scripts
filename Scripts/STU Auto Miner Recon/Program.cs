@@ -22,7 +22,7 @@ namespace IngameScript {
             CockpitDisplay = InitCockpitDisplay(Cockpit);
             Raycaster = InitRaycaster();
             Raycaster.RaycastDistance = 10000;
-            Broadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_LISTENER, IGC, TransmissionDistance.AntennaRelay);
+            Broadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
 
             CommandLineParser = new MyCommandLine();
             ProgramCommands.Add("Raycast", Raycast);
@@ -64,14 +64,19 @@ namespace IngameScript {
         public void Raycast() {
             try {
 
-                PlaneD jobSitePlane = InitilializeJobSitePlane();
+                PlaneD jobPlane = InitilializeJobSitePlane();
+                Vector3D currentPos = Me.GetPosition();
+                Vector3D jobSite = jobPlane.ProjectPoint(ref currentPos);
 
-                CockpitDisplay.Surface.WriteText(jobSitePlane.ToString());
-
+                CockpitDisplay.Surface.WriteText(jobPlane.ToString());
                 Broadcaster.Log(new STULog {
                     Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
-                    Message = jobSitePlane.ToString(),
+                    Message = "Transmitting new job site",
                     Type = STULogType.INFO,
+                    Metadata = new Dictionary<string, string> {
+                        { "JobPlane", MiningDroneData.FormatPlaneD(jobPlane) },
+                        { "JobSite", MiningDroneData.FormatVector3D(jobSite) }
+                    }
                 });
 
             } catch (Exception e) {

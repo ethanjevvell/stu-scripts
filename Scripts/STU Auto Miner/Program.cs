@@ -7,19 +7,9 @@ namespace IngameScript {
 
     partial class Program : MyGridProgram {
 
-        const string MINER_LOGGING_CHANNEL = "STU_AUTO_MINER_LOGGING_CHANNEL";
-
         static string MinerName;
 
-        class MinerState {
-            public const string INITIALIZE = "INITIALIZE";
-            public const string IDLE = "IDLE";
-            public const string FLY_TO_JOB_SITE = "FLY_TO_JOB_SITE";
-            public const string REFUELING = "REFUELING";
-            public const string MINING = "MINING";
-            public const string RTB = "RTB";
-            public const string HARD_FAILURE = "HARD_FAILURE";
-        }
+        IMyBroadcastListener DroneListener;
 
         static STUMasterLogBroadcaster LogBroadcaster { get; set; }
         STUFlightController FlightController { get; set; }
@@ -27,10 +17,7 @@ namespace IngameScript {
         IMyRemoteControl RemoteControl { get; set; }
         IMyShipConnector Connector { get; set; }
 
-        Vector3 JobSite { get; set; }
-        PlaneD JobPlane { get; set; }
         Vector3 HomeBase { get; set; }
-        Dictionary<string, Action> Commands { get; set; }
         string MinerMainState { get; set; }
 
         List<IMyGasTank> HydrogenTanks { get; set; }
@@ -47,6 +34,10 @@ namespace IngameScript {
         // Inventory enumerator
         STUInventoryEnumerator InventoryEnumerator { get; set; }
 
+        static MiningDroneData DroneData { get; set; }
+
+        public string MinerId { get; protected set; }
+
         public Program() {
             HydrogenTanks = new List<IMyGasTank>();
             Batteries = new List<IMyBatteryBlock>();
@@ -56,7 +47,6 @@ namespace IngameScript {
             }
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             MinerMainState = MinerState.INITIALIZE;
-
             Raycaster = new STURaycaster(GridTerminalSystem.GetBlockWithName("Raycaster") as IMyCameraBlock);
             Raycaster.ToggleRaycast(true);
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
@@ -64,83 +54,121 @@ namespace IngameScript {
             GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
             GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
-            LogBroadcaster = new STUMasterLogBroadcaster(MINER_LOGGING_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            DroneListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_COMMAND_CHANNEL);
             LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
+            MinerId = Me.EntityId.ToString();
             InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
-            Commands = new Dictionary<string, Action> {
-                // commands go here
-            };
+            DroneData = new MiningDroneData();
         }
 
-        public void Main(string command) {
+        public void Main() {
 
-            InventoryEnumerator.EnumerateInventories();
+            try {
 
-            //try {
-            //    FlightController.UpdateState();
+                UpdateTelemetry();
+                InventoryEnumerator.EnumerateInventories();
+                FlightController.UpdateState();
 
-            //    // Logging
-            //    LogScreen.StartFrame();
-            //    if (STUFlightController.FlightLogs.Count > 0) {
-            //        while (STUFlightController.FlightLogs.Count > 0) {
-            //            LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
-            //        }
-            //    }
+                if (DroneListener.HasPendingMessage) {
+                    try {
+                        MyIGCMessage message = DroneListener.AcceptMessage();
+                        STULog log = STULog.Deserialize(message.Data.ToString());
+                        CreateOkBroadcast($"Received message: {log.Message}");
+                        ParseCommand(log);
+                    } catch (Exception e) {
+                        CreateErrorBroadcast(e.Message);
+                    }
+                }
 
-            //    LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-            //    LogScreen.EndAndPaintFrame();
 
-            //    Action commandAction = ParseCommand(command);
-            //    if (commandAction != null) {
-            //        commandAction();
-            //    }
+                switch (MinerMainState) {
 
-            //    switch (MinerMainState) {
+                    case MinerState.INITIALIZE:
+                        InitializeMiner();
+                        MinerMainState = MinerState.IDLE;
+                        CreateOkBroadcast("Miner initialized");
+                        break;
 
-            //        case MinerState.INITIALIZE:
-            //            InitializeMiner();
-            //            MinerMainState = MinerState.IDLE;
-            //            CreateOkBroadcast("Miner initialized");
-            //            break;
+                    case MinerState.IDLE:
+                        break;
 
-            //        case MinerState.IDLE:
-            //            MinerMainState = MinerState.FLY_TO_JOB_SITE;
-            //            Vector3 testJobSite = new Vector3(-37990, -39137, -28245);
-            //            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, testJobSite, 30, 5);
-            //            CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
-            //            break;
+                    case MinerState.FLY_TO_JOB_SITE:
+                        if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
+                            CreateInfoBroadcast("Arrived at job site; starting drill routine");
+                            DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane);
+                            MinerMainState = MinerState.MINING;
+                        }
+                        break;
 
-            //        case MinerState.FLY_TO_JOB_SITE:
-            //            if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
-            //                CreateInfoBroadcast("Arrived at job site; starting drill routine");
-            //                DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, JobSite, JobPlane);
-            //                MinerMainState = MinerState.MINING;
-            //            }
-            //            break;
+                    case MinerState.MINING:
+                        if (DrillRoutineStateMachine.ExecuteStateMachine()) {
+                            CreateInfoBroadcast("Drill routine complete; returning to base");
+                        }
+                        break;
 
-            //        case MinerState.MINING:
-            //            if (DrillRoutineStateMachine.ExecuteStateMachine()) {
-            //                CreateInfoBroadcast("Drill routine complete; returning to base");
-            //            }
-            //            break;
+                }
 
-            //    }
-
-            //} catch (Exception e) {
-            //    CreateFatalErrorBroadcast(e.Message);
-            //}
-        }
-
-        Action ParseCommand(string command) {
-            if (Commands.ContainsKey(command)) {
-                return Commands[command];
+            } catch (Exception e) {
+                CreateFatalErrorBroadcast(e.Message);
+            } finally {
+                // Insert FlightController diagnostic logs
+                GetFlightControllerLogs();
+                LogScreen.StartFrame();
+                LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
+                LogScreen.EndAndPaintFrame();
             }
-            return null;
         }
 
-        bool SetJobSite() {
-            // todo
-            return true;
+        void GetFlightControllerLogs() {
+            if (STUFlightController.FlightLogs.Count > 0) {
+                while (STUFlightController.FlightLogs.Count > 0) {
+                    LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
+                }
+            }
+        }
+
+        void ParseCommand(STULog log) {
+
+            string command = log.Message;
+            Dictionary<string, string> metadata = log.Metadata;
+
+            if (string.IsNullOrEmpty(command)) {
+                CreateErrorBroadcast("Command is empty");
+                return;
+            }
+
+            switch (command) {
+
+                case "SetJobSite":
+                    SetJobSite(metadata);
+                    break;
+
+                case "Stop":
+                    if (Stop()) {
+                        CreateOkBroadcast("Miner stopped");
+                    } else {
+                        CreateErrorBroadcast("Error stopping miner");
+                    }
+                    break;
+
+                default:
+                    CreateErrorBroadcast($"Unknown command: {command}");
+                    break;
+
+            }
+
+        }
+
+        void SetJobSite(Dictionary<string, string> metadata) {
+            if (metadata["DroneId"] != MinerId) {
+                return;
+            }
+            MinerMainState = MinerState.FLY_TO_JOB_SITE;
+            DroneData.JobSite = MiningDroneData.DeserializeVector3D(metadata["JobSite"]);
+            DroneData.JobPlane = MiningDroneData.DeserializePlaneD(metadata["JobPlane"]);
+            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane, 30, 5);
+            CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
         }
 
         bool Stop() {
@@ -162,18 +190,40 @@ namespace IngameScript {
             //Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
         }
 
+        void UpdateTelemetry() {
+            Dictionary<string, double> inventory = InventoryEnumerator.GetItemTotals();
+            DroneData.State = MinerMainState;
+            DroneData.WorldPosition = FlightController.CurrentPosition;
+            DroneData.WorldVelocity = FlightController.CurrentVelocity_WorldFrame;
+            DroneData.BatteryLevel = inventory.ContainsKey("Battery") ? inventory["Battery"] : 0;
+            DroneData.HydrogenLevel = inventory.ContainsKey("Hydrogen") ? inventory["Hydrogen"] : 0;
+            DroneData.Name = MinerName;
+            DroneData.Id = MinerId;
+            DroneData.CargoLevel = 0;
+            DroneData.CargoCapacity = 0;
+            Echo(DroneData.Serialize());
+            LogBroadcaster.Log(new STULog() {
+                Message = "",
+                Type = STULogType.INFO,
+                Sender = MinerName,
+                Metadata = new Dictionary<string, string>() {
+                    { "MinerDroneData", DroneData.Serialize() }
+                }
+            });
+        }
+
         // Broadcast utilities
         #region
         static void CreateBroadcast(string message, string type) {
             LogBroadcaster.Log(new STULog() {
                 Message = message,
                 Type = type,
-                Sender = MinerName
+                Sender = MinerName,
             });
             LogScreen.FlightLogs.Enqueue(new STULog() {
                 Message = message,
                 Type = type,
-                Sender = MinerName
+                Sender = MinerName,
             });
         }
 
@@ -193,11 +243,9 @@ namespace IngameScript {
             CreateBroadcast(message, STULogType.INFO);
         }
 
-        static void CreateFatalErrorBroadcast(string message) {
-            CreateBroadcast(message, STULogType.ERROR);
-            LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
-            LogScreen.EndAndPaintFrame();
-            throw new Exception(message);
+        void CreateFatalErrorBroadcast(string message) {
+            CreateBroadcast($"FATAL - {message}. Script has stopped running.", STULogType.ERROR);
+            Runtime.UpdateFrequency = UpdateFrequency.None;
         }
         #endregion
 
