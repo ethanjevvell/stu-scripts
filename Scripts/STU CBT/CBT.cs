@@ -184,14 +184,21 @@ namespace IngameScript
 
             // define the broadcaster method so that display messages can be sent throughout the world
             // (currently not implemented, just keeping this code here for future use)
-            public static void CreateBroadcast(string message, string type)
+            public static void CreateBroadcast(string message, bool encrypt = false, string type = STULogType.INFO)
             {
+                string key = null;
+                if (encrypt)
+                    key = CBT_VARIABLES.TEA_KEY;
+
                 Broadcaster.Log(new STULog
-                {
-                    Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
-                    Message = message,
-                    Type = type,
-                });
+                    {
+                        Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
+                        Message = message,
+                        Type = type,
+                    },
+                    key);
+
+                AddToLogQueue($"just now finished Create Broadcast with message: {message}, key: {key}");
             }
 
             // define the method to send CBT log messages to the queue of all the screens on the CBT that are subscribed to such messages
@@ -299,6 +306,7 @@ namespace IngameScript
                             }
                             catch(Exception e)
                             {
+                                echo("caught exception in AddLogSubscribers:");
                                 echo(e.Message);
                                 fontSize = 0.5f;
                             }

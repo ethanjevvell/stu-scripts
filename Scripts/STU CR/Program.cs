@@ -22,6 +22,8 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+        bool Canary = true;
+        
         CR ThisCR;
         STUMasterLogBroadcaster Broadcaster;
         IMyBroadcastListener Listener;
@@ -34,20 +36,24 @@ namespace IngameScript
             Listener = IGC.RegisterBroadcastListener(CBT_VARIABLES.CBT_BROADCAST_CHANNEL);
             ThisCR = new CR(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
 
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
             if (Listener.HasPendingMessage)
             {
-                var message = Listener.AcceptMessage();
-                string decryptedMessage = Modem.Decrypt(message.Data.ToString(), CBT_VARIABLES.TEA_KEY);
+                var rawMessage = Listener.AcceptMessage();
+                string message = rawMessage.Data.ToString();
+                STULog incomingLog = STULog.Deserialize(message);
+                string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
+                
+                CR.AddToLogQueue($"Incoming Log: {decryptedMessage}; metadata: {incomingLog.Metadata}");
+                
                 ParseCommand(decryptedMessage.ToUpper());
             }
             
-            ThisCR.UpdatePBCurrentPosition();
-            Echo($"PB Position: {ThisCR.CurrentPosition}");
+            CR.UpdateLogScreens();
         }
 
         public void ParseCommand(string arg) // arg = "CBT REPORT LOCATION PB"
@@ -62,20 +68,17 @@ namespace IngameScript
                         break;
                     case "TEST":
                         Echo($"TEST command received from {CommandLineParser.Argument(0)}");
-                        SendEncryptedMessage($"PING,{Me.CubeGrid.CustomName}");
-                        Runtime.UpdateFrequency = UpdateFrequency.None;
+                        break;
+                    case "PING":
+                        Echo($"PING received from {CommandLineParser.Argument(0)}");
+                        CR.CreateBroadcast($"{CommandLineParser.Argument(1)}", true, STULogType.INFO);
+                        Canary = false;
                         break;
                     default:
                         Echo($"Unknown command received from {CommandLineParser.Argument(0)}");
                         break;
                 }
             }
-        }
-
-        public void SendEncryptedMessage(string message)
-        {
-            string thisString = Modem.Encrypt(message, CBT_VARIABLES.TEA_KEY);
-            Broadcaster.SendStandardMessage(thisString);
         }
 
         public string AdditionalArguments(MyCommandLine thisCommandLineParser)

@@ -165,20 +165,20 @@ namespace IngameScript
         {
             if (Listener.HasPendingMessage)
             {
-                var message = Listener.AcceptMessage();
-                CBT.AddToLogQueue($"Received message: {message.Data}", STULogType.INFO);
-                string decryptedMessage = Modem.Decrypt(message.Data.ToString(), CBT_VARIABLES.TEA_KEY);
+                CBT.AddToLogQueue("Received something lol", STULogType.INFO);
+                var rawMessage = Listener.AcceptMessage();
+                string message = rawMessage.Data.ToString();
+                STULog incomingLog = STULog.Deserialize(message);
+                string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
+                
+                CBT.AddToLogQueue($"Received message: {decryptedMessage}", STULogType.INFO);
+
                 if (decryptedMessage == "PING")
                 {
-                    CBT.AddToLogQueue("receuved ping", STULogType.INFO);
+                    CBT.AddToLogQueue("PONG", STULogType.OK);
+                    CBT.CreateBroadcast("PONG", true, STULogType.OK);
                 }
             }
-        }
-
-        public void SendEncryptedMessage(string message)
-        {
-            string thisString = Modem.Encrypt(message, CBT_VARIABLES.TEA_KEY);
-            Broadcaster.SendStandardMessage(thisString);
         }
 
         public bool CheckSpecialCommandWord(string arg)
@@ -210,7 +210,7 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    SendEncryptedMessage("TEST");
+                    CBT.CreateBroadcast("PING", true, STULogType.OK);
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
