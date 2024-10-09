@@ -1,7 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
@@ -11,7 +10,7 @@ namespace IngameScript {
 
         STUMasterLogBroadcaster HQToDroneBroadcaster;
 
-        MyIGCMessage Message;
+        MyIGCMessage IGCMessage;
 
         // MAIN LCDS
         List<IMyTerminalBlock> MainSubscribers = new List<IMyTerminalBlock>();
@@ -21,13 +20,9 @@ namespace IngameScript {
 
         Dictionary<string, MiningDroneData> MiningDrones = new Dictionary<string, MiningDroneData>();
 
-        StringBuilder TelemetryRecords = new StringBuilder();
-
         // Holds log data temporarily for each run
         STULog IncomingLog;
-        STULog OutgoingLog;
 
-        Dictionary<string, string> TempMetadata = new Dictionary<string, string>();
         Dictionary<string, MiningDroneData> IncomingDroneData = new Dictionary<string, MiningDroneData>();
 
         public Program() {
@@ -47,10 +42,10 @@ namespace IngameScript {
             try {
                 UpdateDroneTelemetry();
                 if (ReconListener.HasPendingMessage) {
-                    Message = ReconListener.AcceptMessage();
-                    IncomingLog = STULog.Deserialize(Message.Data.ToString());
-                    PublishExternalLog(IncomingLog.Sender, IncomingLog.Message, IncomingLog.Type);
-                    DisbatchDrone(IncomingLog);
+                    IGCMessage = ReconListener.AcceptMessage();
+                    IncomingLog = STULog.Deserialize(IGCMessage.Data.ToString());
+                    PublishExternalLog(IncomingLog);
+                    DispatchDrone(IncomingLog);
                 }
             } catch (Exception e) {
                 CreateHQLog($"Error in Main(): {e.Message}. Terminating script.", STULogType.ERROR);
@@ -122,7 +117,8 @@ namespace IngameScript {
 
                     // By convention, blank message fields mean the transmission only contains telemetry data
                     if (!string.IsNullOrEmpty(IncomingLog.Message)) {
-                        PublishExternalLog(IncomingLog.Sender, IncomingLog.Message, STULogType.INFO);
+                        // If it's just a message, publish it to the log screens and move on to the next incoming message
+                        PublishExternalLog(IncomingLog);
                         continue;
                     }
 
@@ -159,12 +155,7 @@ namespace IngameScript {
             }
         }
 
-        void PublishExternalLog(string sender, string message, string type) {
-            STULog log = new STULog {
-                Sender = sender,
-                Message = message,
-                Type = type,
-            };
+        void PublishExternalLog(STULog log) {
             foreach (var subscriber in LogSubscribers) {
                 subscriber.FlightLogs.Enqueue(log);
             }
@@ -181,26 +172,30 @@ namespace IngameScript {
             }
         }
 
-        void DisbatchDrone(STULog log) {
+        /// <summary>
+        /// Finds an available drone and sends it to the job site; if no drones are available, the job is not dispatched.
+        /// Note that this assumes the incoming log has both JobSite and JobPlane already in the metadata.
+        /// </summary>
+        /// <param name="log"></param>
+        void DispatchDrone(STULog log) {
             // Find an available drone
             CreateHQLog("Dispatching drone", STULogType.INFO);
             foreach (var drone in MiningDrones) {
                 if (drone.Value.State == MinerState.IDLE) {
                     // Send the drone the new job
                     CreateHQLog($"Sending drone {drone.Key} to new job site", STULogType.INFO);
+                    log.Metadata.Add("DroneId", drone.Key);
                     HQToDroneBroadcaster.Log(new STULog {
                         Sender = AUTO_MINER_VARIABLES.AUTO_MINER_HQ_NAME,
                         Message = "SetJobSite",
                         Type = STULogType.INFO,
-                        Metadata = new Dictionary<string, string> {
-                            { "JobPlane", log.Metadata["JobPlane"] },
-                            { "JobSite", log.Metadata["JobSite"] },
-                            { "DroneId", drone.Key }
-                        }
+                        Metadata = log.Metadata
                     });
                     CreateHQLog($"Message sent", STULogType.OK);
+                    break;
                 }
             }
+            CreateHQLog("No drones available, cannot dispatch job", STULogType.ERROR);
         }
 
     }
