@@ -1,4 +1,8 @@
-﻿namespace IngameScript {
+﻿using Sandbox.ModAPI.Ingame;
+using System.Collections.Generic;
+using VRage.Game.ModAPI.Ingame;
+
+namespace IngameScript {
     partial class Program {
         public class STUInventoryEnumerator {
 
@@ -84,29 +88,30 @@
                 { co + "/Powerkit", "Powerkit" },
                 { po + "/SpaceCredit", "Space Credit" },
 
+
                 // Ammo
-                { am + "NATO_5p56x45mm", "5.56x45mm NATO magazine" },
-                { am + "LargeCalibreAmmo", "Artillery Shell" },
-                { am + "MediumCalibreAmmo", "Assault Cannon Shell" },
-                { am + "AutocannonClip", "Autocannon Magazine" },
-                { am + "FireworksBoxBlue", "Fireworks Blue" },
-                { am + "FireworksBoxGreen", "Fireworks Green" },
-                { am + "FireworksBoxPink", "Fireworks Pink" },
-                { am + "FireworksBoxRainbow", "Fireworks Rainbow" },
-                { am + "FireworksBoxRed", "Fireworks Red" },
-                { am + "FireworksBoxYellow", "Fireworks Yellow" },
-                { am + "FlareClip", "Flare Gun Clip" },
-                { am + "NATO_25x184mm", "Gatling Ammo Box" },
-                { am + "LargeRailgunAmmo", "Large Railgun Sabot" },
-                { am + "AutomaticRifleGun_Mag_20rd", "MR-20 Rifle Magazine" },
-                { am + "UltimateAutomaticRifleGun_Mag_30rd", "MR-30E Rifle Magazine" },
-                { am + "RapidFireAutomaticRifleGun_Mag_50rd", "MR-50A Rifle Magazine" },
-                { am + "PreciseAutomaticRifleGun_Mag_5rd", "MR-8P Rifle Magazine" },
-                { am + "Missile200mm", "Rocket" },
-                { am + "SemiAutoPistolMagazine", "S-10 Pistol Magazine" },
-                { am + "ElitePistolMagazine", "S-10E Pistol Magazine" },
-                { am + "FullAutoPistolMagazine", "S-20A Pistol Magazine" },
-                { am + "SmallRailgunAmmo", "Small Railgun Sabot" },
+                { am + "/NATO_5p56x45mm", "5.56x45mm NATO magazine" },
+                { am + "/LargeCalibreAmmo", "Artillery Shell" },
+                { am + "/MediumCalibreAmmo", "Assault Cannon Shell" },
+                { am + "/AutocannonClip", "Autocannon Magazine" },
+                { am + "/FireworksBoxBlue", "Fireworks Blue" },
+                { am + "/FireworksBoxGreen", "Fireworks Green" },
+                { am + "/FireworksBoxPink", "Fireworks Pink" },
+                { am + "/FireworksBoxRainbow", "Fireworks Rainbow" },
+                { am + "/FireworksBoxRed", "Fireworks Red" },
+                { am + "/FireworksBoxYellow", "Fireworks Yellow" },
+                { am + "/FlareClip", "Flare Gun Clip" },
+                { am + "/NATO_25x184mm", "Gatling Ammo Box" },
+                { am + "/LargeRailgunAmmo", "Large Railgun Sabot" },
+                { am + "/AutomaticRifleGun_Mag_20rd", "MR-20 Rifle Magazine" },
+                { am + "/UltimateAutomaticRifleGun_Mag_30rd", "MR-30E Rifle Magazine" },
+                { am + "/RapidFireAutomaticRifleGun_Mag_50rd", "MR-50A Rifle Magazine" },
+                { am + "/PreciseAutomaticRifleGun_Mag_5rd", "MR-8P Rifle Magazine" },
+                { am + "/Missile200mm", "Rocket" },
+                { am + "/SemiAutoPistolMagazine", "S-10 Pistol Magazine" },
+                { am + "/ElitePistolMagazine", "S-10E Pistol Magazine" },
+                { am + "/FullAutoPistolMagazine", "S-20A Pistol Magazine" },
+                { am + "/SmallRailgunAmmo", "Small Railgun Sabot" },
 
                 // Tools
                 { pg + "/AngleGrinder4Item", "Elite Grinder" },
@@ -132,7 +137,7 @@
                 { pg + "/SemiAutoPistolItem", "S-10 Pistol" },
                 { pg + "/ElitePistolItem", "S-10E Pistol" },
                 { pg + "/FullAutoPistolItem", "S-20A Pistol" },
-                { pg + "/WelderItem", "Welder" },
+                { pg + "/WelderItem", "Welder" }
             };
 
             List<IMyInventory> Inventories;
