@@ -58,6 +58,7 @@ namespace IngameScript
             public static CBTRearDock RearDock { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
             public static STUMasterLogBroadcaster Broadcaster { get; set; }
+            public static STUInventoryEnumerator InventoryEnumerator { get; set; }
             public static IMyShipConnector Connector { get; set; } // fix this later, Ethan said something about the LIGMA code assuming exactly one connector
             public static IMyMotorStator RearHinge1 { get; set; }
             public static IMyMotorStator RearHinge2 { get; set; }
@@ -137,10 +138,11 @@ namespace IngameScript
             };
 
             // CBT object instantiation
-            public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
+            public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, STUInventoryEnumerator inventoryEnumerator, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
                 Broadcaster = broadcaster;
+                InventoryEnumerator = inventoryEnumerator;
                 Runtime = runtime;
                 CBTGrid = grid;
                 echo = Echo;
@@ -195,8 +197,8 @@ namespace IngameScript
                         Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
                         Message = message,
                         Type = type,
-                    },
-                    key);
+                    }
+                    );
 
                 AddToLogQueue($"just now finished Create Broadcast with message: {message}, key: {key}");
             }
@@ -267,10 +269,15 @@ namespace IngameScript
 
             public static void UpdateAmmoScreens()
             {
+                var inventory = InventoryEnumerator.GetItemTotals();
                 foreach (var screen in AmmoChannel)
                 {
                     screen.StartFrame();
-                    screen.LoadAmmoData(GetAmmoLevel("NATO_25x184mm"), GetAmmoLevel("LargeCalibreAmmo"), GetAmmoLevel("LargeRailgunAmmo"));
+                    screen.LoadAmmoData(
+                        inventory.ContainsKey("Gatling Ammo Box") ? (int)inventory["Gatling Ammo Box"] : 0,
+                        inventory.ContainsKey("Artillery Shell") ? (int)inventory["Artillery Shell"] : 0,
+                        inventory.ContainsKey("Large Railgun Sabot") ? (int)inventory["Large Railgun Sabot"] : 0
+                        );
                     screen.BuildScreen(screen.CurrentFrame, screen.Center);
                     screen.EndAndPaintFrame();
                 }

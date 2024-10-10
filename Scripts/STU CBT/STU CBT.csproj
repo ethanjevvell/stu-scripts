@@ -46,10 +46,12 @@
     <Compile Include="CBT Displays\LCDs\CBTLogLCD.cs" />
     <Compile Include="CBT Displays\LCDs\CBTAutopilotLCD.cs" />
     <Compile Include="Actuators\CBTGangway.cs" />
+    <Compile Include="Maneuvers\ExtendGangwayManeuver.cs" />
     <Compile Include="Maneuvers\HoverManeuver.cs" />
     <Compile Include="Maneuvers\GenericManeuver.cs" />
     <Compile Include="Actuators\CBTRearDock.cs" />
     <Compile Include="CBT Displays\LCDs\CBTStatusLCD.cs" />
+    <Compile Include="Maneuvers\ParkManeuver.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -61,7 +63,7 @@
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
-    <Compile Include="TestManeuver.cs" />
+    <Compile Include="Maneuvers\TestManeuver.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />
@@ -74,7 +76,6 @@
   <Import Project="..\..\Shared Projects\Displays\STU Image\STU_Image.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\CUCKS\CUCKS.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

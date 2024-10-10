@@ -30,10 +30,10 @@ namespace IngameScript {
 
                     CR.AddToLogQueue($"Incoming Log: {incomingLog.Message}; metadata: {incomingLog.Metadata}");
 
-                    // ParseCommand(decryptedMessage.ToUpper());
+                    ParseCommand(incomingLog.Message.ToUpper());
                 }
             } catch (Exception e) {
-                CR.AddToLogQueue($"Error: {e.Message}", STULogType.ERROR);
+                CR.AddToLogQueue($"Error: {e.Message}... {e.Source} ({e.StackTrace})", STULogType.ERROR);
             } finally {
                 CR.UpdateLogScreens();
             }
@@ -43,7 +43,7 @@ namespace IngameScript {
         public void ParseCommand(string arg) // arg = "CBT REPORT LOCATION PB"
         {
             if (CommandLineParser.TryParse(arg)) {
-                switch (CommandLineParser.Argument(1)) {
+                switch (CommandLineParser.Argument(0)) {
                     case "REPORT":
                         Echo($"REPORT request received from {CommandLineParser.Argument(0)}");
                         ProcessReportRequest(AdditionalArguments(CommandLineParser));
@@ -53,8 +53,7 @@ namespace IngameScript {
                         break;
                     case "PING":
                         Echo($"PING received from {CommandLineParser.Argument(0)}");
-                        CR.CreateBroadcast($"{CommandLineParser.Argument(1)}", true, STULogType.INFO);
-                        Canary = false;
+                        CR.CreateBroadcast($"{CommandLineParser.Argument(0)}", false, STULogType.INFO);
                         break;
                     default:
                         Echo($"Unknown command received from {CommandLineParser.Argument(0)}");

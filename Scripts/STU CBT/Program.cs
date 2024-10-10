@@ -31,10 +31,11 @@ namespace IngameScript
         CBT CBTShip;
         STUMasterLogBroadcaster Broadcaster;
         IMyBroadcastListener Listener;
+        STUInventoryEnumerator InventoryEnumerator;
         MyCommandLine CommandLineParser = new MyCommandLine();
+        MyCommandLine WirelessMessageParser = new MyCommandLine();
         Queue<STUStateMachine> ManeuverQueue = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
-        TEA Modem = new TEA();
         public struct ManeuverQueueData
         {
             public string CurrentManeuverName;
@@ -53,9 +54,11 @@ namespace IngameScript
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             Listener = IGC.RegisterBroadcastListener(CBT_VARIABLES.CBT_BROADCAST_CHANNEL);
-            CBTShip = new CBT(Echo, Broadcaster, GridTerminalSystem, Me, Runtime);
+            InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
+            CBTShip = new CBT(Echo, Broadcaster, InventoryEnumerator, GridTerminalSystem, Me, Runtime);
             CBT.SetAutopilotControl(true, true, false);
-
+            
+        
             ResetAutopilot();
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
@@ -68,6 +71,8 @@ namespace IngameScript
         {
             try 
             {
+                InventoryEnumerator.EnumerateInventories();
+
                 HandleWirelessMessages();
                 
                 argument = argument.Trim().ToUpper();
@@ -129,8 +134,10 @@ namespace IngameScript
 
             catch (Exception e)
             {
-                Echo($"Program.cs: Caught exception: {e}\n");
-                CBT.AddToLogQueue($"Caught exception: {e}\n", STULogType.ERROR);
+                Echo($"Program.cs: Caught exception: {e}");
+                CBT.AddToLogQueue($"Caught exception: {e}", STULogType.ERROR);
+                CBT.AddToLogQueue("");
+                CBT.AddToLogQueue("");
                 CBT.AddToLogQueue("HALTING PROGRAM EXECUTION!", STULogType.ERROR);
                 CBT.UpdateLogScreens();
                 Runtime.UpdateFrequency = UpdateFrequency.None;
@@ -165,19 +172,37 @@ namespace IngameScript
         {
             if (Listener.HasPendingMessage)
             {
-                CBT.AddToLogQueue("Received something lol", STULogType.INFO);
                 var rawMessage = Listener.AcceptMessage();
                 string message = rawMessage.Data.ToString();
                 STULog incomingLog = STULog.Deserialize(message);
-                string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
+                // string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
                 
-                CBT.AddToLogQueue($"Received message: {decryptedMessage}", STULogType.INFO);
+                CBT.AddToLogQueue($"Received message: {incomingLog.Message}", STULogType.INFO);
 
-                if (decryptedMessage == "PING")
+                if (WirelessMessageParser.TryParse(incomingLog.Message.ToUpper()))
+                {
+                    switch (WirelessMessageParser.Argument(0))
+                    {
+                        case "PING":
+                            CBT.CreateBroadcast("PONG");
+                            break;
+                        case "POSITION":
+                            CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
+                            double x = double.Parse(WirelessMessageParser.Argument(1));
+                            double y = double.Parse(WirelessMessageParser.Argument(2));
+                            double z = double.Parse(WirelessMessageParser.Argument(3));
+                            Vector3D position = new Vector3D(x, y, z);
+                            ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, position, 10));
+                            break;
+                    }
+                }
+                
+                if (incomingLog.Message == "PING")
                 {
                     CBT.AddToLogQueue("PONG", STULogType.OK);
-                    CBT.CreateBroadcast("PONG", true, STULogType.OK);
+                    CBT.CreateBroadcast("PONG", false, STULogType.OK);
                 }
+
             }
         }
 
@@ -210,7 +235,7 @@ namespace IngameScript
 
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    CBT.CreateBroadcast("PING", true, STULogType.OK);
+                    CBT.CreateBroadcast("PING I wonder, do special characters work?", false, STULogType.OK);
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
