@@ -1,6 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
-using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 
 namespace IngameScript {
@@ -25,16 +24,12 @@ namespace IngameScript {
             /// Your solution must have the CUCKS project loaded</param>
             public void Log(STULog log, string key = null) {
                 string export = log.Serialize();
-                if (key != null && key.Length >= 16)
-                {
-                    try
-                    {
+                if (key != null && key.Length >= 16) {
+                    try {
                         export = Encrypt(log.Serialize(), key);
-                    }
-                    catch
-                    {
+                    } catch {
                         throw new Exception($"TEA encryption unsuccessful: STUMasterLogBroadcaster.Log(STULog {log}, string {key}");
-                    }   
+                    }
                 }
                 Broadcaster.SendBroadcastMessage(Channel, export, Distance);
             }
@@ -44,16 +39,14 @@ namespace IngameScript {
             }
 
             #region Tiny Encryption Algorithm (TEA) Methods
-            public void encode(uint[] v, uint[] k)
-            {
+            public void encode(uint[] v, uint[] k) {
                 uint y = v[0];
                 uint z = v[1];
                 uint sum = 0;
                 uint delta = 0x9e3779b9;
                 uint n = 32;
 
-                while (n-- > 0)
-                {
+                while (n-- > 0) {
                     y += (z << 4 ^ z >> 5) + z ^ sum + k[sum & 3];
                     sum += delta;
                     z += (y << 4 ^ y >> 5) + y ^ sum + k[sum >> 11 & 3];
@@ -63,16 +56,14 @@ namespace IngameScript {
                 v[1] = z;
             }
 
-            public void decode(uint[] v, uint[] k)
-            {
+            public void decode(uint[] v, uint[] k) {
                 uint n = 32;
                 uint y = v[0];
                 uint z = v[1];
                 uint delta = 0x9e3779b9;
                 uint sum = delta << 5;
 
-                while (n-- > 0)
-                {
+                while (n-- > 0) {
                     z -= (y << 4 ^ y >> 5) + y ^ sum + k[sum >> 11 & 3];
                     y -= (z << 4 ^ z >> 5) + z ^ sum + k[sum & 3];
                     sum -= delta;
@@ -83,21 +74,18 @@ namespace IngameScript {
             }
 
             // totally auto generated, not sure if it works
-            public uint[] FormatKey(string key)
-            {
+            public uint[] FormatKey(string key) {
                 uint[] formattedKey = new uint[4];
                 byte[] keyBytes = Encoding.UTF8.GetBytes(key);
 
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++) {
                     formattedKey[i] = BitConverter.ToUInt32(keyBytes, i * 4);
                 }
 
                 return formattedKey;
             }
 
-            public string Encrypt(string data, string key)
-            {
+            public string Encrypt(string data, string key) {
                 uint[] formattedKey = FormatKey(key);
 
                 if (data.Length % 2 != 0)
@@ -106,8 +94,7 @@ namespace IngameScript {
 
                 string cipher = string.Empty;
                 uint[] tempData = new uint[2];
-                for (int i = 0; i < dataBytes.Length; i += 2)
-                {
+                for (int i = 0; i < dataBytes.Length; i += 2) {
                     tempData[0] = dataBytes[i];
                     tempData[1] = dataBytes[i + 1];
                     encode(tempData, formattedKey);
@@ -117,15 +104,13 @@ namespace IngameScript {
                 return cipher;
             }
 
-            public string Decrypt(string data, string key)
-            {
+            public string Decrypt(string data, string key) {
                 uint[] formattedKey = FormatKey(key);
 
                 int x = 0;
                 uint[] tempData = new uint[2];
                 byte[] dataBytes = new byte[data.Length / 8 * 2];
-                for (int i = 0; i < data.Length; i += 8)
-                {
+                for (int i = 0; i < data.Length; i += 8) {
                     tempData[0] = ConvertStringToUInt(data.Substring(i, 4));
                     tempData[1] = ConvertStringToUInt(data.Substring(i + 4, 4));
                     decode(tempData, formattedKey);
@@ -136,8 +121,7 @@ namespace IngameScript {
                 string decipheredString = Encoding.ASCII.GetString(dataBytes, 0, dataBytes.Length);
 
                 // Strip null characters
-                if (decipheredString[decipheredString.Length - 1] == '\0')
-                {
+                if (decipheredString[decipheredString.Length - 1] == '\0') {
                     decipheredString = decipheredString.Substring(0, decipheredString.Length - 1);
                 }
 
@@ -145,8 +129,7 @@ namespace IngameScript {
 
             }
 
-            private string ConvertUIntToString(uint value)
-            {
+            private string ConvertUIntToString(uint value) {
                 System.Text.StringBuilder output = new System.Text.StringBuilder();
                 output.Append((char)(value & 0xFF));
                 output.Append((char)((value >> 8) & 0xFF));
@@ -155,8 +138,7 @@ namespace IngameScript {
                 return output.ToString();
             }
 
-            private uint ConvertStringToUInt(string input)
-            {
+            private uint ConvertStringToUInt(string input) {
                 uint output = 0;
                 output = ((uint)input[0]);
                 output += ((uint)input[1] << 8);

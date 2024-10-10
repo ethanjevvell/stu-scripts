@@ -10,7 +10,8 @@ namespace IngameScript {
 
             public const string AUTO_MINER_RECON_NAME = "AM-R";
             public const string AUTO_MINER_HQ_RECON_CHANNEL = "AUTO_MINER_HQ_RECON_CHANNEL";
-            public const string AUTO_MINER_HQ_DRONE_CHANNEL = "AUTO_MINER_HQ_DRONE_CHANNEL";
+            public const string AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL = "AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL";
+            public const string AUTO_MINER_HQ_DRONE_LOG_CHANNEL = "AUTO_MINER_HQ_DRONE_LOG_CHANNEL";
             public const string AUTO_MINER_HQ_COMMAND_CHANNEL = "AUTO_MINER_HQ_COMMAND_CHANNEL";
             public const string AUTO_MINER_HQ_NAME = "AM-HQ";
             public const string AUTO_MINER_LOG_SUBSCRIBER_TAG = "AUTO_MINER_LOG_SUBSCRIBER";

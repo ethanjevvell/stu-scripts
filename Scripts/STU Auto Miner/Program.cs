@@ -11,6 +11,7 @@ namespace IngameScript {
 
         IMyBroadcastListener DroneListener;
 
+        static STUMasterLogBroadcaster TelemetryBroadcaster { get; set; }
         static STUMasterLogBroadcaster LogBroadcaster { get; set; }
         STUFlightController FlightController { get; set; }
         STURaycaster Raycaster { get; set; }
@@ -54,7 +55,10 @@ namespace IngameScript {
             GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
             GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
-            LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+
+            TelemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+
             DroneListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_COMMAND_CHANNEL);
             LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
             MinerId = Me.EntityId.ToString();
@@ -202,7 +206,7 @@ namespace IngameScript {
             DroneData.CargoLevel = 0;
             DroneData.CargoCapacity = 0;
             Echo(DroneData.Serialize());
-            LogBroadcaster.Log(new STULog() {
+            TelemetryBroadcaster.Log(new STULog() {
                 Message = "",
                 Type = STULogType.INFO,
                 Sender = MinerName,

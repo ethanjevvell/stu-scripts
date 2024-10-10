@@ -5,7 +5,9 @@ using System.Collections.Generic;
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        IMyBroadcastListener DroneListener;
+        IMyBroadcastListener DroneTelemetryListener;
+        IMyBroadcastListener DroneLogListener;
+
         IMyBroadcastListener ReconListener;
 
         STUMasterLogBroadcaster HQToDroneBroadcaster;
@@ -23,12 +25,15 @@ namespace IngameScript {
         // Holds log data temporarily for each run
         STULog IncomingLog;
 
-        Dictionary<string, MiningDroneData> IncomingDroneData = new Dictionary<string, MiningDroneData>();
+        Dictionary<string, MiningDroneData> IncomingDroneTelemetryData = new Dictionary<string, MiningDroneData>();
 
         public Program() {
 
-            // Register listeners
-            DroneListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_CHANNEL);
+            // Drone listeners
+            DroneTelemetryListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL);
+            DroneLogListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL);
+
+            // Recon listeners
             ReconListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_CHANNEL);
 
             // Initialize HQ to drone broadcaster
@@ -103,24 +108,39 @@ namespace IngameScript {
             logLCD = output;
         }
 
-        /// <summary>
-        /// Processes incoming drone telemetry messages to determine the state of each drone, discover new drones, and update existing drones.
-        /// </summary>
-        void UpdateDroneTelemetry() {
+        void HandleIncomingDroneLogs() {
 
-            IncomingDroneData.Clear();
-
-            while (DroneListener.HasPendingMessage) {
-                MyIGCMessage message = DroneListener.AcceptMessage();
+            while (DroneLogListener.HasPendingMessage) {
+                MyIGCMessage message = DroneTelemetryListener.AcceptMessage();
                 try {
                     IncomingLog = STULog.Deserialize(message.Data.ToString());
 
-                    // By convention, blank message fields mean the transmission only contains telemetry data
                     if (!string.IsNullOrEmpty(IncomingLog.Message)) {
                         // If it's just a message, publish it to the log screens and move on to the next incoming message
                         PublishExternalLog(IncomingLog);
                         continue;
                     }
+
+                } catch {
+
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Processes incoming drone telemetry messages to determine the state of each drone, discover new drones, and update existing drones.
+        /// </summary>
+        void UpdateDroneTelemetry() {
+
+            IncomingDroneTelemetryData.Clear();
+
+            while (DroneTelemetryListener.HasPendingMessage) {
+                MyIGCMessage message = DroneTelemetryListener.AcceptMessage();
+                try {
+                    IncomingLog = STULog.Deserialize(message.Data.ToString());
+
+                    // By convention, blank message fields mean the transmission only contains telemetry data
 
                     // Check if Metadata is not null and contains the key "MinerDroneData"
                     if (!IncomingLog.Metadata.ContainsKey("MinerDroneData")) {
@@ -130,7 +150,7 @@ namespace IngameScript {
 
                     // Proceed to deserialize the drone data
                     MiningDroneData drone = MiningDroneData.Deserialize(IncomingLog.Metadata["MinerDroneData"]);
-                    IncomingDroneData.Add(drone.Id, drone);
+                    IncomingDroneTelemetryData.Add(drone.Id, drone);
 
                     // Update or add the drone to the MiningDrones dictionary
                     if (MiningDrones.ContainsKey(drone.Id)) {
