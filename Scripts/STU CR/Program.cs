@@ -46,11 +46,11 @@ namespace IngameScript
                 var rawMessage = Listener.AcceptMessage();
                 string message = rawMessage.Data.ToString();
                 STULog incomingLog = STULog.Deserialize(message);
-                string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
+                // string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
                 
-                CR.AddToLogQueue($"Incoming Log: {decryptedMessage}; metadata: {incomingLog.Metadata}");
+                CR.AddToLogQueue($"Incoming Log: {incomingLog.Message}; metadata: {incomingLog.Metadata}");
                 
-                ParseCommand(decryptedMessage.ToUpper());
+                // ParseCommand(decryptedMessage.ToUpper());
             }
             
             CR.UpdateLogScreens();
