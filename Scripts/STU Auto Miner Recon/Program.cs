@@ -11,7 +11,7 @@ namespace IngameScript {
         IMyTerminalBlock Cockpit;
         STUDisplay CockpitDisplay;
         STURaycaster Raycaster;
-        STUMasterLogBroadcaster Broadcaster;
+        STUMasterLogBroadcaster JobBroadcaster;
         MyCommandLine CommandLineParser;
 
         public Dictionary<string, Action> ProgramCommands = new Dictionary<string, Action>(StringComparer.OrdinalIgnoreCase);
@@ -22,7 +22,7 @@ namespace IngameScript {
             CockpitDisplay = InitCockpitDisplay(Cockpit);
             Raycaster = InitRaycaster();
             Raycaster.RaycastDistance = 10000;
-            Broadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            JobBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_JOB_LISTENER, IGC, TransmissionDistance.AntennaRelay);
 
             CommandLineParser = new MyCommandLine();
             ProgramCommands.Add("Raycast", Raycast);
@@ -64,12 +64,11 @@ namespace IngameScript {
         public void Raycast() {
             try {
 
-                PlaneD jobPlane = InitilializeJobSitePlane();
-                Vector3D currentPos = Me.GetPosition();
-                Vector3D jobSite = jobPlane.ProjectPoint(ref currentPos);
+                PlaneD jobPlane = ScanJobPlane();
+                Vector3D jobSite = ScanJobSite();
 
                 CockpitDisplay.Surface.WriteText(jobPlane.ToString());
-                Broadcaster.Log(new STULog {
+                JobBroadcaster.Log(new STULog {
                     Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
                     Message = "Transmitting new job site",
                     Type = STULogType.INFO,
@@ -122,29 +121,26 @@ namespace IngameScript {
             return $"({x.ToString("0.00")}, {y.ToString("0.00")}, {z.ToString("0.00")})";
         }
 
-        PlaneD InitilializeJobSitePlane() {
-
-            Vector3D straightAndUp = new Vector3D(0, 1, -1);
-            Vector3D rightAndDown = new Vector3D(1, -1, -1);
-            Vector3D leftAndDown = new Vector3D(-1, -1, -1);
+        PlaneD ScanJobPlane() {
 
             Vector3D? p1 = Raycaster.Camera.Raycast(100, 5, 0).HitPosition;
             Vector3D? p2 = Raycaster.Camera.Raycast(100, -5, 5).HitPosition;
             Vector3D? p3 = Raycaster.Camera.Raycast(100, -5, -5).HitPosition;
 
             if (p1 == null || p2 == null || p3 == null) {
-                Broadcaster.Log(
-                    new STULog {
-                        Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
-                        Message = "Failed to initialize job site plane",
-                        Type = STULogType.ERROR
-                    }
-                    );
                 throw new Exception("Failed to initialize job site plane");
             }
 
             return new PlaneD(p1.Value, p2.Value, p3.Value);
 
+        }
+
+        Vector3D ScanJobSite() {
+            Vector3D jobSite = Raycaster.Camera.Raycast(100, 0, 0).HitPosition.Value;
+            if (jobSite == null) {
+                throw new Exception("Failed to initialize job site");
+            }
+            return jobSite;
         }
 
 

@@ -9,7 +9,7 @@ namespace IngameScript {
 
         static string MinerName;
 
-        IMyBroadcastListener DroneListener;
+        IMyUnicastListener DroneListener;
 
         static STUMasterLogBroadcaster TelemetryBroadcaster { get; set; }
         static STUMasterLogBroadcaster LogBroadcaster { get; set; }
@@ -23,6 +23,7 @@ namespace IngameScript {
 
         List<IMyGasTank> HydrogenTanks { get; set; }
         List<IMyBatteryBlock> Batteries { get; set; }
+        List<IMyShipDrill> Drills { get; set; }
 
         Queue<STULog> FlightLogs { get; set; }
 
@@ -54,12 +55,12 @@ namespace IngameScript {
             Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
             GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
             GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
+            GridTerminalSystem.GetBlocksOfType(new List<IMyShipDrill>(Drills));
+            Echo(Drills.Count.ToString());
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
-
             TelemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-
-            DroneListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_COMMAND_CHANNEL);
+            DroneListener = IGC.UnicastListener;
             LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
             MinerId = Me.EntityId.ToString();
             InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
@@ -100,7 +101,7 @@ namespace IngameScript {
                     case MinerState.FLY_TO_JOB_SITE:
                         if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
                             CreateInfoBroadcast("Arrived at job site; starting drill routine");
-                            DrillRoutineStateMachine = new DrillRoutine(FlightController, GridTerminalSystem.GetBlockWithName("Drill") as IMyShipDrill, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane);
+                            DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane);
                             MinerMainState = MinerState.MINING;
                         }
                         break;
@@ -165,9 +166,6 @@ namespace IngameScript {
         }
 
         void SetJobSite(Dictionary<string, string> metadata) {
-            if (metadata["DroneId"] != MinerId) {
-                return;
-            }
             MinerMainState = MinerState.FLY_TO_JOB_SITE;
             DroneData.JobSite = MiningDroneData.DeserializeVector3D(metadata["JobSite"]);
             DroneData.JobPlane = MiningDroneData.DeserializePlaneD(metadata["JobPlane"]);
