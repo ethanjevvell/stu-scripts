@@ -57,8 +57,7 @@ namespace IngameScript
                     Sender = CBT_VARIABLES.CBT_VEHICLE_NAME,
                     Message = message,
                     Type = type,
-                },
-                    key);
+                });
             }
             public static void AddToLogQueue(string message, string type = STULogType.INFO, string sender = CBT_VARIABLES.CBT_VEHICLE_NAME)
             {

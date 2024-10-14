@@ -21,33 +21,31 @@ namespace IngameScript
                 echo = Echo;
             }
 
-            public void SetupDrawSurface(IMyTextSurface surface, bool enabled)
+            public void BuildScreen(MySpriteDrawFrame frame, Vector2 centerPos, float scale = 1f)
             {
-                if (enabled)
+                MySprite background = new MySprite()
                 {
-                    // Draw background color
-                    //  surface.ScriptBackgroundColor = new Color(0, 121, 0, 255);
-                    // Set content type
-                    surface.ContentType = ContentType.SCRIPT;
-                    // Set script to none
-                    surface.Script = "";
-                }
-                else
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = TopLeft + new Vector2(0, ScreenHeight / 2),
+                    Size = new Vector2(ScreenWidth, ScreenHeight),
+                    Color = new Color(0, 0, 0)
+                };
+                MySprite horizontal_line = new MySprite()
                 {
-                    // Draw background color
-                    //  surface.ScriptBackgroundColor = new Color(106, 0, 0, 255);
-                    // Set content type
-                    surface.ContentType = ContentType.SCRIPT;
-                    // Set script to none
-                    surface.Script = "";
-                }
+                    Type = SpriteType.TEXTURE,
+                    Data = "SquareSimple",
+                    Position = TopLeft + new Vector2(0, ScreenHeight / 2 + 1),
+                    Size = new Vector2(ScreenWidth, 2),
+                    Color = new Color(64, 64, 64)
+                };
+                
+
+                frame.Add(background);
+                frame.Add(horizontal_line);
+                
+
             }
-
-            // Poll hardware for statuses
-
-            // conversion helpers from hardware output to sprite
-
-            // Draw status sprites
 
         }
     }
