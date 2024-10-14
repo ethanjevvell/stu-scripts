@@ -363,7 +363,7 @@ namespace IngameScript {
                     ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
 
                     // Check if we've reached the desired velocity state
-                    return V_e < 0.1;
+                    return V_e < 0.01;
                 }
 
                 /// <summary>

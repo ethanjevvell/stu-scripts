@@ -10,6 +10,7 @@ namespace IngameScript {
                 Init,
                 Run,
                 Closeout,
+                Done
             }
 
             public virtual InternalStates CurrentInternalState { get; set; } = InternalStates.Init;
@@ -34,9 +35,11 @@ namespace IngameScript {
                         break;
                     case InternalStates.Closeout:
                         if (Closeout()) {
-                            return true;
+                            CurrentInternalState = InternalStates.Done;
                         }
                         break;
+                    case InternalStates.Done:
+                        return true;
 
                 }
                 return false;

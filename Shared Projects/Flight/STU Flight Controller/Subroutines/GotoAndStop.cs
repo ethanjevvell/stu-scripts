@@ -47,6 +47,8 @@ namespace IngameScript {
                     double reverseAcceleration = weakestVector.Length() / STUVelocityController.ShipMass;
                     double stoppingDistance = FC.CalculateStoppingDistance(reverseAcceleration, currentVelocity);
 
+                    CreateInfoBroadcast($"D_t: {Math.Round(distanceToTargetPos, 2)}m");
+
                     switch (CurrentState) {
 
                         case GotoStates.CRUISE:
@@ -88,12 +90,10 @@ namespace IngameScript {
                 }
 
                 public override bool Closeout() {
-                    FC.RelinquishThrusterControl();
-                    FC.ToggleDampeners(true);
-                    FC.RelinquishThrusterControl();
-                    if (FC.CurrentVelocity_WorldFrame.IsZero()) {
+                    FC.SetStableForwardVelocity(0);
+                    if (Math.Abs(FC.VelocityMagnitude) < 1e-2) {
                         FC.RelinquishGyroControl();
-                        FC.ToggleDampeners(false);
+                        CreateOkBroadcast("GotoAndStop maneuver complete");
                         return true;
                     }
                     return false;

@@ -142,6 +142,11 @@ namespace IngameScript {
 
             List<IMyInventory> Inventories;
             List<IMyGasTank> Tanks;
+            List<IMyBatteryBlock> Batteries;
+
+            public float HydrogenCapacity { get; private set; } = 0;
+            public float OxygenCapacity { get; private set; } = 0;
+            public float PowerCapacity { get; private set; } = 0;
 
             Dictionary<string, double> RunningItemTotals = new Dictionary<string, double>();
             Dictionary<string, double> MostRecentItemTotals = new Dictionary<string, double>();
@@ -154,20 +159,30 @@ namespace IngameScript {
                 grid.GetBlocks(gridBlocks);
                 Inventories = GetInventories(gridBlocks, me);
                 Tanks = new List<IMyGasTank>();
+                Batteries = new List<IMyBatteryBlock>();
                 grid.GetBlocksOfType(Tanks, (block) => block.CubeGrid == me.CubeGrid);
+                grid.GetBlocksOfType(Batteries, (block) => block.CubeGrid == me.CubeGrid);
+                Init();
             }
 
             public STUInventoryEnumerator(List<IMyTerminalBlock> blocks, List<IMyGasTank> tanks, IMyProgrammableBlock me) {
                 Inventories = GetInventories(blocks, me);
                 Tanks = tanks;
+                Init();
+            }
+
+            void Init() {
+                HydrogenCapacity = GetHydrogenCapacity();
+                OxygenCapacity = GetOxygenCapacity();
+                PowerCapacity = GetPowerCapacity();
             }
 
             List<IMyInventory> GetInventories(List<IMyTerminalBlock> blocks, IMyProgrammableBlock me) {
                 List<IMyInventory> outputList = new List<IMyInventory>();
-                for (int i = 0; i < blocks.Count; i++) {
-                    if (blocks[i].HasInventory && blocks[i].CubeGrid == me.CubeGrid) {
-                        for (int j = 0; j < blocks[i].InventoryCount; j++) {
-                            outputList.Add(blocks[i].GetInventory(j));
+                foreach (IMyTerminalBlock block in blocks) {
+                    if (block.HasInventory && block.CubeGrid == me.CubeGrid) {
+                        for (int j = 0; j < block.InventoryCount; j++) {
+                            outputList.Add(block.GetInventory(j));
                         }
                     }
                 }
@@ -177,7 +192,7 @@ namespace IngameScript {
             public void EnumerateInventories() {
 
                 if (InventoryEnumeratorStateMachine == null) {
-                    InventoryEnumeratorStateMachine = EnumerateInventoriesCoroutine(Inventories, Tanks).GetEnumerator();
+                    InventoryEnumeratorStateMachine = EnumerateInventoriesCoroutine(Inventories, Tanks, Batteries).GetEnumerator();
                     // Clear the item totals if we're starting a new enumeration
                     RunningItemTotals.Clear();
                     InventoryIndex = 0;
@@ -193,7 +208,7 @@ namespace IngameScript {
 
             }
 
-            IEnumerable<bool> EnumerateInventoriesCoroutine(List<IMyInventory> inventories, List<IMyGasTank> tanks) {
+            IEnumerable<bool> EnumerateInventoriesCoroutine(List<IMyInventory> inventories, List<IMyGasTank> tanks, List<IMyBatteryBlock> batteries) {
 
                 var items = new List<MyInventoryItem>();
 
@@ -209,6 +224,12 @@ namespace IngameScript {
 
                 foreach (IMyGasTank tank in tanks) {
                     ProcessTank(tank);
+                    InventoryIndex++;
+                    yield return true;
+                }
+
+                foreach (IMyBatteryBlock battery in batteries) {
+                    ProcessBattery(battery);
                     InventoryIndex++;
                     yield return true;
                 }
@@ -253,13 +274,50 @@ namespace IngameScript {
                 }
             }
 
+            void ProcessBattery(IMyBatteryBlock battery) {
+                double powerInWattHours = (double)battery.CurrentStoredPower;
+                if (RunningItemTotals.ContainsKey("Power")) {
+                    RunningItemTotals["Power"] += powerInWattHours;
+                } else {
+                    RunningItemTotals["Power"] = powerInWattHours;
+                }
+            }
+
+            float GetHydrogenCapacity() {
+                float totalCapacity = 0;
+                foreach (IMyGasTank tank in Tanks) {
+                    if (tank.BlockDefinition.SubtypeId.Contains("Hydrogen")) {
+                        totalCapacity += tank.Capacity;
+                    }
+                }
+                return totalCapacity;
+            }
+
+            float GetOxygenCapacity() {
+                float totalCapacity = 0;
+                foreach (IMyGasTank tank in Tanks) {
+                    if (tank.BlockDefinition.SubtypeId.Contains("Oxygen")) {
+                        totalCapacity += tank.Capacity;
+                    }
+                }
+                return totalCapacity;
+            }
+
+            float GetPowerCapacity() {
+                float totalCapacity = 0;
+                foreach (IMyBatteryBlock battery in Batteries) {
+                    totalCapacity += battery.MaxStoredPower;
+                }
+                return totalCapacity;
+            }
+
             public Dictionary<string, double> GetItemTotals() {
                 return MostRecentItemTotals;
             }
 
             public float GetProgress() {
                 // Ensure we don't divide by zero
-                int totalCount = Inventories.Count + Tanks.Count;
+                int totalCount = Inventories.Count + Tanks.Count + Batteries.Count;
                 if (totalCount == 0)
                     return 1;
 

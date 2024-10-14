@@ -21,9 +21,9 @@ namespace IngameScript {
         Vector3 HomeBase { get; set; }
         string MinerMainState { get; set; }
 
-        List<IMyGasTank> HydrogenTanks { get; set; }
-        List<IMyBatteryBlock> Batteries { get; set; }
-        List<IMyShipDrill> Drills { get; set; }
+        List<IMyGasTank> HydrogenTanks = new List<IMyGasTank>();
+        List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
+        List<IMyShipDrill> Drills = new List<IMyShipDrill>();
 
         Queue<STULog> FlightLogs { get; set; }
 
@@ -49,25 +49,25 @@ namespace IngameScript {
             }
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             MinerMainState = MinerState.INITIALIZE;
-            Raycaster = new STURaycaster(GridTerminalSystem.GetBlockWithName("Raycaster") as IMyCameraBlock);
-            Raycaster.ToggleRaycast(true);
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
             Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
-            GridTerminalSystem.GetBlocksOfType(new List<IMyGasTank>(HydrogenTanks));
-            GridTerminalSystem.GetBlocksOfType(new List<IMyBatteryBlock>(Batteries));
-            GridTerminalSystem.GetBlocksOfType(new List<IMyShipDrill>(Drills));
-            Echo(Drills.Count.ToString());
+            GridTerminalSystem.GetBlocksOfType(HydrogenTanks);
+            GridTerminalSystem.GetBlocksOfType(Batteries);
+            GridTerminalSystem.GetBlocksOfType(Drills);
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             TelemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             DroneListener = IGC.UnicastListener;
-            LogScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.7f);
+            LogScreen = new LogLCD(Me, 0, "Monospace", 0.5f);
             MinerId = Me.EntityId.ToString();
             InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
             DroneData = new MiningDroneData();
         }
 
         public void Main() {
+
+            // Coroutine to update item and fuel inventory counts
+            InventoryEnumerator.EnumerateInventories();
 
             try {
 
@@ -101,7 +101,7 @@ namespace IngameScript {
                     case MinerState.FLY_TO_JOB_SITE:
                         if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
                             CreateInfoBroadcast("Arrived at job site; starting drill routine");
-                            DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane);
+                            DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, DroneData.JobSite, DroneData.JobPlane, InventoryEnumerator);
                             MinerMainState = MinerState.MINING;
                         }
                         break;
@@ -117,7 +117,10 @@ namespace IngameScript {
             } catch (Exception e) {
                 CreateFatalErrorBroadcast(e.Message);
             } finally {
-                // Insert FlightController diagnostic logs
+                foreach (var log in STUFlightController.FlightLogs) {
+                    CreateBroadcast(log.Message, log.Type);
+                }
+                // Insert FlightController diagnostic logs for local display
                 GetFlightControllerLogs();
                 LogScreen.StartFrame();
                 LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
@@ -126,10 +129,8 @@ namespace IngameScript {
         }
 
         void GetFlightControllerLogs() {
-            if (STUFlightController.FlightLogs.Count > 0) {
-                while (STUFlightController.FlightLogs.Count > 0) {
-                    LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
-                }
+            while (STUFlightController.FlightLogs.Count > 0) {
+                LogScreen.FlightLogs.Enqueue(STUFlightController.FlightLogs.Dequeue());
             }
         }
 
@@ -187,7 +188,7 @@ namespace IngameScript {
             //HomeBase = Connector.GetPosition();
             //// For now, just get the first character of the random entityid; would be cool to have a name generator
             //// Turn all tanks to stockpile
-            //HydrogenTanks.ForEach(tank => tank.Stockpile = true);
+            //HydrogenTanks.ForEach(tank => tank.Stockpile = false);
             //// Put all batteries in recharge mode
             //Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
         }

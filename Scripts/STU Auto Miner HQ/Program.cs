@@ -149,6 +149,11 @@ namespace IngameScript {
 
                     // Proceed to deserialize the drone data
                     MiningDroneData drone = MiningDroneData.Deserialize(IncomingLog.Metadata["MinerDroneData"]);
+
+                    if (IncomingDroneTelemetryData.ContainsKey(drone.Id)) {
+                        return;
+                    }
+
                     IncomingDroneTelemetryData.Add(drone.Id, drone);
 
                     // Update or add the drone to the MiningDrones dictionary
@@ -169,7 +174,7 @@ namespace IngameScript {
 
             // Check for missing drones
             foreach (var drone in MiningDrones) {
-                if (!IncomingDroneTelemetryData.ContainsKey(drone.Key)) {
+                if (!IncomingDroneTelemetryData.ContainsKey(drone.Key) && MiningDrones[drone.Key].State != MinerState.MISSING) {
                     CreateHQLog($"Drone {drone.Key} is missing", STULogType.WARNING);
                     drone.Value.State = MinerState.MISSING;
                 }

@@ -44,7 +44,7 @@ namespace IngameScript {
 
             public override bool Init() {
                 Connector.Disconnect();
-                HydrogenTanks.ForEach(tank => tank.Stockpile = true);
+                HydrogenTanks.ForEach(tank => tank.Stockpile = false);
                 Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
                 CurrentPlanet = STUGalacticMap.GetPlanetOfPoint(FlightController.CurrentPosition);
 
@@ -137,7 +137,7 @@ namespace IngameScript {
 
                     case RunStates.DESCEND:
                         // Descend to 100m
-                        if (FlightController.MaintainSurfaceAltitude(Connector.CubeGrid.WorldVolume.Radius + 10)) {
+                        if (FlightController.MaintainSurfaceAltitude(Connector.CubeGrid.WorldVolume.Radius * 2)) {
                             return true;
                         }
                         break;
