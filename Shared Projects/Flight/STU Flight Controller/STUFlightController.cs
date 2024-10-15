@@ -19,7 +19,7 @@ namespace IngameScript {
             public static Dictionary<string, string> Telemetry = new Dictionary<string, string>();
             StandardOutput[] StandardOutputDisplays { get; set; }
 
-            IMyRemoteControl RemoteControl { get; set; }
+            public IMyRemoteControl RemoteControl { get; protected set; }
 
             public bool HasGyroControl { get; set; }
             public bool HasThrusterControl { get; set; }

@@ -44,12 +44,13 @@ namespace IngameScript {
                 FlightController.ReinstateGyroControl();
                 FlightController.ReinstateThrusterControl();
                 RunState = RunStates.ORIENT_AGAINST_JOB_PLANE;
-                Silos = GetSilos(JobSite, JobPlane, 3, Drills[0]);
+                Silos = GetSilos(JobSite, JobPlane, 3, FlightController.RemoteControl);
                 Drills.ForEach(drill => drill.Enabled = true);
                 return true;
             }
 
             public override bool Closeout() {
+                Drills.ForEach(drill => drill.Enabled = false);
                 return true;
             }
 
@@ -92,7 +93,7 @@ namespace IngameScript {
                         FlightController.SetStableForwardVelocity(0);
                         if (aligned) {
                             CreateOkBroadcast("Oriented against job plane, flying to first silo");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 1);
+                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 5);
                             RunState = RunStates.FLY_TO_SILO_START;
                         }
                         break;
@@ -103,7 +104,7 @@ namespace IngameScript {
                         if (finishedGoToManeuver && aligned) {
                             RunState = RunStates.EXTRACT_SILO;
                             CreateOkBroadcast("Arrived at silo start, starting extraction");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].EndPos, 0.3);
+                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].EndPos, 1);
                         }
                         break;
 
@@ -111,7 +112,7 @@ namespace IngameScript {
                         finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
                             CreateOkBroadcast("Finished extracting silo; starting to pull out");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 1);
+                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
                             RunState = RunStates.PULL_OUT;
                         }
                         break;
@@ -124,13 +125,14 @@ namespace IngameScript {
                                 RunState = RunStates.RTB;
                             } else {
                                 CreateOkBroadcast("Finished pulling out; flying to next silo");
-                                FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 1);
+                                FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
                                 RunState = RunStates.FLY_TO_SILO_START;
                             }
                         }
                         break;
 
                     case RunStates.RTB:
+                        Drills.ForEach(drill => drill.Enabled = false);
                         return true;
 
                 }
@@ -149,6 +151,10 @@ namespace IngameScript {
                 return currentPower / capacity < 0.25;
             }
 
+            private bool StorageIsFull() {
+                return InventoryEnumerator.GetFilledRatio() >= 0.95;
+            }
+
             Vector3D GetClosestPointOnJobPlane(PlaneD jobPlane, Vector3D currentPos) {
                 return jobPlane.ProjectPoint(ref currentPos);
             }
@@ -156,9 +162,11 @@ namespace IngameScript {
 
             private List<Silo> GetSilos(Vector3D jobSite, PlaneD jobPlane, int n, IMyTerminalBlock referenceBlock) {
 
-                double shipWidth = referenceBlock.CubeGrid.WorldAABB.Size.X;
-                double shipHeight = referenceBlock.CubeGrid.WorldAABB.Size.Y;
-                double shipLength = referenceBlock.CubeGrid.WorldAABB.Size.Z;
+                Vector3D shipDimensions = (referenceBlock.CubeGrid.Max - referenceBlock.CubeGrid.Min + Vector3I.One) * referenceBlock.CubeGrid.GridSize;
+
+                double shipWidth = shipDimensions.X;
+                // For unknown reasons, the ship length is actually the Y-dimension... should investigate further some day
+                double shipLength = shipDimensions.Y;
 
                 // Get the normal of the job plane
                 Vector3D normal = Vector3D.Normalize(jobPlane.Normal);
@@ -177,13 +185,13 @@ namespace IngameScript {
                 List<Silo> silos = new List<Silo>();
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < n; j++) {
-                        Vector3D offset = right * (i - halfGridSize) * shipWidth + up * (j - halfGridSize) * shipHeight;
+                        Vector3D offset = right * (i - halfGridSize) * shipWidth + up * (j - halfGridSize) * shipWidth;
                         Vector3D startPos = jobSite + offset;
                         Vector3D endPos = startPos + normal * siloDepth;
 
                         Vector3D endToStart = startPos - endPos;
                         endToStart.Normalize();
-                        startPos += endToStart * (shipLength + 5);
+                        startPos += endToStart * shipLength;
 
                         silos.Add(new Silo(startPos, endPos));
                     }

@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript {
@@ -140,13 +141,14 @@ namespace IngameScript {
                 { pg + "/WelderItem", "Welder" }
             };
 
-            List<IMyInventory> Inventories;
-            List<IMyGasTank> Tanks;
-            List<IMyBatteryBlock> Batteries;
+            List<IMyInventory> Inventories = new List<IMyInventory>();
+            List<IMyGasTank> Tanks = new List<IMyGasTank>();
+            List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
 
             public float HydrogenCapacity { get; private set; } = 0;
             public float OxygenCapacity { get; private set; } = 0;
             public float PowerCapacity { get; private set; } = 0;
+            public float StorageCapacity { get; private set; } = 0;
 
             Dictionary<string, double> RunningItemTotals = new Dictionary<string, double>();
             Dictionary<string, double> MostRecentItemTotals = new Dictionary<string, double>();
@@ -158,16 +160,22 @@ namespace IngameScript {
                 List<IMyTerminalBlock> gridBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocks(gridBlocks);
                 Inventories = GetInventories(gridBlocks, me);
-                Tanks = new List<IMyGasTank>();
-                Batteries = new List<IMyBatteryBlock>();
                 grid.GetBlocksOfType(Tanks, (block) => block.CubeGrid == me.CubeGrid);
                 grid.GetBlocksOfType(Batteries, (block) => block.CubeGrid == me.CubeGrid);
                 Init();
             }
 
-            public STUInventoryEnumerator(List<IMyTerminalBlock> blocks, List<IMyGasTank> tanks, IMyProgrammableBlock me) {
+            public STUInventoryEnumerator(IMyGridTerminalSystem grid, List<IMyTerminalBlock> blocks, IMyProgrammableBlock me) {
+                Inventories = GetInventories(blocks, me);
+                grid.GetBlocksOfType(Batteries);
+                grid.GetBlocksOfType(Tanks);
+                Init();
+            }
+
+            public STUInventoryEnumerator(List<IMyTerminalBlock> blocks, List<IMyGasTank> tanks, List<IMyBatteryBlock> batteries, IMyProgrammableBlock me) {
                 Inventories = GetInventories(blocks, me);
                 Tanks = tanks;
+                Batteries = batteries;
                 Init();
             }
 
@@ -175,6 +183,7 @@ namespace IngameScript {
                 HydrogenCapacity = GetHydrogenCapacity();
                 OxygenCapacity = GetOxygenCapacity();
                 PowerCapacity = GetPowerCapacity();
+                StorageCapacity = GetStorageCapacity();
             }
 
             List<IMyInventory> GetInventories(List<IMyTerminalBlock> blocks, IMyProgrammableBlock me) {
@@ -323,6 +332,16 @@ namespace IngameScript {
 
                 return InventoryIndex / totalCount;
             }
+
+            float GetStorageCapacity() {
+                return Inventories.ToArray().Sum(inventory => (float)inventory.MaxVolume);
+            }
+
+            public float GetFilledRatio() {
+                double currentOccupiedVolume = Inventories.ToArray().Sum(inventory => (double)inventory.CurrentVolume);
+                return (float)(currentOccupiedVolume / StorageCapacity);
+            }
+
         }
     }
 }

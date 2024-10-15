@@ -47,8 +47,6 @@ namespace IngameScript {
                     double reverseAcceleration = weakestVector.Length() / STUVelocityController.ShipMass;
                     double stoppingDistance = FC.CalculateStoppingDistance(reverseAcceleration, currentVelocity);
 
-                    CreateInfoBroadcast($"D_t: {Math.Round(distanceToTargetPos, 2)}m");
-
                     switch (CurrentState) {
 
                         case GotoStates.CRUISE:

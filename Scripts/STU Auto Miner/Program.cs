@@ -21,9 +21,9 @@ namespace IngameScript {
         Vector3 HomeBase { get; set; }
         string MinerMainState { get; set; }
 
+        List<IMyShipDrill> Drills = new List<IMyShipDrill>();
         List<IMyGasTank> HydrogenTanks = new List<IMyGasTank>();
         List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
-        List<IMyShipDrill> Drills = new List<IMyShipDrill>();
 
         Queue<STULog> FlightLogs { get; set; }
 
@@ -41,27 +41,42 @@ namespace IngameScript {
         public string MinerId { get; protected set; }
 
         public Program() {
-            HydrogenTanks = new List<IMyGasTank>();
-            Batteries = new List<IMyBatteryBlock>();
+
+            // Ensure miner has a name
             MinerName = Me.CustomData;
+            MinerId = Me.EntityId.ToString();
             if (MinerName.Length == 0) {
                 CreateFatalErrorBroadcast("Miner name not set in custom data");
             }
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
-            MinerMainState = MinerState.INITIALIZE;
+
+            // Get blocks needed for various systems
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
             Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
+            GridTerminalSystem.GetBlocksOfType(Drills);
             GridTerminalSystem.GetBlocksOfType(HydrogenTanks);
             GridTerminalSystem.GetBlocksOfType(Batteries);
-            GridTerminalSystem.GetBlocksOfType(Drills);
+
+            // Initialize core systems
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
             TelemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             LogBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            DroneListener = IGC.UnicastListener;
             LogScreen = new LogLCD(Me, 0, "Monospace", 0.5f);
-            MinerId = Me.EntityId.ToString();
-            InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
+            DroneListener = IGC.UnicastListener;
+
+            // Initialize inventory enumerator; we only want drills and cargo blocks when considering filled ratio
+            List<IMyCargoContainer> cargoContainers = new List<IMyCargoContainer>();
+            GridTerminalSystem.GetBlocksOfType(cargoContainers);
+            List<IMyTerminalBlock> inventoryBlocks = new List<IMyTerminalBlock>();
+            inventoryBlocks.AddRange(cargoContainers);
+            inventoryBlocks.AddRange(Drills);
+            InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, inventoryBlocks, Me);
+
+
+            // Set runtime frequency and initalize drone state
+            MinerMainState = MinerState.INITIALIZE;
             DroneData = new MiningDroneData();
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
         }
 
         public void Main() {
@@ -117,9 +132,6 @@ namespace IngameScript {
             } catch (Exception e) {
                 CreateFatalErrorBroadcast(e.Message);
             } finally {
-                foreach (var log in STUFlightController.FlightLogs) {
-                    CreateBroadcast(log.Message, log.Type);
-                }
                 // Insert FlightController diagnostic logs for local display
                 GetFlightControllerLogs();
                 LogScreen.StartFrame();
@@ -194,6 +206,7 @@ namespace IngameScript {
         }
 
         void UpdateTelemetry() {
+            // Update drone state
             Dictionary<string, double> inventory = InventoryEnumerator.GetItemTotals();
             DroneData.State = MinerMainState;
             DroneData.WorldPosition = FlightController.CurrentPosition;
@@ -204,7 +217,8 @@ namespace IngameScript {
             DroneData.Id = MinerId;
             DroneData.CargoLevel = 0;
             DroneData.CargoCapacity = 0;
-            Echo(DroneData.Serialize());
+
+            // Send data to HQ
             TelemetryBroadcaster.Log(new STULog() {
                 Message = "",
                 Type = STULogType.INFO,
@@ -213,6 +227,9 @@ namespace IngameScript {
                     { "MinerDroneData", DroneData.Serialize() }
                 }
             });
+
+            // Debug output
+            Echo(DroneData.Serialize());
         }
 
         // Broadcast utilities

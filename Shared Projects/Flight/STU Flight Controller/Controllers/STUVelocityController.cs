@@ -10,6 +10,8 @@ namespace IngameScript {
 
             public partial class STUVelocityController {
 
+                const double WORLD_VELOCITY_ERROR_TOLERANCE = 0.01;
+
                 /// <summary>
                 /// All velocity controllers deal with the same grid mass, so it's shared.
                 /// </summary>
@@ -341,7 +343,7 @@ namespace IngameScript {
                     if (V_c.IsZero()) {
                         outputVector = V_e_vec * ShipMass;
                         ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
-                        return V_e < 0.1;
+                        return V_e < WORLD_VELOCITY_ERROR_TOLERANCE;
                     }
 
                     // Edge case: If the desired velocity is zero, we can just stop the ship with standard velocity controls
@@ -363,7 +365,7 @@ namespace IngameScript {
                     ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
 
                     // Check if we've reached the desired velocity state
-                    return V_e < 0.01;
+                    return V_e < WORLD_VELOCITY_ERROR_TOLERANCE;
                 }
 
                 /// <summary>

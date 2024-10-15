@@ -15,7 +15,6 @@ namespace IngameScript {
                 ADJUST_ALTITUDE,
                 CRUISE,
                 DECELERATE,
-                DESCEND,
             }
 
             STUFlightController FlightController { get; set; }
@@ -130,14 +129,7 @@ namespace IngameScript {
 
                     case RunStates.DECELERATE:
                         if (FlightController.GotoAndStopManeuver.ExecuteStateMachine()) {
-                            CreateInfoBroadcast("Starting descent to job site");
-                            RunState = RunStates.DESCEND;
-                        }
-                        break;
-
-                    case RunStates.DESCEND:
-                        // Descend to 100m
-                        if (FlightController.MaintainSurfaceAltitude(Connector.CubeGrid.WorldVolume.Radius * 2)) {
+                            CreateInfoBroadcast("Finished job site flight state machine");
                             return true;
                         }
                         break;
