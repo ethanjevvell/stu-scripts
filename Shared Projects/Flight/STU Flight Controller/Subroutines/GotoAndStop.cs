@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sandbox.ModAPI.Ingame;
+using System;
 using VRageMath;
 
 namespace IngameScript {
@@ -17,17 +18,19 @@ namespace IngameScript {
 
                 GotoStates CurrentState { get; set; }
                 Vector3D TargetPos { get; set; }
+                IMyTerminalBlock Reference { get; set; }
                 double CruiseVelocity { get; set; }
 
                 // +/- x-m error tolerance
                 const double STOPPING_DISTANCE_ERROR_TOLERANCE = 1.0 / 4.0;
                 const double FINE_TUNING_VELOCITY_ERROR_TOLERANCE = 0.1;
 
-                public GotoAndStop(STUFlightController thisFlightController, Vector3D targetPos, double cruiseVelocity) {
+                public GotoAndStop(STUFlightController thisFlightController, Vector3D targetPos, double cruiseVelocity, IMyTerminalBlock reference = null) {
                     FC = thisFlightController;
                     CurrentState = GotoStates.CRUISE;
                     CruiseVelocity = cruiseVelocity;
                     TargetPos = targetPos;
+                    Reference = reference == null ? FC.RemoteControl : reference;
                 }
 
                 public override bool Init() {
@@ -39,7 +42,16 @@ namespace IngameScript {
 
                 public override bool Run() {
 
-                    Vector3D currentPos = FC.RemoteControl.CubeGrid.WorldVolume.Center;
+                    Vector3D currentPos;
+
+                    if (Reference is IMyShipConnector) {
+                        currentPos = Reference.GetPosition() + Reference.WorldMatrix.Forward * 2.5;
+                    } else if (Reference is IMyRemoteControl) {
+                        currentPos = Reference.CubeGrid.WorldVolume.Center;
+                    } else {
+                        currentPos = Reference.GetPosition();
+                    }
+
                     double distanceToTargetPos = Vector3D.Distance(currentPos, TargetPos);
                     double currentVelocity = FC.CurrentVelocity_WorldFrame.Length();
 

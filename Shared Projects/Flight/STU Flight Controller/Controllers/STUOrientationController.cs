@@ -21,15 +21,27 @@ namespace IngameScript {
                     });
                 }
 
-                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition) {
+                /// <summary>
+                /// Aligns the ship's forward vector to the target vector
+                /// </summary>
+                /// <param name="target"></param>
+                /// <param name="currentPosition"></param>
+                /// <param name="reference"></param>
+                /// <returns></returns>
+                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, IMyTerminalBlock reference = null) {
+
+                    // If we don't pass in a reference block, use the remote control
+                    if (reference == null) {
+                        reference = RemoteControl;
+                    }
 
                     Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
-                    Vector3D forwardVector = Vector3D.Normalize(RemoteControl.WorldMatrix.Forward);
+                    Vector3D forwardVector = Vector3D.Normalize(reference.WorldMatrix.Forward);
 
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
 
-                    if (Math.Abs(rotationAngle) < Math.Abs(ANGLE_ERROR_TOLERANCE)) {
+                    if (Math.Abs(rotationAngle) < ANGLE_ERROR_TOLERANCE) {
                         foreach (var gyro in Gyros) {
                             gyro.Pitch = 0;
                             gyro.Yaw = 0;
@@ -45,10 +57,11 @@ namespace IngameScript {
 
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
-                    Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);
+                    //Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(reference, angularVelocity);
 
-                    // Correctly map the local angular velocity to gyro controls
+                    // Map the local angular velocity to gyro controls
                     foreach (var gyro in Gyros) {
+                        Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
                         gyro.Pitch = (float)localAngularVelocity.X;
                         gyro.Yaw = (float)localAngularVelocity.Y;
                         gyro.Roll = (float)localAngularVelocity.Z;

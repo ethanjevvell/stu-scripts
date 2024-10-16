@@ -156,11 +156,14 @@ namespace IngameScript {
             public const string INITIALIZE = "INITIALIZE";
             public const string IDLE = "IDLE";
             public const string FLY_TO_JOB_SITE = "FLY_TO_JOB_SITE";
+            public const string FLY_TO_HOME_BASE = "FLY_TO_HOME_BASE";
             public const string REFUELING = "REFUELING";
             public const string MINING = "MINING";
             public const string RTB = "RTB";
             public const string HARD_FAILURE = "HARD_FAILURE";
             public const string MISSING = "MISSING";
+            public const string ALIGN_WITH_BASE_CONNECTOR = "ALIGN_WITH_BASE_CONNECTOR";
+            public const string DOCKING = "DOCKING";
         }
 
     }

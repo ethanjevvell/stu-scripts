@@ -16,9 +16,10 @@ namespace IngameScript {
         STUFlightController FlightController { get; set; }
         STURaycaster Raycaster { get; set; }
         IMyRemoteControl RemoteControl { get; set; }
-        IMyShipConnector Connector { get; set; }
 
-        Vector3 HomeBase { get; set; }
+        IMyShipConnector DroneConnector { get; set; }
+        IMyShipConnector HomeBaseConnector { get; set; }
+
         string MinerMainState { get; set; }
 
         List<IMyShipDrill> Drills = new List<IMyShipDrill>();
@@ -30,7 +31,6 @@ namespace IngameScript {
         static LogLCD LogScreen { get; set; }
 
         // Subroutine declarations
-        FlyToJobSite FlyToJobSiteStateMachine { get; set; }
         DrillRoutine DrillRoutineStateMachine { get; set; }
 
         // Inventory enumerator
@@ -51,10 +51,11 @@ namespace IngameScript {
 
             // Get blocks needed for various systems
             RemoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
-            Connector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
-            GridTerminalSystem.GetBlocksOfType(Drills);
-            GridTerminalSystem.GetBlocksOfType(HydrogenTanks);
-            GridTerminalSystem.GetBlocksOfType(Batteries);
+            DroneConnector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
+
+            GridTerminalSystem.GetBlocksOfType(Drills, (block) => block.CubeGrid == Me.CubeGrid);
+            GridTerminalSystem.GetBlocksOfType(HydrogenTanks, (block) => block.CubeGrid == Me.CubeGrid);
+            GridTerminalSystem.GetBlocksOfType(Batteries, (block) => block.CubeGrid == Me.CubeGrid);
 
             // Initialize core systems
             FlightController = new STUFlightController(GridTerminalSystem, RemoteControl, Me);
@@ -114,16 +115,58 @@ namespace IngameScript {
                         break;
 
                     case MinerState.FLY_TO_JOB_SITE:
-                        if (FlyToJobSiteStateMachine.ExecuteStateMachine()) {
+                        bool navigated = FlightController.NavigateOverPlanetSurfaceManeuver.ExecuteStateMachine();
+                        if (navigated) {
                             CreateInfoBroadcast("Arrived at job site; starting drill routine");
-                            DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, DroneData.JobSite, DroneData.JobPlane, InventoryEnumerator);
+                            if (DrillRoutineStateMachine == null || DrillRoutineStateMachine.FinishedLastJob) {
+                                CreateInfoBroadcast("Starting new drill routine");
+                                DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, DroneData.JobSite, DroneData.JobPlane, InventoryEnumerator);
+                            } else {
+                                CreateInfoBroadcast("Resuming previous drill routine");
+                                int lastSilo = DrillRoutineStateMachine.CurrentSilo;
+                                DrillRoutineStateMachine = new DrillRoutine(FlightController, Drills, DroneData.JobSite, DroneData.JobPlane, InventoryEnumerator);
+                                // If the last job didn't finish, we need to reset the current silo
+                                DrillRoutineStateMachine.CurrentSilo = lastSilo;
+                            }
                             MinerMainState = MinerState.MINING;
                         }
                         break;
 
                     case MinerState.MINING:
                         if (DrillRoutineStateMachine.ExecuteStateMachine()) {
-                            CreateInfoBroadcast("Drill routine complete; returning to base");
+                            CreateInfoBroadcast("Returning to base");
+                            FlightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(FlightController, HomeBaseConnector.GetPosition() + HomeBaseConnector.WorldMatrix.Forward * 20, 30, 5);
+                            MinerMainState = MinerState.FLY_TO_HOME_BASE;
+                        }
+                        break;
+
+                    case MinerState.FLY_TO_HOME_BASE:
+                        navigated = FlightController.NavigateOverPlanetSurfaceManeuver.ExecuteStateMachine();
+                        if (navigated) {
+                            MinerMainState = MinerState.ALIGN_WITH_BASE_CONNECTOR;
+                        }
+                        break;
+
+                    case MinerState.ALIGN_WITH_BASE_CONNECTOR:
+                        bool stable = FlightController.SetStableForwardVelocity(0);
+                        bool aligned = FlightController.AlignShipToTarget(HomeBaseConnector.GetPosition(), DroneConnector);
+                        if (stable && aligned) {
+                            CreateInfoBroadcast("Aligned with base connector; connecting");
+                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, HomeBaseConnector.GetPosition(), 1, DroneConnector);
+                            MinerMainState = MinerState.DOCKING;
+                        }
+                        break;
+
+                    case MinerState.DOCKING:
+                        navigated = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        if (navigated) {
+                            DroneConnector.Connect();
+                            if (DroneConnector.Status == MyShipConnectorStatus.Connected) {
+                                CreateInfoBroadcast("Docked with base connector; refueling");
+                                MinerMainState = MinerState.REFUELING;
+                            } else {
+                                CreateWarningBroadcast("Failed to dock; retrying");
+                            }
                         }
                         break;
 
@@ -134,6 +177,9 @@ namespace IngameScript {
             } finally {
                 // Insert FlightController diagnostic logs for local display
                 GetFlightControllerLogs();
+                foreach (var log in STUFlightController.FlightLogs) {
+                    CreateBroadcast(log.Message, log.Type);
+                }
                 LogScreen.StartFrame();
                 LogScreen.WriteWrappableLogs(LogScreen.FlightLogs);
                 LogScreen.EndAndPaintFrame();
@@ -179,11 +225,19 @@ namespace IngameScript {
         }
 
         void SetJobSite(Dictionary<string, string> metadata) {
-            MinerMainState = MinerState.FLY_TO_JOB_SITE;
             DroneData.JobSite = MiningDroneData.DeserializeVector3D(metadata["JobSite"]);
             DroneData.JobPlane = MiningDroneData.DeserializePlaneD(metadata["JobPlane"]);
-            FlyToJobSiteStateMachine = new FlyToJobSite(FlightController, Connector, HydrogenTanks, Batteries, DroneData.JobSite, DroneData.JobPlane, 30, 5);
+            DroneConnector.Disconnect();
+            HydrogenTanks.ForEach(tank => tank.Stockpile = false);
+            Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
+            // Calculate the cruise phase destination
+            STUGalacticMap.Planet currentPlanet = STUGalacticMap.GetPlanetOfPoint(FlightController.CurrentPosition).Value;
+            Vector3D jobSiteVector = DroneData.JobSite - currentPlanet.Center;
+            jobSiteVector.Normalize();
+            Vector3D cruiseDestination = currentPlanet.Center + jobSiteVector * (Vector3D.Distance(currentPlanet.Center, DroneData.JobSite) + 30);
+            FlightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(FlightController, cruiseDestination, 30, 5);
             CreateOkBroadcast("Job site set; moving to FLY_TO_JOB_SITE");
+            MinerMainState = MinerState.FLY_TO_JOB_SITE;
         }
 
         bool Stop() {
@@ -193,16 +247,13 @@ namespace IngameScript {
 
 
         void InitializeMiner() {
-            //if (!Connector.IsConnected) {
-            //    CreateFatalErrorBroadcast("Miner not connected to base; exiting");
-            //}
-            //// Establish the home base
-            //HomeBase = Connector.GetPosition();
-            //// For now, just get the first character of the random entityid; would be cool to have a name generator
-            //// Turn all tanks to stockpile
-            //HydrogenTanks.ForEach(tank => tank.Stockpile = false);
-            //// Put all batteries in recharge mode
-            //Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
+            if (!DroneConnector.IsConnected) {
+                CreateFatalErrorBroadcast("Miner not connected to base; exiting");
+            }
+            HomeBaseConnector = DroneConnector.OtherConnector;
+            CreateInfoBroadcast($"Home base connector pos: {HomeBaseConnector.GetPosition() + HomeBaseConnector.WorldMatrix.Forward * 50}");
+            HydrogenTanks.ForEach(tank => tank.Stockpile = true);
+            Batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Recharge);
         }
 
         void UpdateTelemetry() {

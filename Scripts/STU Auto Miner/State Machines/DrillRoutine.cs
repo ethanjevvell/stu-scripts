@@ -8,14 +8,17 @@ namespace IngameScript {
         public partial class DrillRoutine : STUStateMachine {
 
             public override string Name => "Drill Routine";
+            public bool FinishedLastJob { get; private set; }
 
             public enum RunStates {
                 ORIENT_AGAINST_JOB_PLANE,
                 ASSIGN_SILO_START,
                 FLY_TO_SILO_START,
                 EXTRACT_SILO,
-                PULL_OUT,
-                RTB
+                PULL_OUT_FINISHED_SILO,
+                PULL_OUT_UNFINISHED_SILO,
+                FINISHED_JOB,
+                RTB_BUT_NOT_FINISHED
             }
 
             STUFlightController FlightController { get; set; }
@@ -25,9 +28,7 @@ namespace IngameScript {
             PlaneD JobPlane { get; set; }
             STUInventoryEnumerator InventoryEnumerator;
 
-            Dictionary<string, double> ItemCounts;
-
-            int CurrentSilo = 0;
+            public int CurrentSilo = 0;
 
             class Silo {
                 public Vector3D StartPos;
@@ -72,18 +73,6 @@ namespace IngameScript {
 
                 // Constant mass updates to account for drilling
                 FlightController.UpdateShipMass();
-                ItemCounts = InventoryEnumerator.GetItemTotals();
-
-                //double hydrogen = ItemCounts.ContainsKey("Hydrogen") ? ItemCounts["Hydrogen"] : 0;
-                //double power = ItemCounts.ContainsKey("Power") ? ItemCounts["Power"] : 0;
-
-                //if (HydrogenRunningLow(InventoryEnumerator.HydrogenCapacity, hydrogen)) {
-                //    RunState = RunStates.RTB;
-                //}
-
-                //if (BatteriesRunningLow(InventoryEnumerator.PowerCapacity, power)) {
-                //    RunState = RunStates.RTB;
-                //}
 
                 switch (RunState) {
 
@@ -109,20 +98,34 @@ namespace IngameScript {
                         break;
 
                     case RunStates.EXTRACT_SILO:
+                        if (StorageIsFull()) {
+                            CreateOkBroadcast("Storage is full; returning to base");
+                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
+                            RunState = RunStates.PULL_OUT_UNFINISHED_SILO;
+                            break;
+                        }
                         finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
                             CreateOkBroadcast("Finished extracting silo; starting to pull out");
                             FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
-                            RunState = RunStates.PULL_OUT;
+                            RunState = RunStates.PULL_OUT_FINISHED_SILO;
                         }
                         break;
 
-                    case RunStates.PULL_OUT:
+                    case RunStates.PULL_OUT_UNFINISHED_SILO:
+                        finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        if (finishedGoToManeuver) {
+                            CreateOkBroadcast("Finished pulling out; returning to base");
+                            RunState = RunStates.RTB_BUT_NOT_FINISHED;
+                        }
+                        break;
+
+                    case RunStates.PULL_OUT_FINISHED_SILO:
                         finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
                             CurrentSilo++;
                             if (CurrentSilo >= Silos.Count) {
-                                RunState = RunStates.RTB;
+                                RunState = RunStates.FINISHED_JOB;
                             } else {
                                 CreateOkBroadcast("Finished pulling out; flying to next silo");
                                 FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
@@ -131,24 +134,20 @@ namespace IngameScript {
                         }
                         break;
 
-                    case RunStates.RTB:
-                        Drills.ForEach(drill => drill.Enabled = false);
+                    case RunStates.FINISHED_JOB:
+                        CreateOkBroadcast("Completely finished job, returning to base");
+                        FinishedLastJob = true;
+                        return true;
+
+                    case RunStates.RTB_BUT_NOT_FINISHED:
+                        CreateOkBroadcast("Returning to base for refueling");
+                        FinishedLastJob = false;
                         return true;
 
                 }
 
                 return false;
 
-            }
-
-            private bool HydrogenRunningLow(float capacity, double currentHydrogen) {
-                // TODO: Come up with more sophisticated way to determine if hydrogen is running low
-                return currentHydrogen / capacity < 0.25;
-            }
-
-            private bool BatteriesRunningLow(float capacity, double currentPower) {
-                // TODO: Come up with more sophisticated way to determine if batteries are running low
-                return currentPower / capacity < 0.25;
             }
 
             private bool StorageIsFull() {

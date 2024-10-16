@@ -11,6 +11,7 @@ namespace IngameScript {
             // Maneuver classes
             public HardStop HardStopManeuver { get; private set; }
             public GotoAndStop GotoAndStopManeuver { get; set; }
+            public NavigateOverPlanetSurface NavigateOverPlanetSurfaceManeuver { get; set; }
 
             public static Queue<STULog> FlightLogs = new Queue<STULog>();
             private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
@@ -63,10 +64,7 @@ namespace IngameScript {
                 PlanetOrbitController = new STUPlanetOrbitController(this);
                 HasGyroControl = true;
                 StandardOutputDisplays = FindStandardOutputDisplays(grid);
-
-                // Initialize maneuvers
                 HardStopManeuver = new HardStop(this);
-
                 UpdateState();
                 CreateOkFlightLog("Flight controller initialized.");
             }
@@ -252,9 +250,9 @@ namespace IngameScript {
             /// </summary>
             /// <param name="targetPos"></param>
             /// <returns></returns>
-            public bool AlignShipToTarget(Vector3D targetPos) {
+            public bool AlignShipToTarget(Vector3D targetPos, IMyTerminalBlock reference = null) {
                 ReinstateGyroControl();
-                return OrientationController.AlignShipToTarget(targetPos, CurrentPosition);
+                return OrientationController.AlignShipToTarget(targetPos, CurrentPosition, reference);
             }
 
             /// <summary>
