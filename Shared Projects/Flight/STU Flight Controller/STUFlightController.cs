@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
 namespace IngameScript {
@@ -17,35 +18,32 @@ namespace IngameScript {
             private const string FLIGHT_CONTROLLER_LOG_NAME = "STU-FC";
             private const string FLIGHT_CONTROLLER_STANDARD_OUTPUT_TAG = "FLIGHT_CONTROLLER_STANDARD_OUTPUT";
 
-            public static Dictionary<string, string> Telemetry = new Dictionary<string, string>();
-            StandardOutput[] StandardOutputDisplays { get; set; }
+            StandardOutput[] _standardOutputDisplays { get; set; }
 
             public IMyRemoteControl RemoteControl { get; protected set; }
 
-            public bool HasGyroControl { get; set; }
-            public bool HasThrusterControl { get; set; }
+            public bool HasGyroControl { get; private set; }
+            public bool HasThrusterControl { get; private set; }
 
-            public Vector3D Offset = Vector3D.Zero;
+            public double TargetVelocity { get; protected set; }
+            public double VelocityMagnitude { get; protected set; }
+            public Vector3D CurrentVelocity_LocalFrame { get; protected set; }
+            public Vector3D CurrentVelocity_WorldFrame { get; protected set; }
+            public Vector3D AccelerationComponents { get; protected set; }
 
-            public double TargetVelocity { get; set; }
-            public double VelocityMagnitude { get; set; }
-            public Vector3D CurrentVelocity_LocalFrame { get; set; }
-            public Vector3D CurrentVelocity_WorldFrame { get; set; }
-            public Vector3D AccelerationComponents { get; set; }
+            public Vector3D CurrentPosition { get; protected set; }
 
-            public Vector3D CurrentPosition { get; set; }
+            public MatrixD CurrentWorldMatrix { get; protected set; }
+            public MatrixD PreviousWorldMatrix { get; protected set; }
 
-            public MatrixD CurrentWorldMatrix { get; set; }
-            public MatrixD PreviousWorldMatrix { get; set; }
+            public IMyThrust[] ActiveThrusters { get; protected set; }
+            public IMyGyro[] AllGyroscopes { get; protected set; }
 
-            public IMyThrust[] ActiveThrusters { get; set; }
-            public IMyGyro[] AllGyroscopes { get; set; }
-
-            STUVelocityController VelocityController { get; set; }
-            STUOrientationController OrientationController { get; set; }
-            STUAltitudeController AltitudeController { get; set; }
-            STUPointOrbitController PointOrbitController { get; set; }
-            STUPlanetOrbitController PlanetOrbitController { get; set; }
+            STUVelocityController _velocityController { get; set; }
+            STUOrientationController _orientationController { get; set; }
+            STUAltitudeController _altitudeController { get; set; }
+            STUPointOrbitController _pointOrbitController { get; set; }
+            STUPlanetOrbitController _planetOrbitController { get; set; }
 
             /// <summary>
             /// Flight utility class that handles velocity control and orientation control. Requires exactly one Remote Control block to function.
@@ -57,21 +55,21 @@ namespace IngameScript {
                 ActiveThrusters = FindThrusters(grid, me);
                 AllGyroscopes = FindGyros(grid, me);
                 TargetVelocity = 0;
-                VelocityController = new STUVelocityController(RemoteControl, ActiveThrusters);
-                OrientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
-                AltitudeController = new STUAltitudeController(this, RemoteControl);
-                PointOrbitController = new STUPointOrbitController(this, RemoteControl);
-                PlanetOrbitController = new STUPlanetOrbitController(this);
+                _velocityController = new STUVelocityController(RemoteControl, ActiveThrusters);
+                _orientationController = new STUOrientationController(RemoteControl, AllGyroscopes);
+                _altitudeController = new STUAltitudeController(this, RemoteControl);
+                _pointOrbitController = new STUPointOrbitController(this, RemoteControl);
+                _planetOrbitController = new STUPlanetOrbitController(this);
                 HasGyroControl = true;
-                StandardOutputDisplays = FindStandardOutputDisplays(grid);
+                _standardOutputDisplays = FindStandardOutputDisplays(grid, me);
                 HardStopManeuver = new HardStop(this);
                 UpdateState();
                 CreateOkFlightLog("Flight controller initialized.");
             }
 
             public void UpdateThrustersAfterGridChange(IMyThrust[] newActiveThrusters) {
-                VelocityController = new STUVelocityController(RemoteControl, newActiveThrusters);
-                AltitudeController = new STUAltitudeController(this, RemoteControl);
+                _velocityController = new STUVelocityController(RemoteControl, newActiveThrusters);
+                _altitudeController = new STUAltitudeController(this, RemoteControl);
             }
 
             public void MeasureCurrentVelocity() {
@@ -81,7 +79,7 @@ namespace IngameScript {
             }
 
             public void MeasureCurrentAcceleration() {
-                AccelerationComponents = VelocityController.CalculateAccelerationVectors();
+                AccelerationComponents = _velocityController.CalculateAccelerationVectors();
             }
 
             public void MeasureCurrentPositionAndOrientation() {
@@ -90,7 +88,11 @@ namespace IngameScript {
             }
 
             public double GetCurrentSurfaceAltitude() {
-                return AltitudeController.GetSurfaceAltitude();
+                return _altitudeController.CurrentSurfaceAltitude;
+            }
+
+            public double GetCurrentSeaLevelAltitude() {
+                return _altitudeController.CurrentSeaLevelAltitude;
             }
 
             public void ToggleThrusters(bool on) {
@@ -102,7 +104,7 @@ namespace IngameScript {
             public float CalculateForwardStoppingDistance() {
                 float mass = STUVelocityController.ShipMass;
                 float velocity = (float)CurrentVelocity_LocalFrame.Z;
-                float maxReverseAcceleration = VelocityController.GetMaximumReverseAcceleration();
+                float maxReverseAcceleration = _velocityController.GetMaximumReverseAcceleration();
                 float dx = (velocity * velocity) / (2 * maxReverseAcceleration); // kinematic equation for "how far would I travel if I slammed on the brakes right now?"
                 return dx;
             }
@@ -119,8 +121,8 @@ namespace IngameScript {
             /// This must be called on every tick to ensure that the ship's state is up-to-date!
             /// </summary>
             public void UpdateState() {
-                VelocityController.UpdateState();
-                AltitudeController.UpdateState();
+                _velocityController.UpdateState();
+                _altitudeController.UpdateState();
                 MeasureCurrentPositionAndOrientation();
                 MeasureCurrentVelocity();
                 MeasureCurrentAcceleration();
@@ -128,8 +130,8 @@ namespace IngameScript {
             }
 
             private void DrawToStandardOutputs() {
-                for (int i = 0; i < StandardOutputDisplays.Length; i++) {
-                    StandardOutputDisplays[i].DrawTelemetry();
+                for (int i = 0; i < _standardOutputDisplays.Length; i++) {
+                    _standardOutputDisplays[i].DrawTelemetry();
                 }
             }
 
@@ -139,7 +141,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVx(double desiredVelocity) {
-                return VelocityController.SetVx(CurrentVelocity_LocalFrame.X, desiredVelocity);
+                return _velocityController.SetVx(CurrentVelocity_LocalFrame.X, desiredVelocity);
             }
 
             /// <summary>
@@ -148,7 +150,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVy(double desiredVelocity) {
-                return VelocityController.SetVy(CurrentVelocity_LocalFrame.Y, desiredVelocity);
+                return _velocityController.SetVy(CurrentVelocity_LocalFrame.Y, desiredVelocity);
             }
 
             /// <summary>
@@ -157,7 +159,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetVz(double desiredVelocity) {
-                return VelocityController.SetVz(CurrentVelocity_LocalFrame.Z, desiredVelocity);
+                return _velocityController.SetVz(CurrentVelocity_LocalFrame.Z, desiredVelocity);
             }
 
             /// <summary>
@@ -168,7 +170,7 @@ namespace IngameScript {
             /// <param name="referencePos"></param>
             /// <returns></returns>
             public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity, Vector3D referencePos) {
-                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, referencePos, desiredVelocity);
+                return _velocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, referencePos, desiredVelocity);
             }
 
             /// <summary>
@@ -179,7 +181,7 @@ namespace IngameScript {
             /// <param name="reference"></param>
             /// <returns></returns>
             public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity, IMyTerminalBlock reference) {
-                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, reference.GetPosition(), desiredVelocity);
+                return _velocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, reference.GetPosition(), desiredVelocity);
             }
 
             /// <summary>
@@ -189,7 +191,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public bool SetV_WorldFrame(Vector3D targetPos, double desiredVelocity) {
-                return VelocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, CurrentPosition, desiredVelocity);
+                return _velocityController.SetV_WorldFrame(targetPos, CurrentVelocity_WorldFrame, CurrentPosition, desiredVelocity);
             }
 
             /// <summary>
@@ -197,11 +199,11 @@ namespace IngameScript {
             /// </summary>
             /// <param name="roll"></param>
             public void SetVr(double roll) {
-                OrientationController.SetVr(roll);
+                _orientationController.SetVr(roll);
             }
 
             public void Hover() {
-                VelocityController.ExertVectorForce_WorldFrame(Vector3D.Zero, 0);
+                _velocityController.ExertVectorForce_WorldFrame(Vector3D.Zero, 0);
             }
 
             /// <summary>
@@ -210,7 +212,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public void SetVp(double pitch) {
-                OrientationController.SetVp(pitch);
+                _orientationController.SetVp(pitch);
             }
 
             /// <summary>
@@ -219,7 +221,7 @@ namespace IngameScript {
             /// <param name="desiredVelocity"></param>
             /// <returns></returns>
             public void SetVw(double yaw) {
-                OrientationController.SetVw(yaw);
+                _orientationController.SetVw(yaw);
             }
 
             /// <summary>
@@ -252,7 +254,7 @@ namespace IngameScript {
             /// <returns></returns>
             public bool AlignShipToTarget(Vector3D targetPos, IMyTerminalBlock reference = null) {
                 ReinstateGyroControl();
-                return OrientationController.AlignShipToTarget(targetPos, CurrentPosition, reference);
+                return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, reference);
             }
 
             /// <summary>
@@ -288,9 +290,9 @@ namespace IngameScript {
 
                 // If close enough, stop the roll
                 if (Math.Abs(rollAdjustment) < 0.003) {
-                    OrientationController.SetVr(0);
+                    _orientationController.SetVr(0);
                 } else {
-                    OrientationController.SetVr(rollAdjustment);
+                    _orientationController.SetVr(rollAdjustment);
                 }
             }
 
@@ -330,7 +332,7 @@ namespace IngameScript {
 
             public Vector3D GetAltitudeVelocityChangeForceVector(double desiredVelocity, double altitudeVelocity) {
                 // Note that LocalGravityVector has already been transformed by the ship's orientation
-                Vector3D localGravityVector = VelocityController.LocalGravityVector;
+                Vector3D localGravityVector = _velocityController.LocalGravityVector;
 
                 // Calculate the magnitude of the gravitational force
                 double gravityForceMagnitude = localGravityVector.Length();
@@ -355,21 +357,19 @@ namespace IngameScript {
             }
 
             public void OrbitPoint(Vector3D targetPos) {
-                PointOrbitController.Run(targetPos);
+                _pointOrbitController.Run(targetPos);
             }
 
             public void OrbitPlanet() {
-                PlanetOrbitController.Run();
+                _planetOrbitController.Run();
             }
 
             public bool MaintainSurfaceAltitude(double targetAltitude = 100) {
-                AltitudeController.TargetSurfaceAltitude = targetAltitude;
-                return AltitudeController.MaintainSurfaceAltitude();
+                return _altitudeController.MaintainSurfaceAltitude(targetAltitude);
             }
 
             public bool MaintainSeaLevelAltitude(double targetAltitude = 100) {
-                AltitudeController.TargetSeaLevelAltitude = targetAltitude;
-                return AltitudeController.MaintainSeaLevelAltitude();
+                return _altitudeController.MaintainSeaLevelAltitude(targetAltitude);
             }
 
 
@@ -409,10 +409,11 @@ namespace IngameScript {
                 HasThrusterControl = true;
             }
 
-            private StandardOutput[] FindStandardOutputDisplays(IMyGridTerminalSystem grid) {
+            private StandardOutput[] FindStandardOutputDisplays(IMyGridTerminalSystem grid, IMyTerminalBlock me) {
                 List<StandardOutput> output = new List<StandardOutput>();
                 List<IMyTerminalBlock> allBlocksOnGrid = new List<IMyTerminalBlock>();
                 grid.GetBlocks(allBlocksOnGrid);
+                allBlocksOnGrid.Where((block) => block.CubeGrid == me.CubeGrid);
                 foreach (var block in allBlocksOnGrid) {
                     string customDataRawText = block.CustomData;
                     string[] customDataLines = customDataRawText.Split('\n');
@@ -478,12 +479,6 @@ namespace IngameScript {
                     Type = type,
                     Sender = FLIGHT_CONTROLLER_LOG_NAME
                 });
-            }
-
-            private void DrawLoadingScreen() {
-                for (int i = 0; i < StandardOutputDisplays.Length; i++) {
-                    StandardOutputDisplays[i].DrawLoadingScreen(VelocityController.CALCULATION_PROGRESS);
-                }
             }
 
             IMyThrust[] FindThrusters(IMyGridTerminalSystem grid, IMyTerminalBlock me) {

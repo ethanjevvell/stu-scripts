@@ -32,7 +32,7 @@ namespace IngameScript {
                     switch (CurrentState) {
                         case PointOrbitState.Idle:
                             TargetRadius = Vector3D.Distance(targetPos, RemoteControl.CenterOfMass);
-                            TargetAltitude = FlightController.AltitudeController.CurrentSeaLevelAltitude;
+                            TargetAltitude = FlightController._altitudeController.CurrentSeaLevelAltitude;
                             CurrentState = PointOrbitState.EnteringOrbit;
                             TargetVelocity = FindMaximumOrbitVelocity();
                             break;
@@ -62,16 +62,16 @@ namespace IngameScript {
                     Vector3D nonColinearVector;
 
                     // If we're in gravity, use the gravity vector as the non-colinear vector
-                    nonColinearVector = InGravity() ? FlightController.VelocityController.LocalGravityVector : new Vector3D(0, 0, 1);
+                    nonColinearVector = InGravity() ? FlightController._velocityController.LocalGravityVector : new Vector3D(0, 0, 1);
 
                     if (velocity < TargetVelocity) {
                         Vector3D radiusVector = targetPos - FlightController.CurrentPosition;
                         Vector3D initialOrbitVector = Vector3D.Cross(radiusVector, nonColinearVector);
                         Vector3D kickstartThrust = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                        Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(0, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
+                        Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(0, FlightController._altitudeController.SeaLevelAltitudeVelocity);
                         Vector3D transposedKickstartThrust = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, kickstartThrust);
                         Vector3D outputVector = transposedKickstartThrust + counterGravityForceVector;
-                        FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
+                        FlightController._velocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
                         return false;
                     }
 
@@ -81,7 +81,7 @@ namespace IngameScript {
 
                 public void ExertCentripetalForce() {
 
-                    double altitude = FlightController.AltitudeController.GetSeaLevelAltitude();
+                    double altitude = FlightController._altitudeController.GetSeaLevelAltitude();
                     double mass = STUVelocityController.ShipMass;
                     double velocity = FlightController.CurrentVelocity_LocalFrame.Length();
                     double velocitySquared = velocity * velocity;
@@ -93,11 +93,11 @@ namespace IngameScript {
 
                     double centripetalForceRequired = ((mass * velocitySquared) / TargetRadius) - 10 * radiusError;
                     Vector3D centripetalForceVector = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, GetUnitVectorTowardOrbitalAxis() * centripetalForceRequired);
-                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(altitudeError, FlightController.AltitudeController.SeaLevelAltitudeVelocity);
+                    Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(altitudeError, FlightController._altitudeController.SeaLevelAltitudeVelocity);
 
                     Vector3D outputVector = centripetalForceVector + counterGravityForceVector;
 
-                    FlightController.VelocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
+                    FlightController._velocityController.ExertVectorForce_LocalFrame(outputVector, outputVector.Length());
 
                 }
 
@@ -128,11 +128,11 @@ namespace IngameScript {
                 }
 
                 private bool InGravity() {
-                    return FlightController.VelocityController.LocalGravityVector != Vector3D.Zero;
+                    return FlightController._velocityController.LocalGravityVector != Vector3D.Zero;
                 }
 
                 private double FindMaximumOrbitVelocity() {
-                    Vector3D weakestThrustVector = FlightController.VelocityController.MinimumThrustVector;
+                    Vector3D weakestThrustVector = FlightController._velocityController.MinimumThrustVector;
                     double weakestThrust = weakestThrustVector.Length();
                     double mass = STUVelocityController.ShipMass;
                     double maximumOrbitVelocity = Math.Sqrt(weakestThrust * TargetRadius / mass);

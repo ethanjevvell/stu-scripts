@@ -38,6 +38,13 @@ namespace IngameScript {
                     Radius = 62763.4881,
                     Center = new Vector3D(1031060.3327, 131094.9846, 1631139.8156)
                    }
+            },
+                {
+                    "Crait", new Planet {
+                        Name = "Crait",
+                        Radius = 40700.6663,
+                        Center = new Vector3D(-386492.07388515, -2913876.81373743, -3014984.2073616)
+                    }
                 }
             };
 

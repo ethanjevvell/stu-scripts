@@ -1,0 +1,4 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Planetary Measurements\obj\x64\Debug\STU Planetary Measurements.csproj.CoreCompileInputs.cache

@@ -20,7 +20,7 @@ namespace IngameScript {
         // LOG LCDS
         List<LogLCD> LogSubscribers = new List<LogLCD>();
 
-        Queue<MyTuple<Vector3D, PlaneD>> JobQueue = new Queue<MyTuple<Vector3D, PlaneD>>();
+        Queue<MyTuple<Vector3D, PlaneD, int>> JobQueue = new Queue<MyTuple<Vector3D, PlaneD, int>>();
 
         Dictionary<string, MiningDroneData> MiningDrones = new Dictionary<string, MiningDroneData>();
 
@@ -221,8 +221,9 @@ namespace IngameScript {
         void AddJobToQueue(STULog log) {
             Vector3D jobSite = MiningDroneData.DeserializeVector3D(log.Metadata["JobSite"]);
             PlaneD jobPlane = MiningDroneData.DeserializePlaneD(log.Metadata["JobPlane"]);
-            JobQueue.Enqueue(new MyTuple<Vector3D, PlaneD>(jobSite, jobPlane));
-            CreateHQLog($"Job added to queue: {jobSite}", STULogType.INFO);
+            int jobDepth = int.Parse(log.Metadata["JobDepth"]);
+            JobQueue.Enqueue(new MyTuple<Vector3D, PlaneD, int>(jobSite, jobPlane, jobDepth));
+            CreateHQLog($"Job added to queue", STULogType.INFO);
         }
 
         void DispatchDroneIfAvailable() {
@@ -230,20 +231,21 @@ namespace IngameScript {
             while (JobQueue.Count > 0 && idleDrones.Count > 0) {
                 var job = JobQueue.Dequeue();
                 var drone = idleDrones.Pop();
-                DispatchDrone(drone.Id, job.Item1, job.Item2);
-                CreateHQLog($"Drone {drone.Id} dispatched to {job.Item1}", STULogType.INFO);
+                DispatchDrone(drone.Id, job.Item1, job.Item2, job.Item3);
+                CreateHQLog($"Drone {drone.Id} dispatched to {Vector3D.Round(job.Item1)} with depth {job.Item3}", STULogType.INFO);
                 drone.State = MinerState.FLY_TO_JOB_SITE;
             }
         }
 
-        void DispatchDrone(string droneId, Vector3D jobSite, PlaneD jobPlane) {
+        void DispatchDrone(string droneId, Vector3D jobSite, PlaneD jobPlane, int jobDepth) {
             OutgoingLog = new STULog {
                 Sender = AUTO_MINER_VARIABLES.AUTO_MINER_HQ_NAME,
                 Message = "SetJobSite",
                 Type = STULogType.INFO,
                 Metadata = new Dictionary<string, string> {
                     { "JobSite", MiningDroneData.FormatVector3D(jobSite) },
-                    { "JobPlane", MiningDroneData.FormatPlaneD(jobPlane) }
+                    { "JobPlane", MiningDroneData.FormatPlaneD(jobPlane) },
+                    { "JobDepth", jobDepth.ToString() }
                 }
             };
             long parsedDroneId;

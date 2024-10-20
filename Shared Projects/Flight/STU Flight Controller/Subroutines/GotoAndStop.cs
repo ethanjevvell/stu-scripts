@@ -6,7 +6,7 @@ namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
             public class GotoAndStop : STUStateMachine {
-                public override string Name => "Goto And Stop";
+                public override string Name => "Go-to-and-stop";
 
                 private STUFlightController FC { get; set; }
 
@@ -16,18 +16,22 @@ namespace IngameScript {
                     FINE_TUNE
                 }
 
-                GotoStates CurrentState { get; set; }
+                GotoStates _currentState;
+                GotoStates CurrentState {
+                    get { return _currentState; }
+                    set { CreateInfoFlightLog($"{Name} transitioning to {value}"); _currentState = value; }
+                }
+
                 Vector3D TargetPos { get; set; }
                 IMyTerminalBlock Reference { get; set; }
                 double CruiseVelocity { get; set; }
 
                 // +/- x-m error tolerance
-                const double STOPPING_DISTANCE_ERROR_TOLERANCE = 1.0 / 4.0;
+                const double STOPPING_DISTANCE_ERROR_TOLERANCE = 1;
                 const double FINE_TUNING_VELOCITY_ERROR_TOLERANCE = 0.1;
 
                 public GotoAndStop(STUFlightController thisFlightController, Vector3D targetPos, double cruiseVelocity, IMyTerminalBlock reference = null) {
                     FC = thisFlightController;
-                    CurrentState = GotoStates.CRUISE;
                     CruiseVelocity = cruiseVelocity;
                     TargetPos = targetPos;
                     Reference = reference == null ? FC.RemoteControl : reference;
@@ -36,7 +40,8 @@ namespace IngameScript {
                 public override bool Init() {
                     FC.ReinstateGyroControl();
                     FC.ReinstateThrusterControl();
-                    CreateInfoFlightLog("Initiating GotoAndStop maneuver");
+                    FC.UpdateShipMass();
+                    CurrentState = GotoStates.CRUISE;
                     return true;
                 }
 
@@ -45,7 +50,7 @@ namespace IngameScript {
                     Vector3D currentPos;
 
                     if (Reference is IMyShipConnector) {
-                        currentPos = Reference.GetPosition() + Reference.WorldMatrix.Forward * 2.5;
+                        currentPos = Reference.GetPosition() + Reference.WorldMatrix.Forward * 1.25;
                     } else if (Reference is IMyRemoteControl) {
                         currentPos = Reference.CubeGrid.WorldVolume.Center;
                     } else {
@@ -55,7 +60,7 @@ namespace IngameScript {
                     double distanceToTargetPos = Vector3D.Distance(currentPos, TargetPos);
                     double currentVelocity = FC.CurrentVelocity_WorldFrame.Length();
 
-                    Vector3D weakestVector = FC.VelocityController.MinimumThrustVector;
+                    Vector3D weakestVector = FC._velocityController.MinimumThrustVector;
                     double reverseAcceleration = weakestVector.Length() / STUVelocityController.ShipMass;
                     double stoppingDistance = FC.CalculateStoppingDistance(reverseAcceleration, currentVelocity);
 
@@ -66,8 +71,7 @@ namespace IngameScript {
                             FC.SetV_WorldFrame(TargetPos, CruiseVelocity, currentPos);
 
                             if (distanceToTargetPos <= stoppingDistance + (1.0 / 6.0) * FC.CurrentVelocity_WorldFrame.Length()) {
-                                CreateInfoFlightLog("CRUISE exit condition satisfied, moving to DECELERATE");
-                                FC.VelocityController.ExertVectorForce_WorldFrame(-FC.CurrentVelocity_WorldFrame, FC.VelocityController.MinimumThrustVector.Length());
+                                FC._velocityController.ExertVectorForce_WorldFrame(-FC.CurrentVelocity_WorldFrame, FC._velocityController.MinimumThrustVector.Length());
                                 CurrentState = GotoStates.DECELERATE;
                             }
 
@@ -75,10 +79,9 @@ namespace IngameScript {
 
                         case GotoStates.DECELERATE:
 
-                            FC.VelocityController.ExertVectorForce_WorldFrame(-FC.CurrentVelocity_WorldFrame, FC.VelocityController.MinimumThrustVector.Length());
+                            FC._velocityController.ExertVectorForce_WorldFrame(-FC.CurrentVelocity_WorldFrame, FC._velocityController.MinimumThrustVector.Length());
 
                             if (currentVelocity <= (1.0 / 6.0) * reverseAcceleration) {
-                                CreateInfoFlightLog("Fine tuning...");
                                 CurrentState = GotoStates.FINE_TUNE;
                             }
                             break;
@@ -101,9 +104,9 @@ namespace IngameScript {
 
                 public override bool Closeout() {
                     FC.SetStableForwardVelocity(0);
-                    if (Math.Abs(FC.VelocityMagnitude) < 1e-2) {
+                    if (Math.Abs(FC.VelocityMagnitude) <= 0.1) {
                         FC.RelinquishGyroControl();
-                        CreateOkBroadcast("GotoAndStop maneuver complete");
+                        CreateOkFlightLog($"{Name} finished");
                         return true;
                     }
                     return false;

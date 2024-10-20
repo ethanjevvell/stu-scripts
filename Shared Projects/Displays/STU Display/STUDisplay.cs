@@ -1,7 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Security.Policy;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
@@ -188,8 +187,7 @@ namespace IngameScript {
                 return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).X;
             }
 
-            public float GetTextSpriteWidth(string s, float scale = 1f, string fontID = "Monospace")
-            {
+            public float GetTextSpriteWidth(string s, float scale = 1f, string fontID = "Monospace") {
                 StringBuilder builder = new StringBuilder();
                 builder.Append(s);
                 return Surface.MeasureStringInPixels(builder, fontID, scale).X;
@@ -200,8 +198,7 @@ namespace IngameScript {
                 return Surface.MeasureStringInPixels(builder.Append(sprite.Data), sprite.FontId, sprite.RotationOrScale).Y;
             }
 
-            public float GetTextSpriteHeight(string s, float scale = 1f, string fontID = "Monospace")
-            {
+            public float GetTextSpriteHeight(string s, float scale = 1f, string fontID = "Monospace") {
                 StringBuilder builder = new StringBuilder();
                 builder.Append(s);
                 return Surface.MeasureStringInPixels(builder, fontID, scale).Y;

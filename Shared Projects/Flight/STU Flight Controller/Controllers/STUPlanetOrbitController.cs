@@ -26,16 +26,16 @@ namespace IngameScript {
                 // The AltitudeController has a default tolerance of 1m, so it will more finely tune the altitude from there
                 const double ALTITUDE_ERROR_TOLERANCE = 30;
 
-                STUFlightController FlightController;
+                STUFlightController _flightController;
 
                 public STUPlanetOrbitController(STUFlightController controller) {
                     State = PlanetOrbitState.Initialize;
-                    FlightController = controller;
+                    _flightController = controller;
                 }
 
                 public bool Run() {
 
-                    if (FlightController.RemoteControl.GetNaturalGravity().Length() == 0) {
+                    if (_flightController.RemoteControl.GetNaturalGravity().Length() == 0) {
                         CreateErrorFlightLog("ABORT -- NO GRAVITY");
                         State = PlanetOrbitState.Abort;
                     }
@@ -44,14 +44,14 @@ namespace IngameScript {
 
                         case PlanetOrbitState.Initialize:
                             // figure out TargetPlanet, using galactic map
-                            TargetPlanet = FlightController.GetPlanetOfPoint(FlightController.CurrentPosition);
+                            TargetPlanet = _flightController.GetPlanetOfPoint(_flightController.CurrentPosition);
                             if (!TargetPlanet.HasValue) {
                                 CreateFatalFlightLog("ABORT -- NO TARGET PLANET");
                             }
-                            double gravityMagnitudeAtOrbitAltitude = FlightController.VelocityController.LocalGravityVector.Length();
-                            double targetRadius = Vector3D.Distance(FlightController.RemoteControl.CenterOfMass, TargetPlanet.Value.Center);
+                            double gravityMagnitudeAtOrbitAltitude = _flightController._velocityController.LocalGravityVector.Length();
+                            double targetRadius = Vector3D.Distance(_flightController.RemoteControl.CenterOfMass, TargetPlanet.Value.Center);
                             TargetVelocity = Math.Sqrt(gravityMagnitudeAtOrbitAltitude * targetRadius);
-                            TargetAltitude = FlightController.AltitudeController.GetSeaLevelAltitude();
+                            TargetAltitude = _flightController._altitudeController.GetSeaLevelAltitude();
 
                             State = PlanetOrbitState.Idle;
                             break;
@@ -60,14 +60,14 @@ namespace IngameScript {
 
                             if (!WithinVelocityErrorTolerance()) {
                                 CreateInfoFlightLog("Entering AdjustingVelocity");
-                                FlightController.ToggleThrusters(true);
+                                _flightController.ToggleThrusters(true);
                                 State = PlanetOrbitState.AdjustingVelocity;
                                 break;
                             }
 
                             if (!WithinAltitudeErrorTolerance()) {
                                 CreateInfoFlightLog("Entering AdjustingAltitude");
-                                FlightController.ToggleThrusters(true);
+                                _flightController.ToggleThrusters(true);
                                 State = PlanetOrbitState.AdjustingAltitude;
                                 break;
                             }
@@ -76,21 +76,21 @@ namespace IngameScript {
 
                         case PlanetOrbitState.AdjustingVelocity:
                             if (AdjustVelocity()) {
-                                FlightController.ToggleThrusters(false);
+                                _flightController.ToggleThrusters(false);
                                 State = PlanetOrbitState.Idle;
                             }
                             break;
 
                         case PlanetOrbitState.AdjustingAltitude:
                             if (AdjustAltitude()) {
-                                FlightController.ToggleThrusters(false);
+                                _flightController.ToggleThrusters(false);
                                 State = PlanetOrbitState.Idle;
                             }
                             break;
 
                         case PlanetOrbitState.Abort:
-                            FlightController.RelinquishGyroControl();
-                            FlightController.RelinquishThrusterControl();
+                            _flightController.RelinquishGyroControl();
+                            _flightController.RelinquishThrusterControl();
                             throw new Exception("Aborting");
 
                     }
@@ -102,15 +102,15 @@ namespace IngameScript {
                 private bool AdjustVelocity() {
                     // One tick of velocity to get started
                     try {
-                        if (FlightController.RemoteControl.GetShipVelocities().LinearVelocity.Length() == 0) {
-                            Vector3D gravityVector = FlightController.RemoteControl.GetNaturalGravity();
+                        if (_flightController.RemoteControl.GetShipVelocities().LinearVelocity.Length() == 0) {
+                            Vector3D gravityVector = _flightController.RemoteControl.GetNaturalGravity();
                             Vector3D initialOrbitVector = Vector3D.Cross(gravityVector, new Vector3D(0, 0, 1));
                             Vector3D kickstartVelocityForce = Vector3D.Normalize(initialOrbitVector) * STUVelocityController.ShipMass;
-                            FlightController.VelocityController.ExertVectorForce_WorldFrame(kickstartVelocityForce, kickstartVelocityForce.Length());
+                            _flightController._velocityController.ExertVectorForce_WorldFrame(kickstartVelocityForce, kickstartVelocityForce.Length());
                             return false;
                         }
 
-                        Vector3D velocityVector = FlightController.RemoteControl.GetShipVelocities().LinearVelocity;
+                        Vector3D velocityVector = _flightController.RemoteControl.GetShipVelocities().LinearVelocity;
                         Vector3D velocityUnitVector = Vector3D.Normalize(velocityVector);
 
                         double velocityMagnitude = velocityVector.Length();
@@ -118,7 +118,7 @@ namespace IngameScript {
 
                         double outputForce = STUVelocityController.ShipMass * velocityError;
                         Vector3D outputForceVector = velocityUnitVector * outputForce;
-                        FlightController.VelocityController.ExertVectorForce_WorldFrame(outputForceVector, outputForceVector.Length());
+                        _flightController._velocityController.ExertVectorForce_WorldFrame(outputForceVector, outputForceVector.Length());
                         return Math.Abs(velocityError) < VELOCITY_ERROR_TOLERANCE;
 
                     } catch (Exception e) {
@@ -129,7 +129,7 @@ namespace IngameScript {
 
                 private bool AdjustAltitude() {
                     try {
-                        return FlightController.MaintainSeaLevelAltitude(TargetAltitude);
+                        return _flightController.MaintainSeaLevelAltitude(TargetAltitude);
                     } catch (Exception e) {
                         CreateFatalFlightLog(e.ToString());
                         return false;
@@ -137,14 +137,14 @@ namespace IngameScript {
                 }
 
                 private bool WithinVelocityErrorTolerance() {
-                    Vector3D velocityVector = FlightController.RemoteControl.GetShipVelocities().LinearVelocity;
+                    Vector3D velocityVector = _flightController.RemoteControl.GetShipVelocities().LinearVelocity;
                     double velocityMagnitude = velocityVector.Length();
                     double velocityError = Math.Abs(TargetVelocity - velocityMagnitude);
                     return velocityError < VELOCITY_ERROR_TOLERANCE;
                 }
 
                 private bool WithinAltitudeErrorTolerance() {
-                    return Math.Abs(TargetAltitude - FlightController.AltitudeController.GetSeaLevelAltitude()) < ALTITUDE_ERROR_TOLERANCE;
+                    return Math.Abs(TargetAltitude - _flightController._altitudeController.GetSeaLevelAltitude()) < ALTITUDE_ERROR_TOLERANCE;
                 }
 
             }

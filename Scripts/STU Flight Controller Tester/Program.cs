@@ -29,7 +29,7 @@ namespace IngameScript {
             try {
                 FlightController.UpdateState();
                 FlightController.ReinstateThrusterControl();
-                FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                FlightController.MaintainSurfaceAltitude(50);
             } catch (Exception e) {
                 STUFlightController.CreateFatalFlightLog(e.Message);
             } finally {

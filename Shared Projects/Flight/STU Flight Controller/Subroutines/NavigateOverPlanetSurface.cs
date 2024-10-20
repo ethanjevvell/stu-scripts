@@ -7,21 +7,31 @@ namespace IngameScript {
         public partial class STUFlightController {
             public class NavigateOverPlanetSurface : STUStateMachine {
 
-                public enum RunStates {
-                    ASCEND,
-                    ORIENT,
-                    ADJUST_VELOCITY,
-                    ADJUST_ALTITUDE,
-                    CRUISE,
-                    DECELERATE,
+                static class RunStates {
+                    public const string ASCEND = "ASCEND";
+                    public const string ORIENT = "ORIENT";
+                    public const string ADJUST_VELOCITY = "ADJUST_VELOCITY";
+                    public const string ADJUST_ALTITUDE = "ADJUST_ALTITUDE";
+                    public const string CRUISE = "CRUISE";
+                    public const string DECELERATE = "DECELERATE";
+                }
+
+                string _runState;
+                string RunState {
+                    get { return _runState; }
+                    set {
+                        CreateInfoFlightLog($"{Name} transitioning to {value}");
+                        _runState = value;
+                    }
                 }
 
                 STUFlightController FlightController { get; set; }
-                RunStates RunState { get; set; }
                 public int CruiseAltitude { get; set; }
                 public int CruiseVelocity { get; set; }
                 Vector3D Destination { get; set; }
                 STUGalacticMap.Planet? CurrentPlanet { get; set; }
+
+                Vector3D _headingVector { get; set; }
 
                 public NavigateOverPlanetSurface(STUFlightController flightController, Vector3D destination, int cruiseAltitude, int cruiseVelocity) {
                     FlightController = flightController;
@@ -42,6 +52,8 @@ namespace IngameScript {
                     FlightController.ReinstateGyroControl();
                     FlightController.ReinstateThrusterControl();
                     FlightController.GotoAndStopManeuver = new GotoAndStop(FlightController, Destination, CruiseVelocity);
+                    FlightController.UpdateShipMass();
+                    CreateInfoFlightLog("Init NOPS complete");
                     return true;
                 }
 
@@ -57,6 +69,8 @@ namespace IngameScript {
                     // Shortcut to the end of the state machine
                     if (ApproachingDestination()) {
                         RunState = RunStates.DECELERATE;
+                    } else if (FlightController.GetCurrentSurfaceAltitude() < CruiseAltitude / 2) {
+                        RunState = RunStates.ADJUST_ALTITUDE;
                     }
 
                     switch (RunState) {
@@ -68,8 +82,8 @@ namespace IngameScript {
                             break;
 
                         case RunStates.ORIENT:
-                            Vector3D headingVector = GetGreatCircleCruiseVector(FlightController.CurrentPosition, Destination, CurrentPlanet.Value);
-                            bool aligned = FlightController.AlignShipToTarget(headingVector);
+                            _headingVector = GetGreatCircleCruiseVector(FlightController.CurrentPosition, Destination, CurrentPlanet.Value);
+                            bool aligned = FlightController.AlignShipToTarget(_headingVector);
                             bool stable = FlightController.SetStableForwardVelocity(0);
                             if (aligned && stable) {
                                 RunState = RunStates.ADJUST_VELOCITY;
@@ -77,7 +91,9 @@ namespace IngameScript {
                             break;
 
                         case RunStates.ADJUST_VELOCITY:
-                            if (FlightController.SetStableForwardVelocity(CruiseVelocity)) {
+                            stable = FlightController.SetV_WorldFrame(_headingVector, CruiseVelocity);
+                            aligned = FlightController.AlignShipToTarget(_headingVector);
+                            if (stable && aligned) {
                                 RunState = RunStates.CRUISE;
                             }
                             break;
@@ -89,13 +105,14 @@ namespace IngameScript {
                             break;
 
                         case RunStates.CRUISE:
+                            if (Math.Abs(FlightController.GetCurrentSurfaceAltitude() - CruiseAltitude) > 5) {
+                                RunState = RunStates.ADJUST_ALTITUDE;
+                                break;
+                            }
                             if (FlightController.VelocityMagnitude < 0.9 * CruiseVelocity
                                 || FlightController.VelocityMagnitude > 1.1 * CruiseVelocity) {
                                 RunState = RunStates.ADJUST_VELOCITY;
-                                break;
-                            }
-                            if (Math.Abs(FlightController.GetCurrentSurfaceAltitude() - CruiseAltitude) > 5) {
-                                RunState = RunStates.ADJUST_ALTITUDE;
+                                _headingVector = GetGreatCircleCruiseVector(FlightController.CurrentPosition, Destination, CurrentPlanet.Value);
                                 break;
                             }
                             break;

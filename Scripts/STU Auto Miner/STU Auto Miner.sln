@@ -13,8 +13,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Log", "..\..\Shared Pro
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Display", "..\..\Shared Projects\Displays\STU Display\STU Display.shproj", "{57B50592-7BEB-4012-A879-DEF8C4C735F0}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Image", "..\..\Shared Projects\Displays\STU Image\STU Image.shproj", "{7D53F862-DF1C-4FC4-92F8-49568E15C32B}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU State Machine", "..\..\Shared Projects\Misc\STU State Machine\STU State Machine.shproj", "{4FB19E00-BD67-4421-AD35-D02F6C4C181B}"
@@ -28,6 +26,8 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Auto Miner Variables", "..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU Auto Miner Variables.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STUInventoryEnumerator", "..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.shproj", "{9543D945-4F12-4CD2-9B70-938AE33C98C7}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

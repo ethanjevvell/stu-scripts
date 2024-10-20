@@ -20,7 +20,7 @@ namespace IngameScript {
             const string oc = "MyObjectBuilder_OxygenContainerObject";
             const string am = "MyObjectBuilder_AmmoMagazine";
 
-            public static Dictionary<string, string> SubtypeToNameDict = new Dictionary<string, string>() {
+            public static Dictionary<string, string> _subtypeToNameDict = new Dictionary<string, string>() {
                 // Components
                 { c + "/BulletproofGlass", "Bulletproof Glass" },
                 { c + "/Canvas", "Canvas" },
@@ -141,41 +141,46 @@ namespace IngameScript {
                 { pg + "/WelderItem", "Welder" }
             };
 
-            List<IMyInventory> Inventories = new List<IMyInventory>();
-            List<IMyGasTank> Tanks = new List<IMyGasTank>();
-            List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
+            List<IMyInventory> _inventories = new List<IMyInventory>();
+            List<IMyGasTank> _tanks = new List<IMyGasTank>();
+            List<IMyBatteryBlock> _batteries = new List<IMyBatteryBlock>();
 
             public float HydrogenCapacity { get; private set; } = 0;
             public float OxygenCapacity { get; private set; } = 0;
             public float PowerCapacity { get; private set; } = 0;
             public float StorageCapacity { get; private set; } = 0;
+            public float FilledRatio { get; private set; } = 0;
 
-            Dictionary<string, double> RunningItemTotals = new Dictionary<string, double>();
-            Dictionary<string, double> MostRecentItemTotals = new Dictionary<string, double>();
+            Dictionary<string, double> _runningItemTotals = new Dictionary<string, double>();
+            Dictionary<string, double> _mostRecentItemTotals = new Dictionary<string, double>();
 
-            IEnumerator<bool> InventoryEnumeratorStateMachine;
-            float InventoryIndex;
+            IEnumerator<bool> _enumeratorStateMachine;
+            float _inventoryIndex;
+
+            // Temp variables
+            List<MyInventoryItem> _tempItems = new List<MyInventoryItem>();
 
             public STUInventoryEnumerator(IMyGridTerminalSystem grid, IMyProgrammableBlock me) {
                 List<IMyTerminalBlock> gridBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocks(gridBlocks);
-                Inventories = GetInventories(gridBlocks, me);
-                grid.GetBlocksOfType(Tanks, (block) => block.CubeGrid == me.CubeGrid);
-                grid.GetBlocksOfType(Batteries, (block) => block.CubeGrid == me.CubeGrid);
+                gridBlocks = gridBlocks.Where(block => block.CubeGrid == me.CubeGrid).ToList();
+                _inventories = GetInventories(gridBlocks, me);
+                grid.GetBlocksOfType(_tanks, (block) => block.CubeGrid == me.CubeGrid);
+                grid.GetBlocksOfType(_batteries, (block) => block.CubeGrid == me.CubeGrid);
                 Init();
             }
 
             public STUInventoryEnumerator(IMyGridTerminalSystem grid, List<IMyTerminalBlock> blocks, IMyProgrammableBlock me) {
-                Inventories = GetInventories(blocks, me);
-                grid.GetBlocksOfType(Batteries);
-                grid.GetBlocksOfType(Tanks);
+                _inventories = GetInventories(blocks, me);
+                grid.GetBlocksOfType(_batteries, (block) => block.CubeGrid == me.CubeGrid);
+                grid.GetBlocksOfType(_tanks, (block) => block.CubeGrid == me.CubeGrid);
                 Init();
             }
 
             public STUInventoryEnumerator(List<IMyTerminalBlock> blocks, List<IMyGasTank> tanks, List<IMyBatteryBlock> batteries, IMyProgrammableBlock me) {
-                Inventories = GetInventories(blocks, me);
-                Tanks = tanks;
-                Batteries = batteries;
+                _inventories = GetInventories(blocks, me);
+                _tanks = tanks;
+                _batteries = batteries;
                 Init();
             }
 
@@ -200,60 +205,59 @@ namespace IngameScript {
 
             public void EnumerateInventories() {
 
-                if (InventoryEnumeratorStateMachine == null) {
-                    InventoryEnumeratorStateMachine = EnumerateInventoriesCoroutine(Inventories, Tanks, Batteries).GetEnumerator();
+                if (_enumeratorStateMachine == null) {
+                    _enumeratorStateMachine = EnumerateInventoriesCoroutine(_inventories, _tanks, _batteries).GetEnumerator();
                     // Clear the item totals if we're starting a new enumeration
-                    RunningItemTotals.Clear();
-                    InventoryIndex = 0;
+                    _runningItemTotals.Clear();
+                    _inventoryIndex = 0;
                 }
 
                 // Process inventories incrementally
-                if (InventoryEnumeratorStateMachine.MoveNext()) {
+                if (_enumeratorStateMachine.MoveNext()) {
                     return;
                 }
 
-                InventoryEnumeratorStateMachine.Dispose();
-                InventoryEnumeratorStateMachine = null;
+                _enumeratorStateMachine.Dispose();
+                _enumeratorStateMachine = null;
 
             }
 
             IEnumerable<bool> EnumerateInventoriesCoroutine(List<IMyInventory> inventories, List<IMyGasTank> tanks, List<IMyBatteryBlock> batteries) {
 
-                var items = new List<MyInventoryItem>();
-
                 foreach (IMyInventory inventory in inventories) {
-                    items.Clear();
-                    inventory.GetItems(items);
-                    foreach (MyInventoryItem item in items) {
+                    _tempItems.Clear();
+                    inventory.GetItems(_tempItems);
+                    foreach (MyInventoryItem item in _tempItems) {
                         ProcessItem(item);
                     }
-                    InventoryIndex++;
+                    _inventoryIndex++;
                     yield return true;
                 }
 
                 foreach (IMyGasTank tank in tanks) {
                     ProcessTank(tank);
-                    InventoryIndex++;
+                    _inventoryIndex++;
                     yield return true;
                 }
 
                 foreach (IMyBatteryBlock battery in batteries) {
                     ProcessBattery(battery);
-                    InventoryIndex++;
+                    _inventoryIndex++;
                     yield return true;
                 }
 
-                MostRecentItemTotals = RunningItemTotals;
+                _mostRecentItemTotals = _runningItemTotals;
+                FilledRatio = GetFilledRatio();
 
             }
 
             void ProcessItem(MyInventoryItem item) {
                 string itemName = item.Type.TypeId + "/" + item.Type.SubtypeId;
-                if (SubtypeToNameDict.ContainsKey(itemName)) {
-                    if (RunningItemTotals.ContainsKey(SubtypeToNameDict[itemName])) {
-                        RunningItemTotals[SubtypeToNameDict[itemName]] += (double)item.Amount;
+                if (_subtypeToNameDict.ContainsKey(itemName)) {
+                    if (_runningItemTotals.ContainsKey(_subtypeToNameDict[itemName])) {
+                        _runningItemTotals[_subtypeToNameDict[itemName]] += (double)item.Amount;
                     } else {
-                        RunningItemTotals[SubtypeToNameDict[itemName]] = (double)item.Amount;
+                        _runningItemTotals[_subtypeToNameDict[itemName]] = (double)item.Amount;
                     }
                 } else {
                     throw new System.Exception($"Unknown item: \n {item.Type.TypeId} \n {item.Type.SubtypeId} \n {item.Type.ToString()}");
@@ -266,17 +270,17 @@ namespace IngameScript {
 
                 if (tankType.Contains("Oxygen")) {
                     double oxygenInLiters = (double)tank.Capacity * (double)tank.FilledRatio;
-                    if (RunningItemTotals.ContainsKey("Oxygen")) {
-                        RunningItemTotals["Oxygen"] += oxygenInLiters;
+                    if (_runningItemTotals.ContainsKey("Oxygen")) {
+                        _runningItemTotals["Oxygen"] += oxygenInLiters;
                     } else {
-                        RunningItemTotals["Oxygen"] = oxygenInLiters;
+                        _runningItemTotals["Oxygen"] = oxygenInLiters;
                     }
                 } else if (tankType.Contains("Hydrogen")) {
                     double hydrogenInLiters = (double)tank.Capacity * (double)tank.FilledRatio;
-                    if (RunningItemTotals.ContainsKey("Hydrogen")) {
-                        RunningItemTotals["Hydrogen"] += hydrogenInLiters;
+                    if (_runningItemTotals.ContainsKey("Hydrogen")) {
+                        _runningItemTotals["Hydrogen"] += hydrogenInLiters;
                     } else {
-                        RunningItemTotals["Hydrogen"] = hydrogenInLiters;
+                        _runningItemTotals["Hydrogen"] = hydrogenInLiters;
                     }
                 } else {
                     throw new System.Exception($"Unknown tank: \n {tank.BlockDefinition.TypeId} \n {tank.BlockDefinition.SubtypeId} \n {tank.BlockDefinition.ToString()}");
@@ -285,16 +289,16 @@ namespace IngameScript {
 
             void ProcessBattery(IMyBatteryBlock battery) {
                 double powerInWattHours = (double)battery.CurrentStoredPower;
-                if (RunningItemTotals.ContainsKey("Power")) {
-                    RunningItemTotals["Power"] += powerInWattHours;
+                if (_runningItemTotals.ContainsKey("Power")) {
+                    _runningItemTotals["Power"] += powerInWattHours;
                 } else {
-                    RunningItemTotals["Power"] = powerInWattHours;
+                    _runningItemTotals["Power"] = powerInWattHours;
                 }
             }
 
             float GetHydrogenCapacity() {
                 float totalCapacity = 0;
-                foreach (IMyGasTank tank in Tanks) {
+                foreach (IMyGasTank tank in _tanks) {
                     if (tank.BlockDefinition.SubtypeId.Contains("Hydrogen")) {
                         totalCapacity += tank.Capacity;
                     }
@@ -304,7 +308,7 @@ namespace IngameScript {
 
             float GetOxygenCapacity() {
                 float totalCapacity = 0;
-                foreach (IMyGasTank tank in Tanks) {
+                foreach (IMyGasTank tank in _tanks) {
                     if (tank.BlockDefinition.SubtypeId.Contains("Oxygen")) {
                         totalCapacity += tank.Capacity;
                     }
@@ -314,31 +318,31 @@ namespace IngameScript {
 
             float GetPowerCapacity() {
                 float totalCapacity = 0;
-                foreach (IMyBatteryBlock battery in Batteries) {
+                foreach (IMyBatteryBlock battery in _batteries) {
                     totalCapacity += battery.MaxStoredPower;
                 }
                 return totalCapacity;
             }
 
             public Dictionary<string, double> GetItemTotals() {
-                return MostRecentItemTotals;
+                return _mostRecentItemTotals;
             }
 
             public float GetProgress() {
                 // Ensure we don't divide by zero
-                int totalCount = Inventories.Count + Tanks.Count + Batteries.Count;
+                int totalCount = _inventories.Count + _tanks.Count + _batteries.Count;
                 if (totalCount == 0)
                     return 1;
 
-                return InventoryIndex / totalCount;
+                return _inventoryIndex / totalCount;
             }
 
             float GetStorageCapacity() {
-                return Inventories.ToArray().Sum(inventory => (float)inventory.MaxVolume);
+                return _inventories.ToArray().Sum(inventory => (float)inventory.MaxVolume);
             }
 
-            public float GetFilledRatio() {
-                double currentOccupiedVolume = Inventories.ToArray().Sum(inventory => (double)inventory.CurrentVolume);
+            float GetFilledRatio() {
+                double currentOccupiedVolume = _inventories.ToArray().Sum(inventory => (double)inventory.CurrentVolume);
                 return (float)(currentOccupiedVolume / StorageCapacity);
             }
 

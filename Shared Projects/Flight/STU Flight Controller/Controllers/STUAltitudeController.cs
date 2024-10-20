@@ -8,151 +8,118 @@ namespace IngameScript {
 
             public class STUAltitudeController {
 
-                enum AltitudeState {
-                    Idle,
-                    Ascending,
-                    Descending,
-                    StopAltitudeChange
+                static class AltitudeState {
+                    public const string IDLE = "IDLE";
+                    public const string ASCENDING = "ASCENDING";
+                    public const string DESCENDING = "DESCENDING";
+                    public const string STOP_ALTITUDE_CHANGE = "STOP_ALTITUDE_CHANGE";
                 }
 
-                AltitudeState CurrentState = AltitudeState.Idle;
                 STUFlightController FlightController { get; set; }
                 IMyRemoteControl RemoteControl { get; set; }
 
-                public double TargetSeaLevelAltitude { get; set; }
-                public double CurrentSeaLevelAltitude { get; set; }
-                public double PreviousSeaLevelAltitude { get; set; }
-                public double SeaLevelAltitudeVelocity { get; set; }
+                public double CurrentSeaLevelAltitude { get; private set; }
+                public double SeaLevelAltitudeVelocity { get; private set; }
+                double _previousSeaLevelAltitude { get; set; }
 
-                public double TargetSurfaceAltitude { get; set; }
-                public double CurrentSurfaceAltitude { get; set; }
-                public double PreviousSurfaceAltitude { get; set; }
-                public double SurfaceAltitudeVelocity { get; set; }
+                public double CurrentSurfaceAltitude { get; private set; }
+                public double SurfaceAltitudeVelocity { get; private set; }
+                double _previousSurfaceAltitude { get; set; }
 
                 double ALTITUDE_ERROR_TOLERANCE = 1;
+                double ASCEND_VELOCITY = 10;
+                double DESCEND_VELOCITY = -5;
 
                 public STUAltitudeController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
                     RemoteControl = remoteControl;
-                    CurrentSurfaceAltitude = PreviousSurfaceAltitude = GetSurfaceAltitude();
-                    CurrentSeaLevelAltitude = PreviousSeaLevelAltitude = GetSeaLevelAltitude();
-                    CurrentState = AltitudeState.Idle;
+                    CurrentSurfaceAltitude = _previousSurfaceAltitude = GetSurfaceAltitude();
+                    CurrentSeaLevelAltitude = _previousSeaLevelAltitude = GetSeaLevelAltitude();
                 }
 
-                public bool MaintainSurfaceAltitude() {
-                    switch (CurrentState) {
-                        case AltitudeState.Idle:
-                            return IdleSurfaceAltitude();
-                        case AltitudeState.Ascending:
-                            if (SetSurfaceVa(5, SurfaceAltitudeVelocity)) {
-                                CurrentState = AltitudeState.Idle;
-                            }
-                            break;
-                        case AltitudeState.Descending:
-                            if (SetSurfaceVa(-5, SurfaceAltitudeVelocity)) {
-                                CurrentState = AltitudeState.Idle;
-                            }
-                            break;
+                public bool MaintainSurfaceAltitude(double targetAltitude) {
+                    if (IdleSurfaceAltitude(targetAltitude)) {
+                        return true;
                     }
-                    return false;
+                    if (GetSurfaceAltitude() < targetAltitude) {
+                        if (SetSurfaceVa(ASCEND_VELOCITY, SurfaceAltitudeVelocity, targetAltitude)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    return SetSurfaceVa(DESCEND_VELOCITY, SurfaceAltitudeVelocity, targetAltitude);
                 }
 
-                public bool MaintainSeaLevelAltitude() {
-                    switch (CurrentState) {
-                        case AltitudeState.Idle:
-                            return IdleSeaLevelAltitude();
-                        case AltitudeState.Ascending:
-                            if (SetSeaLevelVa(5, SeaLevelAltitudeVelocity)) {
-                                CreateInfoFlightLog("Reached target sea level altitude");
-                                CurrentState = AltitudeState.Idle;
-                            }
-                            break;
-                        case AltitudeState.Descending:
-                            if (SetSeaLevelVa(-5, SeaLevelAltitudeVelocity)) {
-                                CreateInfoFlightLog("Reached target sea level altitude");
-                                CurrentState = AltitudeState.Idle;
-                            }
-                            break;
+                public bool MaintainSeaLevelAltitude(double targetAltitude) {
+                    if (IdleSeaLevelAltitude(targetAltitude)) {
+                        return true;
                     }
-                    return false;
+                    if (GetSeaLevelAltitude() < targetAltitude) {
+                        if (SetSeaLevelVa(ASCEND_VELOCITY, SeaLevelAltitudeVelocity, targetAltitude)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    return SetSeaLevelVa(DESCEND_VELOCITY, SeaLevelAltitudeVelocity, targetAltitude);
                 }
 
                 public void UpdateState() {
-                    PreviousSurfaceAltitude = CurrentSurfaceAltitude;
+                    _previousSurfaceAltitude = CurrentSurfaceAltitude;
                     CurrentSurfaceAltitude = GetSurfaceAltitude();
                     SurfaceAltitudeVelocity = GetSurfaceAltitudeVelocity();
-
-                    PreviousSeaLevelAltitude = CurrentSeaLevelAltitude;
+                    _previousSeaLevelAltitude = CurrentSeaLevelAltitude;
                     CurrentSeaLevelAltitude = GetSeaLevelAltitude();
                     SeaLevelAltitudeVelocity = GetSeaLevelAltitudeVelocity();
                 }
 
                 private double GetSurfaceAltitudeVelocity() {
-                    return (CurrentSurfaceAltitude - PreviousSurfaceAltitude) / (1.0 / 6.0);
+                    return (CurrentSurfaceAltitude - _previousSurfaceAltitude) / (1.0 / 6.0);
                 }
 
                 private double GetSeaLevelAltitudeVelocity() {
-                    return (CurrentSeaLevelAltitude - PreviousSeaLevelAltitude) / (1.0 / 6.0);
+                    return (CurrentSeaLevelAltitude - _previousSeaLevelAltitude) / (1.0 / 6.0);
                 }
 
-                public bool IdleSurfaceAltitude() {
-                    double surfaceAltitudeError = GetSurfaceAltitudeError();
+                public bool IdleSurfaceAltitude(double targetAltitude) {
+                    double surfaceAltitudeError = GetSurfaceAltitudeError(targetAltitude);
                     // if we're close enough, don't do anything
                     if (surfaceAltitudeError < ALTITUDE_ERROR_TOLERANCE) {
-                        SetSurfaceVa(0, SurfaceAltitudeVelocity);
+                        SetSurfaceVa(0, SurfaceAltitudeVelocity, targetAltitude);
                         return true;
-                    }
-
-                    double altitude = GetSurfaceAltitude();
-                    if (altitude > TargetSurfaceAltitude) {
-                        CreateInfoFlightLog($"Descending to target surface altitude: {TargetSurfaceAltitude}");
-                        CurrentState = AltitudeState.Descending;
-                    } else if (altitude < TargetSurfaceAltitude) {
-                        CreateInfoFlightLog($"Ascending to target surface altitude: {TargetSurfaceAltitude}");
-                        CurrentState = AltitudeState.Ascending;
                     }
                     return false;
                 }
 
-                public bool IdleSeaLevelAltitude() {
-                    double seaLevelAltitudeError = GetSeaLevelAltitudeError();
+                public bool IdleSeaLevelAltitude(double targetAltitude) {
+                    double seaLevelAltitudeError = GetSeaLevelAltitudeError(targetAltitude);
                     // if we're close enough, don't do anything
                     if (seaLevelAltitudeError < ALTITUDE_ERROR_TOLERANCE) {
-                        SetSeaLevelVa(0, SeaLevelAltitudeVelocity);
+                        SetSeaLevelVa(0, SeaLevelAltitudeVelocity, targetAltitude);
                         return true;
-                    }
-
-                    double altitude = GetSeaLevelAltitude();
-                    if (altitude > TargetSeaLevelAltitude) {
-                        CreateInfoFlightLog($"Descending to target sea level altitude: {TargetSeaLevelAltitude}");
-                        CurrentState = AltitudeState.Descending;
-                    } else if (altitude < TargetSeaLevelAltitude) {
-                        CreateInfoFlightLog($"Ascending to target sea level altitude: {TargetSeaLevelAltitude}");
-                        CurrentState = AltitudeState.Ascending;
                     }
                     return false;
                 }
 
-                public bool SetSurfaceVa(double desiredVelocity, double altitudeVelocity) {
+                public bool SetSurfaceVa(double desiredVelocity, double altitudeVelocity, double targetAltitude) {
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     // NOTE: counterGravityForceVector has already been transformed to local frame of reference
-                    FlightController.VelocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
-                    return GetSurfaceAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
+                    FlightController._velocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
+                    return GetSurfaceAltitudeError(targetAltitude) < ALTITUDE_ERROR_TOLERANCE;
                 }
 
-                public bool SetSeaLevelVa(double desiredVelocity, double altitudeVelocity) {
+                public bool SetSeaLevelVa(double desiredVelocity, double altitudeVelocity, double targetAltitude) {
                     Vector3D counterGravityForceVector = FlightController.GetAltitudeVelocityChangeForceVector(desiredVelocity, altitudeVelocity);
                     // NOTE: counterGravityForceVector has already been transformed to local frame of reference
-                    FlightController.VelocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
-                    return GetSeaLevelAltitudeError() < ALTITUDE_ERROR_TOLERANCE;
+                    FlightController._velocityController.ExertVectorForce_LocalFrame(counterGravityForceVector, counterGravityForceVector.Length());
+                    return GetSeaLevelAltitudeError(targetAltitude) < ALTITUDE_ERROR_TOLERANCE;
                 }
 
-                private double GetSurfaceAltitudeError() {
-                    return Math.Abs(GetSurfaceAltitude() - TargetSurfaceAltitude);
+                private double GetSurfaceAltitudeError(double targetAltitude) {
+                    return Math.Abs(GetSurfaceAltitude() - targetAltitude);
                 }
 
-                private double GetSeaLevelAltitudeError() {
-                    return Math.Abs(GetSeaLevelAltitude() - TargetSeaLevelAltitude);
+                private double GetSeaLevelAltitudeError(double targetAltitude) {
+                    return Math.Abs(GetSeaLevelAltitude() - targetAltitude);
                 }
 
                 public double GetSurfaceAltitude() {

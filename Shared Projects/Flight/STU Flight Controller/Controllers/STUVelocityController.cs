@@ -339,6 +339,11 @@ namespace IngameScript {
                     Vector3D V_e_vec = V_d - V_c;
                     double V_e = V_e_vec.Length();
 
+                    // If V_e is really low already, we're done
+                    if (V_e < WORLD_VELOCITY_ERROR_TOLERANCE) {
+                        return true;
+                    }
+
                     // Edge case: if we're not moving, we can't calculate a normalized vector
                     if (V_c.IsZero()) {
                         outputVector = V_e_vec * ShipMass;
@@ -363,9 +368,7 @@ namespace IngameScript {
 
                     // Accelerate along the output vector
                     ExertVectorForce_WorldFrame(outputVector, outputVector.Length());
-
-                    // Check if we've reached the desired velocity state
-                    return V_e < WORLD_VELOCITY_ERROR_TOLERANCE;
+                    return false;
                 }
 
                 /// <summary>

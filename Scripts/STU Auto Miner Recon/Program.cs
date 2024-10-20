@@ -25,7 +25,7 @@ namespace IngameScript {
             JobBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_JOB_LISTENER, IGC, TransmissionDistance.AntennaRelay);
 
             CommandLineParser = new MyCommandLine();
-            ProgramCommands.Add("Raycast", Raycast);
+            ProgramCommands.Add("ScanJobSite", RaycastJobSite);
             ProgramCommands.Add("ToggleRaycast", Raycaster.ToggleRaycast);
 
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
@@ -61,20 +61,26 @@ namespace IngameScript {
 
         }
 
-        public void Raycast() {
+        public void RaycastJobSite() {
             try {
 
                 PlaneD jobPlane = ScanJobPlane();
                 Vector3D jobSite = ScanJobSite();
 
-                CockpitDisplay.Surface.WriteText(jobPlane.ToString());
+                int jobDepth;
+                if (!int.TryParse(CommandLineParser.Argument(1), out jobDepth)) {
+                    throw new Exception("Invalid job depth argument; command format is 'ScanJobSite 70', where '70' denotes depth in meters");
+                }
+
+                CockpitDisplay.Surface.WriteText("Success");
                 JobBroadcaster.Log(new STULog {
                     Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
                     Message = "Transmitting new job site",
                     Type = STULogType.INFO,
                     Metadata = new Dictionary<string, string> {
                         { "JobPlane", MiningDroneData.FormatPlaneD(jobPlane) },
-                        { "JobSite", MiningDroneData.FormatVector3D(jobSite) }
+                        { "JobSite", MiningDroneData.FormatVector3D(jobSite) },
+                        { "JobDepth", jobDepth.ToString() },
                     }
                 });
 

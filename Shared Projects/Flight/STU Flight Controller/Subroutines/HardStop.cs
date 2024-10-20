@@ -20,7 +20,7 @@ namespace IngameScript {
                 public override bool Init() {
                     CreateWarningFlightLog("Initiating hard stop! User controls disabled");
                     // Determine the maximum acceleration the ship can exert per tick
-                    double maxAcceleration = FC.VelocityController.MaximumThrustVector.Length() / FC.GetShipMass();
+                    double maxAcceleration = FC._velocityController.MaximumThrustVector.Length() / FC.GetShipMass();
                     oneTickAcceleration = Math.Ceiling(maxAcceleration / 6.0);
                     FC.ReinstateGyroControl();
                     FC.ReinstateThrusterControl();
@@ -29,13 +29,14 @@ namespace IngameScript {
                         thruster.Enabled = true;
                     }
                     FC.RemoteControl.DampenersOverride = false;
+                    FC.UpdateShipMass();
                     return true;
                 }
 
                 public override bool Run() {
                     Vector3D worldLinearVelocity = FC.RemoteControl.GetShipVelocities().LinearVelocity;
-                    FC.VelocityController.ExertVectorForce_WorldFrame(-worldLinearVelocity, float.PositiveInfinity);
-                    FC.OrientationController.AlignCounterVelocity(worldLinearVelocity, FC.VelocityController.MaximumThrustVector);
+                    FC._velocityController.ExertVectorForce_WorldFrame(-worldLinearVelocity, float.PositiveInfinity);
+                    FC._orientationController.AlignCounterVelocity(worldLinearVelocity, FC._velocityController.MaximumThrustVector);
                     if (worldLinearVelocity.Length() < oneTickAcceleration) {
                         CreateOkFlightLog("Hard stop complete! Returning controls to user");
                         return true;

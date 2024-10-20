@@ -38,6 +38,7 @@ namespace IngameScript {
             public double CargoCapacity { get; set; }
             public PlaneD JobPlane { get; set; }
             public Vector3D JobSite { get; set; }
+            public int JobDepth { get; set; }
 
             public static MiningDroneData Deserialize(string s) {
                 var drone = new MiningDroneData();
@@ -87,6 +88,9 @@ namespace IngameScript {
                             break;
                         case "JobSite":
                             drone.JobSite = DeserializeVector3D(value);
+                            break;
+                        case "JobDepth":
+                            drone.JobDepth = int.Parse(value);
                             break;
                     }
                 }
@@ -141,6 +145,7 @@ namespace IngameScript {
                 sb.Append($"CargoLevel: {CargoLevel}; ");
                 sb.Append($"JobSite: {FormatVector3D(JobSite)}; ");
                 sb.Append($"JobPlane: {FormatPlaneD(JobPlane)}; ");
+                sb.Append($"JobDepth: {JobDepth}; ");
                 sb.Append($"CargoCapacity: {CargoCapacity}");
 
                 return sb.ToString();
@@ -164,6 +169,8 @@ namespace IngameScript {
             public const string MISSING = "MISSING";
             public const string ALIGN_WITH_BASE_CONNECTOR = "ALIGN_WITH_BASE_CONNECTOR";
             public const string DOCKING = "DOCKING";
+            public const string DEPOSIT_ORES = "DEPOSIT_ORES";
+            public const string DEPOSIT_IDLE = "DEPOSIT_IDLE";
         }
 
     }
