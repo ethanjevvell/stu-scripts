@@ -52,6 +52,7 @@ namespace IngameScript {
                     FlightController.ReinstateGyroControl();
                     FlightController.ReinstateThrusterControl();
                     FlightController.GotoAndStopManeuver = new GotoAndStop(FlightController, Destination, CruiseVelocity);
+                    FlightController.ToggleThrusters(true);
                     FlightController.UpdateShipMass();
                     CreateInfoFlightLog("Init NOPS complete");
                     return true;

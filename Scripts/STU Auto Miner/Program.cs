@@ -160,7 +160,7 @@ namespace IngameScript {
 
                     case MinerState.MINING:
                         if (_drillRoutineStateMachine.ExecuteStateMachine()) {
-                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, _homeBaseConnector.GetPosition() + _homeBaseConnector.WorldMatrix.Forward * 20, _cruiseAltitude, _cruiseVelocity);
+                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, _homeBaseConnector.GetPosition() + _homeBaseConnector.WorldMatrix.Forward * _cruiseAltitude, _cruiseAltitude, _cruiseVelocity);
                             MinerMainState = MinerState.FLY_TO_HOME_BASE;
                         }
                         break;
@@ -175,12 +175,12 @@ namespace IngameScript {
                     case MinerState.ALIGN_WITH_BASE_CONNECTOR:
                         bool stable = _flightController.SetStableForwardVelocity(0);
                         bool aligned = _flightController.AlignShipToTarget(_homeBaseConnector.GetPosition(), _droneConnector);
-                        if (stable && aligned) {
+                        if (aligned) {
                             // Large-grid connectors are 2.5m long, so we need to move the drone forward by 1.0m to dock
                             // Subtracted 0.25m due to error tolerance of GotoAndStop maneuver
                             Vector3D homeBaseConnectorTip = _homeBaseConnector.GetPosition() + _homeBaseConnector.WorldMatrix.Forward * 1.0;
                             // GotoAndStop maneuver automatically adjusts the reference point by 1.25m when the reference is a connector
-                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, homeBaseConnectorTip, 1, _droneConnector);
+                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, homeBaseConnectorTip, 2, _droneConnector);
                             MinerMainState = MinerState.DOCKING;
                         }
                         break;
@@ -188,6 +188,10 @@ namespace IngameScript {
                     case MinerState.DOCKING:
                         _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         _droneConnector.Connect();
+                        // Keep aligning until we're _cruiseAltitude / 2 meters from the home base connector
+                        if (Vector3D.Distance(_droneConnector.GetPosition(), _homeBaseConnector.GetPosition()) > _cruiseAltitude / 2) {
+                            _flightController.AlignShipToTarget(_homeBaseConnector.GetPosition(), _droneConnector);
+                        }
                         if (_droneConnector.Status == MyShipConnectorStatus.Connected) {
                             MinerMainState = MinerState.REFUELING;
                             // Start refueling
@@ -213,6 +217,8 @@ namespace IngameScript {
                     case MinerState.DEPOSIT_ORES:
                         // Deposit dronecargocontainer ores and drill ores to home base cargo containeres
                         UpdateBaseCargoContainers();
+                        // Update flight configurations to allow on-the-fly adjustments between trips
+                        ParseMinerConfiguration(Me.CustomData);
                         List<IMyInventory> cargoInventories = _droneCargoContainers.ConvertAll(container => container.GetInventory());
                         List<IMyInventory> drillInventories = _drills.ConvertAll(drill => drill.GetInventory());
                         List<IMyInventory> baseInventories = _baseCargoContainers.ConvertAll(container => container.GetInventory());
@@ -253,6 +259,7 @@ namespace IngameScript {
         void GetFlightControllerLogs() {
             while (STUFlightController.FlightLogs.Count > 0) {
                 _tempFlightLog = STUFlightController.FlightLogs.Dequeue();
+                _tempFlightLog.Sender = $"{s_droneData.Name} (FC)";
                 s_logBroadcaster.Log(_tempFlightLog);
                 _logScreen.FlightLogs.Enqueue(_tempFlightLog);
             }
@@ -363,7 +370,7 @@ namespace IngameScript {
             if (!_droneConnector.IsConnected) {
                 CreateFatalErrorBroadcast("Miner not connected to base; exiting");
             }
-            _flightController.ToggleThrusters(true);
+            _flightController.ToggleThrusters(false);
             _homeBaseConnector = _droneConnector.OtherConnector;
             UpdateBaseCargoContainers();
             _hydrogenTanks.ForEach(tank => tank.Stockpile = true);

@@ -40,6 +40,7 @@ namespace IngameScript {
                 public override bool Init() {
                     FC.ReinstateGyroControl();
                     FC.ReinstateThrusterControl();
+                    FC.ToggleThrusters(true);
                     FC.UpdateShipMass();
                     CurrentState = GotoStates.CRUISE;
                     return true;

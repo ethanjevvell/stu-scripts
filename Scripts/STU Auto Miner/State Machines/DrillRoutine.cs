@@ -196,7 +196,8 @@ namespace IngameScript {
 
                         Vector3D endToStart = startPos - endPos;
                         endToStart.Normalize();
-                        startPos += endToStart * shipLength;
+                        // Adding 5 to offset odd Crait issue
+                        startPos += endToStart * (shipLength + 5);
 
                         silos.Add(new Silo(startPos, endPos));
                     }
