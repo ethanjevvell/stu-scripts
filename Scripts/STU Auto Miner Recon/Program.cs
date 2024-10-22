@@ -1,25 +1,25 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using VRage.Game.GUI.TextPanel;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRageMath;
 
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
-        IMyTerminalBlock Cockpit;
-        STUDisplay CockpitDisplay;
         STURaycaster Raycaster;
         STUMasterLogBroadcaster JobBroadcaster;
         MyCommandLine CommandLineParser;
+        List<LogLCD> LogSubscribers;
+        MyIni _ini;
 
         public Dictionary<string, Action> ProgramCommands = new Dictionary<string, Action>(StringComparer.OrdinalIgnoreCase);
 
         public Program() {
 
-            Cockpit = GetMainCockpit();
-            CockpitDisplay = InitCockpitDisplay(Cockpit);
+            _ini = new MyIni();
+
+            LogSubscribers = DiscoverLogSubscribers();
             Raycaster = InitRaycaster();
             Raycaster.RaycastDistance = 10000;
             JobBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_JOB_LISTENER, IGC, TransmissionDistance.AntennaRelay);
@@ -33,7 +33,13 @@ namespace IngameScript {
         }
 
         public void Main(string argument) {
-            ParseCommand(argument);
+            try {
+                ParseCommand(argument);
+            } catch (Exception e) {
+                CreateLog($"Error in main loop: {e}", STULogType.ERROR);
+            } finally {
+                WriteLogs();
+            }
         }
 
         public void ParseCommand(string argument) {
@@ -52,13 +58,31 @@ namespace IngameScript {
                     return;
                 }
 
-                Echo($"Command {commandString} not recognized.\n");
-                Echo("Available commands:\n");
+                CreateLog($"Command {commandString} not recognized.", STULogType.ERROR);
+                CreateLog("Available commands:", STULogType.INFO);
                 foreach (var command in ProgramCommands.Keys) {
-                    Echo($"\t{command}\n");
+                    CreateLog($"\t{command}", STULogType.INFO);
                 }
             }
 
+        }
+
+        void CreateLog(string message, string type) {
+            foreach (var lcd in LogSubscribers) {
+                lcd.FlightLogs.Enqueue(
+                   new STULog() {
+                       Message = message,
+                       Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
+                       Type = type
+                   }
+                   );
+            }
+        }
+
+        void WriteLogs() {
+            foreach (var lcd in LogSubscribers) {
+                lcd.Update();
+            }
         }
 
         public void RaycastJobSite() {
@@ -72,7 +96,6 @@ namespace IngameScript {
                     throw new Exception("Invalid job depth argument; command format is 'ScanJobSite 70', where '70' denotes depth in meters");
                 }
 
-                CockpitDisplay.Surface.WriteText("Success");
                 JobBroadcaster.Log(new STULog {
                     Sender = AUTO_MINER_VARIABLES.AUTO_MINER_RECON_NAME,
                     Message = "Transmitting new job site",
@@ -84,29 +107,30 @@ namespace IngameScript {
                     }
                 });
 
+                CreateLog("Sent job to HQ", STULogType.OK);
+
             } catch (Exception e) {
                 var outString = $"Raycast failed: {e.Message}";
-                CockpitDisplay.Surface.WriteText(outString);
+                CreateLog(outString, STULogType.ERROR);
             }
         }
 
-        public IMyTerminalBlock GetMainCockpit() {
-            var cockpitBlocks = new List<IMyCockpit>();
-            GridTerminalSystem.GetBlocksOfType(cockpitBlocks);
-            foreach (var block in cockpitBlocks) {
-                var cockpit = block;
-                if (cockpit.IsMainCockpit) {
-                    return cockpit;
+        List<LogLCD> DiscoverLogSubscribers() {
+            List<IMyTextPanel> logPanels = new List<IMyTextPanel>();
+            GridTerminalSystem.GetBlocksOfType(
+                logPanels,
+                block => MyIni.HasSection(block.CustomData, AUTO_MINER_VARIABLES.AUTO_MINER_RECON_LOG_SUBSCRIBER_TAG)
+                && block.CubeGrid == Me.CubeGrid);
+            return new List<LogLCD>(logPanels.ConvertAll(panel => {
+                MyIniParseResult result;
+                if (!_ini.TryParse(panel.CustomData, out result)) {
+                    throw new Exception($"Error parsing log configuration: {result}");
                 }
-            }
-            throw new Exception("No main cockpit found. Be sure to choose a cockpit and select it as the main cockpit");
-        }
-
-        public STUDisplay InitCockpitDisplay(IMyTerminalBlock cockpit) {
-            var display = new STUDisplay(cockpit, 0);
-            display.Surface.ContentType = ContentType.TEXT_AND_IMAGE;
-            display.Surface.BackgroundColor = Color.Blue;
-            return display;
+                int displayIndex = _ini.Get(AUTO_MINER_VARIABLES.AUTO_MINER_RECON_LOG_SUBSCRIBER_TAG, "DisplayIndex").ToInt32(0);
+                double fontSize = _ini.Get(AUTO_MINER_VARIABLES.AUTO_MINER_RECON_LOG_SUBSCRIBER_TAG, "FontSize").ToDouble(1.0);
+                string font = _ini.Get(AUTO_MINER_VARIABLES.AUTO_MINER_RECON_LOG_SUBSCRIBER_TAG, "Font").ToString("Monospace");
+                return new LogLCD(panel, displayIndex, font, (float)fontSize);
+            }));
         }
 
         public STURaycaster InitRaycaster() {

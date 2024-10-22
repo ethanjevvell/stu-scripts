@@ -104,6 +104,17 @@ namespace IngameScript {
             _debug = _ini.Get("MinerConfiguration", "Debug").ToBoolean(false);
         }
 
+        // For now, just make sure it doesn't fall out of the sky if the server is shut down
+        public void Save() {
+            ToggleCriticalFlightSystems(true);
+            _flightController.ToggleDampeners(true);
+            _flightController.RelinquishGyroControl();
+            _flightController.RelinquishThrusterControl();
+            for (int i = 0; i < _flightController.ActiveThrusters.Length; i++) {
+                _flightController.ActiveThrusters[i].ThrustOverride = 0;
+            }
+        }
+
         public void Main() {
 
             // Coroutine to update item and fuel inventory counts
@@ -138,9 +149,7 @@ namespace IngameScript {
                         break;
 
                     case MinerState.FLY_TO_JOB_SITE:
-                        if (_droneConnector.IsConnected) {
-                            _droneConnector.Disconnect();
-                        }
+                        _droneConnector.Disconnect();
                         bool navigated = _flightController.NavigateOverPlanetSurfaceManeuver.ExecuteStateMachine();
                         if (navigated) {
                             CreateInfoBroadcast("Arrived at job site; starting drill routine");
@@ -195,10 +204,9 @@ namespace IngameScript {
                         if (_droneConnector.Status == MyShipConnectorStatus.Connected) {
                             MinerMainState = MinerState.REFUELING;
                             // Start refueling
-                            _hydrogenTanks.ForEach(tank => tank.Stockpile = true);
-                            _batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Recharge);
-                            _flightController.ToggleThrusters(false);
+                            ToggleCriticalFlightSystems(false);
                         } else {
+                            // Do nothing
                         }
                         break;
 
@@ -207,17 +215,13 @@ namespace IngameScript {
                         bool recharged = _batteries.TrueForAll(battery => battery.CurrentStoredPower == battery.MaxStoredPower);
                         if (refueled && recharged) {
                             MinerMainState = MinerState.DEPOSIT_ORES;
-                            // Turn these back on
-                            _hydrogenTanks.ForEach(tank => tank.Stockpile = false);
-                            _batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
-                            _flightController.ToggleThrusters(true);
                         }
                         break;
 
                     case MinerState.DEPOSIT_ORES:
                         // Deposit dronecargocontainer ores and drill ores to home base cargo containeres
                         UpdateBaseCargoContainers();
-                        // Update flight configurations to allow on-the-fly adjustments between trips
+                        // Update flight configurations to allow on-the-fly adjustments between trip
                         ParseMinerConfiguration(Me.CustomData);
                         List<IMyInventory> cargoInventories = _droneCargoContainers.ConvertAll(container => container.GetInventory());
                         List<IMyInventory> drillInventories = _drills.ConvertAll(drill => drill.GetInventory());
@@ -229,9 +233,13 @@ namespace IngameScript {
                             CreateFatalErrorBroadcast("Could not deposit all material!");
                         }
                         if (_drillRoutineStateMachine.FinishedLastJob) {
+                            // Turn everything off; we're going into IDLE
+                            ToggleCriticalFlightSystems(false);
                             MinerMainState = MinerState.IDLE;
                         } else {
-                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(50), _cruiseAltitude, _cruiseVelocity);
+                            // Turn everything on because we're going to fly back to the job site
+                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
+                            ToggleCriticalFlightSystems(true);
                             MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         }
                         break;
@@ -242,9 +250,12 @@ namespace IngameScript {
                 CreateFatalErrorBroadcast(e.StackTrace);
                 _flightController.RelinquishGyroControl();
                 _flightController.RelinquishThrusterControl();
-                _hydrogenTanks.ForEach(tank => tank.Stockpile = false);
-                _batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
                 _flightController.ToggleDampeners(true);
+                ToggleCriticalFlightSystems(true);
+                // Remove all override, allow dampeners to stabilize vehicle
+                for (int i = 0; i < _flightController.ActiveThrusters.Length; i++) {
+                    _flightController.ActiveThrusters[i].ThrustOverride = 0;
+                }
             } finally {
                 // Insert FlightController diagnostic logs for local display if debug mode is on
                 if (_debug) {
@@ -263,6 +274,13 @@ namespace IngameScript {
                 s_logBroadcaster.Log(_tempFlightLog);
                 _logScreen.FlightLogs.Enqueue(_tempFlightLog);
             }
+        }
+
+        void ToggleCriticalFlightSystems(bool on) {
+            CreateInfoBroadcast($"Toggle critical systems: {on}");
+            _batteries.ForEach(battery => battery.ChargeMode = on ? ChargeMode.Auto : ChargeMode.Recharge);
+            _hydrogenTanks.ForEach(tank => tank.Stockpile = !on);
+            _flightController.ToggleThrusters(on);
         }
 
         void ParseCommand(STULog log) {
@@ -306,11 +324,9 @@ namespace IngameScript {
             }
             s_droneData.JobDepth = depth;
             _droneConnector.Disconnect();
-            _hydrogenTanks.ForEach(tank => tank.Stockpile = false);
-            _batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Auto);
-
+            ToggleCriticalFlightSystems(true);
             // Calculate the cruise phase destination
-            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(50), _cruiseAltitude, _cruiseVelocity);
+            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
             MinerMainState = MinerState.FLY_TO_JOB_SITE;
         }
 
@@ -370,11 +386,9 @@ namespace IngameScript {
             if (!_droneConnector.IsConnected) {
                 CreateFatalErrorBroadcast("Miner not connected to base; exiting");
             }
-            _flightController.ToggleThrusters(false);
             _homeBaseConnector = _droneConnector.OtherConnector;
             UpdateBaseCargoContainers();
-            _hydrogenTanks.ForEach(tank => tank.Stockpile = true);
-            _batteries.ForEach(battery => battery.ChargeMode = ChargeMode.Recharge);
+            ToggleCriticalFlightSystems(false);
         }
 
         void UpdateBaseCargoContainers() {
@@ -390,7 +404,7 @@ namespace IngameScript {
             s_droneData.State = MinerMainState;
             s_droneData.WorldPosition = _flightController.CurrentPosition;
             s_droneData.WorldVelocity = _flightController.CurrentVelocity_WorldFrame;
-            s_droneData.BatteryLevel = _tempInventoryEnumeratorDictionary.ContainsKey("Battery") ? _tempInventoryEnumeratorDictionary["Battery"] : 0;
+            s_droneData.BatteryLevel = _tempInventoryEnumeratorDictionary.ContainsKey("Power") ? _tempInventoryEnumeratorDictionary["Power"] : 0;
             s_droneData.HydrogenLevel = _tempInventoryEnumeratorDictionary.ContainsKey("Hydrogen") ? _tempInventoryEnumeratorDictionary["Hydrogen"] : 0;
             s_droneData.Name = _minerName;
             s_droneData.Id = _minerId;

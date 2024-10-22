@@ -9,6 +9,7 @@ namespace IngameScript {
         public static class AUTO_MINER_VARIABLES {
 
             public const string AUTO_MINER_RECON_NAME = "AM-R";
+            public const string AUTO_MINER_RECON_LOG_SUBSCRIBER_TAG = "AUTO_MINER_RECON_LOG_SUBSCRIBER";
 
             public const string AUTO_MINER_HQ_RECON_JOB_LISTENER = "AUTO_MINER_HQ_RECON_JOB_LISTENER";
 
@@ -21,6 +22,7 @@ namespace IngameScript {
             public const string AUTO_MINER_HQ_NAME = "AM-HQ";
 
             public const string AUTO_MINER_LOG_SUBSCRIBER_TAG = "AUTO_MINER_LOG_SUBSCRIBER";
+            public const string AUTO_MINER_HQ_MAIN_SUBSCRIBER_TAG = "AUTO_MINER_MAIN_SUBSCRIBER";
 
         }
 

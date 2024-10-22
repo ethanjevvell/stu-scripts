@@ -246,7 +246,7 @@ namespace IngameScript {
                     yield return true;
                 }
 
-                _mostRecentItemTotals = _runningItemTotals;
+                _mostRecentItemTotals = new Dictionary<string, double>(_runningItemTotals);
                 FilledRatio = GetFilledRatio();
 
             }

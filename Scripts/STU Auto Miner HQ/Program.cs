@@ -37,7 +37,7 @@ namespace IngameScript {
 
             _ini = new MyIni();
 
-            DiscoverSubscribers();
+            DiscoverLogSubscribers();
 
             // Drone listeners
             _droneTelemetryListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL);
@@ -47,7 +47,7 @@ namespace IngameScript {
             _reconNewJobListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_RECON_JOB_LISTENER);
 
             // Initialize HQ to drone broadcaster
-            _logSubscribers = DiscoverSubscribers();
+            _logSubscribers = DiscoverLogSubscribers();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
@@ -67,7 +67,7 @@ namespace IngameScript {
 
         }
 
-        List<LogLCD> DiscoverSubscribers() {
+        List<LogLCD> DiscoverLogSubscribers() {
             List<IMyTextPanel> logPanels = new List<IMyTextPanel>();
             GridTerminalSystem.GetBlocksOfType(
                 logPanels,
@@ -83,6 +83,17 @@ namespace IngameScript {
                 string font = _ini.Get(AUTO_MINER_VARIABLES.AUTO_MINER_LOG_SUBSCRIBER_TAG, "Font").ToString("Monospace");
                 return new LogLCD(panel, displayIndex, font, (float)fontSize);
             }));
+        }
+
+        List<LogLCD> DiscoverMainSubscribers() {
+            List<IMyTextPanel> mainPanels = new List<IMyTextPanel>();
+            GridTerminalSystem.GetBlocksOfType(
+                mainPanels,
+                block => MyIni.HasSection(block.CustomData, AUTO_MINER_VARIABLES.AUTO_MINER_HQ_MAIN_SUBSCRIBER_TAG)
+                && block.CubeGrid == Me.CubeGrid
+            );
+            // todo: create main subscribers
+            return new List<LogLCD>();
         }
 
         void HandleIncomingDroneLogs() {
