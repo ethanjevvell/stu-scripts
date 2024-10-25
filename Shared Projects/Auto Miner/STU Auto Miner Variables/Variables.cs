@@ -173,6 +173,7 @@ namespace IngameScript {
             public const string DOCKING = "DOCKING";
             public const string DEPOSIT_ORES = "DEPOSIT_ORES";
             public const string DEPOSIT_IDLE = "DEPOSIT_IDLE";
+            public const string ERROR = "ERROR";
         }
 
     }

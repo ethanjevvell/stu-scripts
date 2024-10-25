@@ -57,8 +57,6 @@ namespace IngameScript {
 
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
-                    //Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(reference, angularVelocity);
-
                     // Map the local angular velocity to gyro controls
                     foreach (var gyro in Gyros) {
                         Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);

@@ -30,19 +30,21 @@ namespace IngameScript {
         IMyShipConnector _homeBaseConnector { get; set; }
         List<IMyCargoContainer> _baseCargoContainers = new List<IMyCargoContainer>();
 
-        string MinerMainState;
-        string _minerMainState {
+        string MinerMainState {
             get { return _minerMainState; }
             set {
                 _minerMainState = value;
                 CreateInfoBroadcast($"Transitioning to {value}");
                 _flightController.UpdateShipMass();
+                SetStatusLights(value);
             }
         }
+        string _minerMainState;
 
         List<IMyShipDrill> _drills = new List<IMyShipDrill>();
         List<IMyGasTank> _hydrogenTanks = new List<IMyGasTank>();
         List<IMyBatteryBlock> _batteries = new List<IMyBatteryBlock>();
+        List<IMyLightingBlock> _statusLights = new List<IMyLightingBlock>();
 
         static LogLCD _logScreen { get; set; }
 
@@ -59,38 +61,45 @@ namespace IngameScript {
 
         public Program() {
 
-            ParseMinerConfiguration(Me.CustomData);
-            _minerId = Me.EntityId.ToString();
+            try {
+                ParseMinerConfiguration(Me.CustomData);
+                _minerId = Me.EntityId.ToString();
 
-            // Get blocks needed for various systems
-            _remoteControl = GridTerminalSystem.GetBlockWithName("FC Remote Control") as IMyRemoteControl;
-            _droneConnector = GridTerminalSystem.GetBlockWithName("Main Connector") as IMyShipConnector;
+                // Get blocks needed for various systems
+                _statusLights = GetStatusLights();
+                _remoteControl = GetRemoteControl();
+                _droneConnector = GetConnector();
 
-            GridTerminalSystem.GetBlocksOfType(_drills, (block) => block.CubeGrid == Me.CubeGrid);
-            GridTerminalSystem.GetBlocksOfType(_hydrogenTanks, (block) => block.CubeGrid == Me.CubeGrid);
-            GridTerminalSystem.GetBlocksOfType(_batteries, (block) => block.CubeGrid == Me.CubeGrid);
+                GridTerminalSystem.GetBlocksOfType(_drills, (block) => block.CubeGrid == Me.CubeGrid);
+                GridTerminalSystem.GetBlocksOfType(_hydrogenTanks, (block) => block.CubeGrid == Me.CubeGrid);
+                GridTerminalSystem.GetBlocksOfType(_batteries, (block) => block.CubeGrid == Me.CubeGrid);
 
-            // Initialize core systems
-            _flightController = new STUFlightController(GridTerminalSystem, _remoteControl, Me);
-            s_telemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            s_logBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            _logScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("LogLCD"), 0, "Monospace", 0.5f);
-            _droneListener = IGC.UnicastListener;
+                // Initialize core systems
+                _flightController = new STUFlightController(GridTerminalSystem, _remoteControl, Me);
+                s_telemetryBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+                s_logBroadcaster = new STUMasterLogBroadcaster(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+                _logScreen = new LogLCD(GridTerminalSystem.GetBlockWithName("BC9 LogLCD"), 0, "Monospace", 0.5f);
+                _droneListener = IGC.UnicastListener;
 
-            // Initialize inventory enumerator; we only want drills and cargo blocks when considering filled ratio
-            GridTerminalSystem.GetBlocksOfType(_droneCargoContainers, (block) => block.CubeGrid == Me.CubeGrid);
+                // Initialize inventory enumerator; we only want drills and cargo blocks when considering filled ratio
+                GridTerminalSystem.GetBlocksOfType(_droneCargoContainers, (block) => block.CubeGrid == Me.CubeGrid);
 
-            List<IMyTerminalBlock> inventoryBlocks = new List<IMyTerminalBlock>();
-            inventoryBlocks.AddRange(_droneCargoContainers);
-            inventoryBlocks.AddRange(_drills);
+                List<IMyTerminalBlock> inventoryBlocks = new List<IMyTerminalBlock>();
+                inventoryBlocks.AddRange(_droneCargoContainers);
+                inventoryBlocks.AddRange(_drills);
 
-            _inventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, inventoryBlocks, Me);
+                _inventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, inventoryBlocks, Me);
 
-            // Set runtime frequency and initalize drone state
-            MinerMainState = MinerState.INITIALIZE;
-            s_droneData = new MiningDroneData();
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
-
+                // Set runtime frequency and initalize drone state
+                MinerMainState = MinerState.INITIALIZE;
+                s_droneData = new MiningDroneData();
+                Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            } catch (Exception e) {
+                Echo(e.StackTrace);
+                MinerMainState = MinerState.ERROR;
+            } finally {
+                WriteAllLogs();
+            }
         }
 
         void ParseMinerConfiguration(string configurationString) {
@@ -104,17 +113,6 @@ namespace IngameScript {
             _debug = _ini.Get("MinerConfiguration", "Debug").ToBoolean(false);
         }
 
-        // For now, just make sure it doesn't fall out of the sky if the server is shut down
-        public void Save() {
-            ToggleCriticalFlightSystems(true);
-            _flightController.ToggleDampeners(true);
-            _flightController.RelinquishGyroControl();
-            _flightController.RelinquishThrusterControl();
-            for (int i = 0; i < _flightController.ActiveThrusters.Length; i++) {
-                _flightController.ActiveThrusters[i].ThrustOverride = 0;
-            }
-        }
-
         public void Main() {
 
             // Coroutine to update item and fuel inventory counts
@@ -124,7 +122,10 @@ namespace IngameScript {
 
                 UpdateTelemetry();
                 _inventoryEnumerator.EnumerateInventories();
-                _flightController.UpdateState();
+
+                if (MinerMainState != MinerState.IDLE) {
+                    _flightController.UpdateState();
+                }
 
                 if (_droneListener.HasPendingMessage) {
                     try {
@@ -204,7 +205,7 @@ namespace IngameScript {
                         if (_droneConnector.Status == MyShipConnectorStatus.Connected) {
                             MinerMainState = MinerState.REFUELING;
                             // Start refueling
-                            ToggleCriticalFlightSystems(false);
+                            ToggleCriticalFlightSystems(false, "A");
                         } else {
                             // Do nothing
                         }
@@ -230,41 +231,51 @@ namespace IngameScript {
                         bool depositedDrills = DepositOres(drillInventories, baseInventories);
                         if (!depositedCargo || !depositedDrills) {
                             // TODO: Come up with more graceful handling of full inventories
-                            CreateFatalErrorBroadcast("Could not deposit all material!");
+                            throw new Exception("Could not deposit all material!");
                         }
                         if (_drillRoutineStateMachine.FinishedLastJob) {
                             // Turn everything off; we're going into IDLE
-                            ToggleCriticalFlightSystems(false);
+                            ToggleCriticalFlightSystems(false, "B");
                             MinerMainState = MinerState.IDLE;
                         } else {
                             // Turn everything on because we're going to fly back to the job site
                             _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
-                            ToggleCriticalFlightSystems(true);
+                            ToggleCriticalFlightSystems(true, "C");
                             MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         }
+                        break;
+
+                    case MinerState.ERROR:
+                        // Do nothing
                         break;
 
                 }
 
             } catch (Exception e) {
-                CreateFatalErrorBroadcast(e.StackTrace);
+                string stackTrace = e.StackTrace.Replace("\n", " ");
+                CreateFatalErrorBroadcast(stackTrace);
                 _flightController.RelinquishGyroControl();
                 _flightController.RelinquishThrusterControl();
                 _flightController.ToggleDampeners(true);
-                ToggleCriticalFlightSystems(true);
+                ToggleCriticalFlightSystems(true, "D");
                 // Remove all override, allow dampeners to stabilize vehicle
                 for (int i = 0; i < _flightController.ActiveThrusters.Length; i++) {
                     _flightController.ActiveThrusters[i].ThrustOverride = 0;
                 }
+                MinerMainState = MinerState.ERROR;
             } finally {
-                // Insert FlightController diagnostic logs for local display if debug mode is on
-                if (_debug) {
-                    GetFlightControllerLogs();
-                }
-                _logScreen.StartFrame();
-                _logScreen.WriteWrappableLogs(_logScreen.FlightLogs);
-                _logScreen.EndAndPaintFrame();
+                WriteAllLogs();
             }
+        }
+
+        void WriteAllLogs() {
+            // Insert FlightController diagnostic logs for local display if debug mode is on
+            if (_debug) {
+                GetFlightControllerLogs();
+            }
+            _logScreen.StartFrame();
+            _logScreen.WriteWrappableLogs(_logScreen.FlightLogs);
+            _logScreen.EndAndPaintFrame();
         }
 
         void GetFlightControllerLogs() {
@@ -276,8 +287,12 @@ namespace IngameScript {
             }
         }
 
-        void ToggleCriticalFlightSystems(bool on) {
-            CreateInfoBroadcast($"Toggle critical systems: {on}");
+        void ToggleCriticalFlightSystems(bool on, string location) {
+            if (_debug) {
+                string output = $"Toggle critical systems: {on}; {location}";
+                CreateInfoBroadcast(output);
+                Echo(output);
+            }
             _batteries.ForEach(battery => battery.ChargeMode = on ? ChargeMode.Auto : ChargeMode.Recharge);
             _hydrogenTanks.ForEach(tank => tank.Stockpile = !on);
             _flightController.ToggleThrusters(on);
@@ -324,7 +339,7 @@ namespace IngameScript {
             }
             s_droneData.JobDepth = depth;
             _droneConnector.Disconnect();
-            ToggleCriticalFlightSystems(true);
+            ToggleCriticalFlightSystems(true, "E");
             // Calculate the cruise phase destination
             _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
             MinerMainState = MinerState.FLY_TO_JOB_SITE;
@@ -381,19 +396,18 @@ namespace IngameScript {
             return true;
         }
 
-
         void InitializeMiner() {
             if (!_droneConnector.IsConnected) {
-                CreateFatalErrorBroadcast("Miner not connected to base; exiting");
+                throw new Exception("Miner not connected to base; exiting");
             }
             _homeBaseConnector = _droneConnector.OtherConnector;
             UpdateBaseCargoContainers();
-            ToggleCriticalFlightSystems(false);
+            ToggleCriticalFlightSystems(false, "F");
         }
 
         void UpdateBaseCargoContainers() {
             if (_homeBaseConnector == null) {
-                CreateFatalErrorBroadcast("Need home base connector reference to find base cargo containers");
+                throw new Exception("Need home base connector reference to find base cargo containers");
             }
             GridTerminalSystem.GetBlocksOfType(_baseCargoContainers, (block) => block.CubeGrid == _homeBaseConnector.CubeGrid);
         }
@@ -422,6 +436,78 @@ namespace IngameScript {
 
             // Debug output
             Echo(_tempMetadataDictionary["MinerDroneData"]);
+        }
+
+        List<IMyLightingBlock> GetStatusLights() {
+            List<IMyLightingBlock> statusLights = new List<IMyLightingBlock>();
+            GridTerminalSystem.GetBlocksOfType(statusLights, light =>
+                light.CubeGrid == Me.CubeGrid &&
+                MyIni.HasSection(light.CustomData, "MinerStatusLight")
+            );
+            statusLights.ForEach(light => {
+                light.Enabled = true;
+                light.Radius = 3.0f;
+                light.Falloff = 0.5f;
+                light.Intensity = 5.0f;
+                light.BlinkOffset = 0.0f;
+            });
+            return statusLights;
+        }
+
+        IMyRemoteControl GetRemoteControl() {
+            List<IMyRemoteControl> remoteControls = new List<IMyRemoteControl>();
+            GridTerminalSystem.GetBlocksOfType(remoteControls, block =>
+                block.CubeGrid == Me.CubeGrid &&
+                MyIni.HasSection(block.CustomData, "MinerRemoteControl")
+            );
+            if (remoteControls.Count == 0) {
+                throw new Exception("No remote control found");
+            }
+            if (remoteControls.Count > 1) {
+                throw new Exception("Multiple remote controls found");
+            }
+            return remoteControls[0];
+        }
+
+        IMyShipConnector GetConnector() {
+            List<IMyShipConnector> connectors = new List<IMyShipConnector>();
+            GridTerminalSystem.GetBlocksOfType(connectors, block =>
+                block.CubeGrid == Me.CubeGrid &&
+                MyIni.HasSection(block.CustomData, "MinerConnector")
+            );
+            if (connectors.Count == 0) {
+                throw new Exception("No ship connector found");
+            }
+            if (connectors.Count > 1) {
+                throw new Exception("Multiple ship connectors found");
+            }
+            return connectors[0];
+        }
+
+        void SetStatusLights(string status) {
+            foreach (var light in _statusLights) {
+                switch (status) {
+                    case MinerState.IDLE:
+                        // solid green light
+                        light.Color = Color.Green;
+                        light.BlinkIntervalSeconds = 0;
+                        light.BlinkLength = 0;
+                        break;
+                    case MinerState.ERROR:
+                        // slow blinking red light
+                        light.Color = Color.Red;
+                        light.BlinkIntervalSeconds = 2.0f;
+                        light.BlinkLength = 50.0f;
+                        break;
+                    default:
+                        // quick blinking yellow
+                        light.Color = Color.Yellow;
+                        light.BlinkIntervalSeconds = 0.5f;
+                        light.BlinkLength = 25.0f;
+                        break;
+                }
+
+            }
         }
 
         // Broadcast utilities
