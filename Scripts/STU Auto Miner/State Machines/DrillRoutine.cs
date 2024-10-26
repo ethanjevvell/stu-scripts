@@ -21,13 +21,13 @@ namespace IngameScript {
                 RTB_BUT_NOT_FINISHED
             }
 
-            STUFlightController FlightController { get; set; }
+            STUFlightController _flightController { get; set; }
             RunStates RunState { get; set; }
-            List<IMyShipDrill> Drills { get; set; }
-            Vector3 JobSite { get; set; }
-            PlaneD JobPlane { get; set; }
-            int JobDepth { get; set; }
-            STUInventoryEnumerator InventoryEnumerator;
+            List<IMyShipDrill> _drills { get; set; }
+            Vector3 _jobSite { get; set; }
+            PlaneD _jobPlane { get; set; }
+            int _jobDepth { get; set; }
+            STUInventoryEnumerator _inventoryEnumerator;
 
             public int CurrentSilo = 0;
 
@@ -43,29 +43,29 @@ namespace IngameScript {
             List<Silo> Silos { get; set; }
 
             public override bool Init() {
-                FlightController.ReinstateGyroControl();
-                FlightController.ReinstateThrusterControl();
+                _flightController.ReinstateGyroControl();
+                _flightController.ReinstateThrusterControl();
                 RunState = RunStates.ORIENT_AGAINST_JOB_PLANE;
-                Silos = GetSilos(JobSite, JobPlane, 3, FlightController.RemoteControl);
+                Silos = GetSilos(_jobSite, _jobPlane, 3, _flightController.RemoteControl);
                 return true;
             }
 
             public override bool Closeout() {
-                Drills.ForEach(drill => drill.Enabled = false);
-                FlightController.UpdateShipMass();
+                _drills.ForEach(drill => drill.Enabled = false);
+                _flightController.UpdateShipMass();
                 return true;
             }
 
-            public DrillRoutine(STUFlightController fc, List<IMyShipDrill> drills, Vector3 jobSite, PlaneD jobPlane, int jobDepth, STUInventoryEnumerator inventoryEnumerator) {
+            public DrillRoutine(STUFlightController flightController, List<IMyShipDrill> drills, Vector3 jobSite, PlaneD jobPlane, int jobDepth, STUInventoryEnumerator inventoryEnumerator) {
 
-                FlightController = fc;
-                JobSite = jobSite;
-                JobPlane = jobPlane;
-                JobDepth = jobDepth;
-                Drills = drills;
-                InventoryEnumerator = inventoryEnumerator;
+                _flightController = flightController;
+                _jobSite = jobSite;
+                _jobPlane = jobPlane;
+                _jobDepth = jobDepth;
+                _drills = drills;
+                _inventoryEnumerator = inventoryEnumerator;
 
-                if (JobPlane == null) {
+                if (_jobPlane == null) {
                     throw new Exception("Job plane is null");
                 }
 
@@ -74,67 +74,67 @@ namespace IngameScript {
             public override bool Run() {
 
                 // Constant mass updates to account for drilling
-                FlightController.UpdateShipMass();
+                _flightController.UpdateShipMass();
 
                 switch (RunState) {
 
                     case RunStates.ORIENT_AGAINST_JOB_PLANE:
-                        Vector3D closestPointOnJobPlane = GetClosestPointOnJobPlane(JobPlane, FlightController.CurrentPosition);
-                        bool aligned = FlightController.AlignShipToTarget(closestPointOnJobPlane);
-                        FlightController.SetStableForwardVelocity(0);
+                        Vector3D closestPointOnJobPlane = GetClosestPointOnJobPlane(_jobPlane, _flightController.CurrentPosition);
+                        bool aligned = _flightController.AlignShipToTarget(closestPointOnJobPlane);
+                        _flightController.SetStableForwardVelocity(0);
                         if (aligned) {
-                            CreateOkBroadcast("Oriented against job plane, flying to first silo");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 5);
+                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, Silos[CurrentSilo].StartPos, 5);
                             RunState = RunStates.FLY_TO_SILO_START;
-                            Drills.ForEach(drill => drill.Enabled = true);
+                            _drills.ForEach(drill => drill.Enabled = true);
                         }
                         break;
 
                     case RunStates.FLY_TO_SILO_START:
-                        aligned = FlightController.AlignShipToTarget(Silos[CurrentSilo].EndPos);
-                        bool finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        aligned = _flightController.AlignShipToTarget(Silos[CurrentSilo].EndPos);
+                        _flightController.GotoAndStopManeuver.CruiseVelocity = Vector3D.Distance(_flightController.CurrentPosition, Silos[CurrentSilo].StartPos) < 100 ? 5 : 20;
+                        bool finishedGoToManeuver = _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver && aligned) {
                             RunState = RunStates.EXTRACT_SILO;
-                            CreateOkBroadcast("Arrived at silo start, starting extraction");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].EndPos, 1);
-                            Drills.ForEach(drill => drill.Enabled = true);
+                            CreateInfoBroadcast("Arrived at silo start, starting extraction");
+                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, Silos[CurrentSilo].EndPos, 1);
+                            _drills.ForEach(drill => drill.Enabled = true);
                         }
                         break;
 
                     case RunStates.EXTRACT_SILO:
                         if (StorageIsFull()) {
-                            CreateOkBroadcast("Storage is full; returning to base");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
+                            CreateInfoBroadcast("Storage full");
+                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, Silos[CurrentSilo].StartPos, 3);
                             RunState = RunStates.PULL_OUT_UNFINISHED_SILO;
-                            Drills.ForEach(drill => drill.Enabled = false);
+                            _drills.ForEach(drill => drill.Enabled = false);
                             break;
                         }
-                        finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        finishedGoToManeuver = _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
-                            CreateOkBroadcast("Finished extracting silo; starting to pull out");
-                            FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
+                            CreateInfoBroadcast("Finished extracting silo; starting to pull out");
+                            _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, Silos[CurrentSilo].StartPos, 3);
                             RunState = RunStates.PULL_OUT_FINISHED_SILO;
-                            Drills.ForEach(drill => drill.Enabled = false);
+                            _drills.ForEach(drill => drill.Enabled = false);
                         }
                         break;
 
                     case RunStates.PULL_OUT_UNFINISHED_SILO:
-                        finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        finishedGoToManeuver = _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
-                            CreateOkBroadcast("Finished pulling out; returning to base");
+                            CreateOkBroadcast("Returning to base");
                             RunState = RunStates.RTB_BUT_NOT_FINISHED;
                         }
                         break;
 
                     case RunStates.PULL_OUT_FINISHED_SILO:
-                        finishedGoToManeuver = FlightController.GotoAndStopManeuver.ExecuteStateMachine();
+                        finishedGoToManeuver = _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         if (finishedGoToManeuver) {
                             CurrentSilo++;
                             if (CurrentSilo >= Silos.Count) {
                                 RunState = RunStates.FINISHED_JOB;
                             } else {
-                                CreateOkBroadcast("Finished pulling out; flying to next silo");
-                                FlightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(FlightController, Silos[CurrentSilo].StartPos, 3);
+                                CreateInfoBroadcast("Finished pulling out; flying to next silo");
+                                _flightController.GotoAndStopManeuver = new STUFlightController.GotoAndStop(_flightController, Silos[CurrentSilo].StartPos, 3);
                                 RunState = RunStates.FLY_TO_SILO_START;
                             }
                         }
@@ -157,7 +157,7 @@ namespace IngameScript {
             }
 
             private bool StorageIsFull() {
-                return InventoryEnumerator.FilledRatio >= 0.95;
+                return _inventoryEnumerator.FilledRatio >= 0.95;
             }
 
             Vector3D GetClosestPointOnJobPlane(PlaneD jobPlane, Vector3D currentPos) {
@@ -185,7 +185,7 @@ namespace IngameScript {
                 Vector3D up = Vector3D.Normalize(Vector3D.Cross(right, normal));
 
                 double halfGridSize = (n - 1) / 2.0;
-                double siloDepth = JobDepth;
+                double siloDepth = _jobDepth;
 
                 List<Silo> silos = new List<Silo>();
                 for (int i = 0; i < n; i++) {

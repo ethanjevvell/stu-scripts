@@ -364,12 +364,26 @@ namespace IngameScript {
                 _planetOrbitController.Run();
             }
 
-            public bool MaintainSurfaceAltitude(double targetAltitude = 100) {
-                return _altitudeController.MaintainSurfaceAltitude(targetAltitude);
+            /// <summary>
+            /// Sets the ship's altitude to the target altitude. Returns true if the ship's altitude is stable.
+            /// Pass in desiredAltitudeVelocity if you want the ship to reach the target altitude at a certain speed.
+            /// </summary>
+            /// <param name="targetAltitude"></param>
+            /// <param name="desiredAltitudeVelocity"></param>
+            /// <returns></returns>
+            public bool MaintainSurfaceAltitude(double targetAltitude, double ascendVelocity, double descendVelocity) {
+                return _altitudeController.MaintainSurfaceAltitude(targetAltitude, ascendVelocity, descendVelocity);
             }
 
-            public bool MaintainSeaLevelAltitude(double targetAltitude = 100) {
-                return _altitudeController.MaintainSeaLevelAltitude(targetAltitude);
+            /// <summary>
+            /// Sets the ship's altitude to the target altitude. Returns true if the ship's altitude is stable.
+            /// Pass in desiredAltitudeVelocity if you want the ship to reach the target altitude at a certain speed.
+            /// </summary>
+            /// <param name="targetAltitude"></param>
+            /// <param name="desiredAltitudeVelocity"></param>
+            /// <returns></returns>
+            public bool MaintainSeaLevelAltitude(double targetAltitude, double ascendVelocity, double descendVelocity) {
+                return _altitudeController.MaintainSeaLevelAltitude(targetAltitude, ascendVelocity, descendVelocity);
             }
 
 

@@ -8,13 +8,6 @@ namespace IngameScript {
 
             public class STUAltitudeController {
 
-                static class AltitudeState {
-                    public const string IDLE = "IDLE";
-                    public const string ASCENDING = "ASCENDING";
-                    public const string DESCENDING = "DESCENDING";
-                    public const string STOP_ALTITUDE_CHANGE = "STOP_ALTITUDE_CHANGE";
-                }
-
                 STUFlightController FlightController { get; set; }
                 IMyRemoteControl RemoteControl { get; set; }
 
@@ -26,9 +19,7 @@ namespace IngameScript {
                 public double SurfaceAltitudeVelocity { get; private set; }
                 double _previousSurfaceAltitude { get; set; }
 
-                double ALTITUDE_ERROR_TOLERANCE = 1;
-                double ASCEND_VELOCITY = 10;
-                double DESCEND_VELOCITY = -5;
+                const double ALTITUDE_ERROR_TOLERANCE = 1;
 
                 public STUAltitudeController(STUFlightController flightController, IMyRemoteControl remoteControl) {
                     FlightController = flightController;
@@ -37,30 +28,36 @@ namespace IngameScript {
                     CurrentSeaLevelAltitude = _previousSeaLevelAltitude = GetSeaLevelAltitude();
                 }
 
-                public bool MaintainSurfaceAltitude(double targetAltitude) {
+                public bool MaintainSurfaceAltitude(double targetAltitude, double ascendVelocity, double descendVelocity) {
+                    if (descendVelocity > 0) {
+                        descendVelocity = -descendVelocity;
+                    }
                     if (IdleSurfaceAltitude(targetAltitude)) {
                         return true;
                     }
                     if (GetSurfaceAltitude() < targetAltitude) {
-                        if (SetSurfaceVa(ASCEND_VELOCITY, SurfaceAltitudeVelocity, targetAltitude)) {
+                        if (SetSurfaceVa(ascendVelocity, SurfaceAltitudeVelocity, targetAltitude)) {
                             return true;
                         }
                         return false;
                     }
-                    return SetSurfaceVa(DESCEND_VELOCITY, SurfaceAltitudeVelocity, targetAltitude);
+                    return SetSurfaceVa(descendVelocity, SurfaceAltitudeVelocity, targetAltitude);
                 }
 
-                public bool MaintainSeaLevelAltitude(double targetAltitude) {
+                public bool MaintainSeaLevelAltitude(double targetAltitude, double ascendVelocity, double descendVelocity) {
+                    if (descendVelocity > 0) {
+                        descendVelocity = -descendVelocity;
+                    }
                     if (IdleSeaLevelAltitude(targetAltitude)) {
                         return true;
                     }
                     if (GetSeaLevelAltitude() < targetAltitude) {
-                        if (SetSeaLevelVa(ASCEND_VELOCITY, SeaLevelAltitudeVelocity, targetAltitude)) {
+                        if (SetSeaLevelVa(ascendVelocity, SeaLevelAltitudeVelocity, targetAltitude)) {
                             return true;
                         }
                         return false;
                     }
-                    return SetSeaLevelVa(DESCEND_VELOCITY, SeaLevelAltitudeVelocity, targetAltitude);
+                    return SetSeaLevelVa(descendVelocity, SeaLevelAltitudeVelocity, targetAltitude);
                 }
 
                 public void UpdateState() {

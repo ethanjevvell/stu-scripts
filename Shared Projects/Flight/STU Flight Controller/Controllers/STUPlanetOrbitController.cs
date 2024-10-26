@@ -129,7 +129,7 @@ namespace IngameScript {
 
                 private bool AdjustAltitude() {
                     try {
-                        return _flightController.MaintainSeaLevelAltitude(TargetAltitude);
+                        return _flightController.MaintainSeaLevelAltitude(TargetAltitude, 5, -5);
                     } catch (Exception e) {
                         CreateFatalFlightLog(e.ToString());
                         return false;

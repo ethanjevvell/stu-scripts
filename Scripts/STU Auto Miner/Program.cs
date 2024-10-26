@@ -12,8 +12,10 @@ namespace IngameScript {
         MyIni _ini = new MyIni();
 
         static string _minerName;
-        int _cruiseAltitude;
-        int _cruiseVelocity;
+        double _cruiseAltitude;
+        double _cruiseVelocity;
+        double _ascendVelocity;
+        double _descendVelocity;
         bool _debug;
 
         IMyUnicastListener _droneListener;
@@ -102,14 +104,21 @@ namespace IngameScript {
             }
         }
 
+        /// <summary>
+        /// Parses CustomData string for miner configuration.
+        /// </summary>
+        /// <param name="configurationString"></param>
+        /// <exception cref="Exception"></exception>
         void ParseMinerConfiguration(string configurationString) {
             MyIniParseResult result;
             if (!_ini.TryParse(configurationString, out result)) {
                 throw new Exception("Issue parsing configuration in Custom Data");
             }
             _minerName = _ini.Get("MinerConfiguration", "MinerName").ToString("DEFAULT");
-            _cruiseVelocity = _ini.Get("MinerConfiguration", "CruiseVelocity").ToInt32(15);
-            _cruiseAltitude = _ini.Get("MinerConfiguration", "CruiseAltitude").ToInt32(100);
+            _cruiseVelocity = _ini.Get("MinerConfiguration", "CruiseVelocity").ToDouble(15);
+            _cruiseAltitude = _ini.Get("MinerConfiguration", "CruiseAltitude").ToDouble(100);
+            _ascendVelocity = _ini.Get("MinerConfiguration", "AscendVelocity").ToDouble(5);
+            _descendVelocity = _ini.Get("MinerConfiguration", "DescendVelocity").ToDouble(-5);
             _debug = _ini.Get("MinerConfiguration", "Debug").ToBoolean(false);
         }
 
@@ -156,11 +165,23 @@ namespace IngameScript {
                             CreateInfoBroadcast("Arrived at job site; starting drill routine");
                             if (_drillRoutineStateMachine == null || _drillRoutineStateMachine.FinishedLastJob) {
                                 CreateInfoBroadcast("Starting new drill routine");
-                                _drillRoutineStateMachine = new DrillRoutine(_flightController, _drills, s_droneData.JobSite, s_droneData.JobPlane, s_droneData.JobDepth, _inventoryEnumerator);
+                                _drillRoutineStateMachine = new DrillRoutine(
+                                    _flightController,
+                                    _drills,
+                                    s_droneData.JobSite,
+                                    s_droneData.JobPlane,
+                                    s_droneData.JobDepth,
+                                    _inventoryEnumerator);
                             } else {
                                 CreateInfoBroadcast("Resuming previous drill routine");
                                 int lastSilo = _drillRoutineStateMachine.CurrentSilo;
-                                _drillRoutineStateMachine = new DrillRoutine(_flightController, _drills, s_droneData.JobSite, s_droneData.JobPlane, s_droneData.JobDepth, _inventoryEnumerator);
+                                _drillRoutineStateMachine = new DrillRoutine(
+                                    _flightController,
+                                    _drills,
+                                    s_droneData.JobSite,
+                                    s_droneData.JobPlane,
+                                    s_droneData.JobDepth,
+                                    _inventoryEnumerator);
                                 // If the last job didn't finish, we need to reset the current silo
                                 _drillRoutineStateMachine.CurrentSilo = lastSilo;
                             }
@@ -170,7 +191,13 @@ namespace IngameScript {
 
                     case MinerState.MINING:
                         if (_drillRoutineStateMachine.ExecuteStateMachine()) {
-                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, _homeBaseConnector.GetPosition() + _homeBaseConnector.WorldMatrix.Forward * _cruiseAltitude, _cruiseAltitude, _cruiseVelocity);
+                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(
+                                _flightController,
+                                _homeBaseConnector.GetPosition() + _homeBaseConnector.WorldMatrix.Forward * _cruiseAltitude,
+                                _cruiseAltitude,
+                                _cruiseVelocity,
+                                _ascendVelocity,
+                                _descendVelocity);
                             MinerMainState = MinerState.FLY_TO_HOME_BASE;
                         }
                         break;
@@ -196,6 +223,7 @@ namespace IngameScript {
                         break;
 
                     case MinerState.DOCKING:
+                        _flightController.GotoAndStopManeuver.CruiseVelocity = Vector3D.Distance(_flightController.CurrentPosition, _homeBaseConnector.GetPosition()) < 50 ? 2 : 10;
                         _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         _droneConnector.Connect();
                         // Keep aligning until we're _cruiseAltitude / 2 meters from the home base connector
@@ -239,7 +267,13 @@ namespace IngameScript {
                             MinerMainState = MinerState.IDLE;
                         } else {
                             // Turn everything on because we're going to fly back to the job site
-                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
+                            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(
+                                _flightController,
+                                GetPointAboveJobSite(_cruiseAltitude),
+                                _cruiseAltitude,
+                                _cruiseVelocity,
+                                _ascendVelocity,
+                                _descendVelocity);
                             ToggleCriticalFlightSystems(true, "C");
                             MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         }
@@ -341,7 +375,13 @@ namespace IngameScript {
             _droneConnector.Disconnect();
             ToggleCriticalFlightSystems(true, "E");
             // Calculate the cruise phase destination
-            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(_flightController, GetPointAboveJobSite(_cruiseAltitude), _cruiseAltitude, _cruiseVelocity);
+            _flightController.NavigateOverPlanetSurfaceManeuver = new STUFlightController.NavigateOverPlanetSurface(
+                _flightController,
+                GetPointAboveJobSite(_cruiseAltitude),
+                _cruiseAltitude,
+                _cruiseVelocity,
+                _ascendVelocity,
+                _descendVelocity);
             MinerMainState = MinerState.FLY_TO_JOB_SITE;
         }
 
