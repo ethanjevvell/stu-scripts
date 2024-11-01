@@ -124,12 +124,8 @@ namespace IngameScript {
 
         public void Main() {
 
-            // Coroutine to update item and fuel inventory counts
-            _inventoryEnumerator.EnumerateInventories();
-
             try {
 
-                UpdateTelemetry();
                 _inventoryEnumerator.EnumerateInventories();
 
                 if (MinerMainState != MinerState.IDLE) {
@@ -227,7 +223,7 @@ namespace IngameScript {
                         _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         _droneConnector.Connect();
                         // Keep aligning until we're _cruiseAltitude / 2 meters from the home base connector
-                        if (Vector3D.Distance(_droneConnector.GetPosition(), _homeBaseConnector.GetPosition()) > _cruiseAltitude / 2) {
+                        if (Vector3D.Distance(_droneConnector.GetPosition(), _homeBaseConnector.GetPosition()) > 20) {
                             _flightController.AlignShipToTarget(_homeBaseConnector.GetPosition(), _droneConnector);
                         }
                         if (_droneConnector.Status == MyShipConnectorStatus.Connected) {
@@ -299,6 +295,7 @@ namespace IngameScript {
                 MinerMainState = MinerState.ERROR;
             } finally {
                 WriteAllLogs();
+                UpdateTelemetry();
             }
         }
 
@@ -458,12 +455,14 @@ namespace IngameScript {
             s_droneData.State = MinerMainState;
             s_droneData.WorldPosition = _flightController.CurrentPosition;
             s_droneData.WorldVelocity = _flightController.CurrentVelocity_WorldFrame;
-            s_droneData.BatteryLevel = _tempInventoryEnumeratorDictionary.ContainsKey("Power") ? _tempInventoryEnumeratorDictionary["Power"] : 0;
-            s_droneData.HydrogenLevel = _tempInventoryEnumeratorDictionary.ContainsKey("Hydrogen") ? _tempInventoryEnumeratorDictionary["Hydrogen"] : 0;
+            s_droneData.PowerMegawatts = _tempInventoryEnumeratorDictionary.ContainsKey("Power") ? _tempInventoryEnumeratorDictionary["Power"] : 0;
+            s_droneData.HydrogenLiters = _tempInventoryEnumeratorDictionary.ContainsKey("Hydrogen") ? _tempInventoryEnumeratorDictionary["Hydrogen"] : 0;
+            s_droneData.PowerCapacity = _inventoryEnumerator.PowerCapacity;
+            s_droneData.HydrogenCapacity = _inventoryEnumerator.HydrogenCapacity;
             s_droneData.Name = _minerName;
             s_droneData.Id = _minerId;
             s_droneData.CargoLevel = _inventoryEnumerator.FilledRatio;
-            s_droneData.CargoCapacity = 0;
+            s_droneData.CargoCapacity = _inventoryEnumerator.StorageCapacity;
 
             _tempMetadataDictionary["MinerDroneData"] = s_droneData.Serialize();
             _tempOutgoingLog.Message = "";

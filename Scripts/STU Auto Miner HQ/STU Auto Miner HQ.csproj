@@ -39,6 +39,7 @@
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
     <Compile Include="Displays\LogLCD\LogLCD.cs" />
+    <Compile Include="Displays\MainLCD\MainLCD.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -51,9 +52,7 @@
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Displays\MainLCD\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Log\STU_Log.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />

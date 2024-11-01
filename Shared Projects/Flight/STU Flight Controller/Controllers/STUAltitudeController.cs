@@ -19,6 +19,8 @@ namespace IngameScript {
                 public double SurfaceAltitudeVelocity { get; private set; }
                 double _previousSurfaceAltitude { get; set; }
 
+                double _tempElevation;
+
                 const double ALTITUDE_ERROR_TOLERANCE = 1;
 
                 public STUAltitudeController(STUFlightController flightController, IMyRemoteControl remoteControl) {
@@ -120,19 +122,11 @@ namespace IngameScript {
                 }
 
                 public double GetSurfaceAltitude() {
-                    double elevation;
-                    if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out elevation)) {
-                        return elevation;
-                    }
-                    return 0;
+                    return RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Surface, out _tempElevation) ? _tempElevation : 0;
                 }
 
                 public double GetSeaLevelAltitude() {
-                    double elevation;
-                    if (RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Sealevel, out elevation)) {
-                        return elevation;
-                    }
-                    return 0;
+                    return RemoteControl.TryGetPlanetElevation(MyPlanetElevation.Sealevel, out _tempElevation) ? _tempElevation : 0;
                 }
 
             }

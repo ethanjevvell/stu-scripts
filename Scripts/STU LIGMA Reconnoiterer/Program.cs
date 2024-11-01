@@ -66,7 +66,7 @@ namespace IngameScript {
                 var hit = Raycaster.Raycast();
                 if (!hit.IsEmpty()) {
                     var hitInfo = Raycaster.GetHitInfoString(hit);
-                    var metadata = Raycaster.GetHitInfoDictionary(hit);
+                    var metadata = STURaycaster.GetHitInfoDictionary(hit, Raycaster.Camera);
                     CockpitDisplay.Surface.WriteText(hitInfo);
                     Echo(hitInfo);
 

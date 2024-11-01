@@ -34,8 +34,10 @@ namespace IngameScript {
             public Vector3D WorldPosition { get; set; }
             public Vector3D WorldVelocity { get; set; }
             public Vector3D WorldAcceleration { get; set; }
-            public double HydrogenLevel { get; set; }
-            public double BatteryLevel { get; set; }
+            public double HydrogenLiters { get; set; }
+            public double HydrogenCapacity { get; set; }
+            public double PowerMegawatts { get; set; }
+            public double PowerCapacity { get; set; }
             public double CargoLevel { get; set; }
             public double CargoCapacity { get; set; }
             public PlaneD JobPlane { get; set; }
@@ -73,11 +75,17 @@ namespace IngameScript {
                         case "WorldAcceleration":
                             drone.WorldAcceleration = DeserializeVector3D(value);
                             break;
-                        case "HydrogenLevel":
-                            drone.HydrogenLevel = double.Parse(value);
+                        case "HydrogenLiters":
+                            drone.HydrogenLiters = double.Parse(value);
                             break;
-                        case "BatteryLevel":
-                            drone.BatteryLevel = double.Parse(value);
+                        case "HydrogenCapacity":
+                            drone.HydrogenCapacity = double.Parse(value);
+                            break;
+                        case "PowerMegawatts":
+                            drone.PowerMegawatts = double.Parse(value);
+                            break;
+                        case "PowerCapacity":
+                            drone.PowerCapacity = double.Parse(value);
                             break;
                         case "CargoLevel":
                             drone.CargoLevel = double.Parse(value);
@@ -142,8 +150,10 @@ namespace IngameScript {
                 sb.Append($"WorldPosition: {FormatVector3D(WorldPosition)}; ");
                 sb.Append($"WorldVelocity: {FormatVector3D(WorldVelocity)}; ");
                 sb.Append($"WorldAcceleration: {FormatVector3D(WorldAcceleration)}; ");
-                sb.Append($"HydrogenLevel: {HydrogenLevel}; ");
-                sb.Append($"BatteryLevel: {BatteryLevel}; ");
+                sb.Append($"HydrogenLiters: {HydrogenLiters}; ");
+                sb.Append($"PowerMegawatts: {PowerMegawatts}; ");
+                sb.Append($"HydrogenCapacity: {HydrogenCapacity}; ");
+                sb.Append($"PowerCapacity: {PowerCapacity}; ");
                 sb.Append($"CargoLevel: {CargoLevel}; ");
                 sb.Append($"JobSite: {FormatVector3D(JobSite)}; ");
                 sb.Append($"JobPlane: {FormatPlaneD(JobPlane)}; ");

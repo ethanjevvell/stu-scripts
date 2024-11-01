@@ -17,11 +17,8 @@ namespace IngameScript {
 
         MyIGCMessage _IGCMessage;
 
-        // MAIN LCDS
-        List<IMyTerminalBlock> _mainSubscribers = new List<IMyTerminalBlock>();
-
-        // LOG LCDS
         List<LogLCD> _logSubscribers = new List<LogLCD>();
+        List<MainLCD> _mainSubscribers = new List<MainLCD>();
 
         Queue<MyTuple<Vector3D, PlaneD, int>> _jobQueue = new Queue<MyTuple<Vector3D, PlaneD, int>>();
 
@@ -37,8 +34,6 @@ namespace IngameScript {
 
             _ini = new MyIni();
 
-            DiscoverLogSubscribers();
-
             // Drone listeners
             _droneTelemetryListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_TELEMETRY_CHANNEL);
             _droneLogListener = IGC.RegisterBroadcastListener(AUTO_MINER_VARIABLES.AUTO_MINER_HQ_DRONE_LOG_CHANNEL);
@@ -48,7 +43,10 @@ namespace IngameScript {
 
             // Initialize HQ to drone broadcaster
             _logSubscribers = DiscoverLogSubscribers();
+            _mainSubscribers = DiscoverMainSubscribers();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
+
+            ParseStorage(Storage);
         }
 
         public void Main(string argument) {
@@ -58,6 +56,7 @@ namespace IngameScript {
                 HandleIncomingDroneLogs();
                 HandleNewIncomingJobs();
                 DispatchDroneIfAvailable();
+                WriteAllMainScreens();
             } catch (Exception e) {
                 CreateHQLog($"Error in Main(): {e.Message}. Terminating script.", STULogType.ERROR);
                 Runtime.UpdateFrequency = UpdateFrequency.None;
@@ -65,6 +64,14 @@ namespace IngameScript {
                 WriteAllLogScreens();
             }
 
+        }
+
+        public void Save() {
+            // Assume this has already been parsed or used
+            _ini.Clear();
+            _ini.Set("HQ_STORAGE", "JobQueue", SerializeQueue(_jobQueue));
+            // Persist to disk
+            Storage = _ini.ToString();
         }
 
         List<LogLCD> DiscoverLogSubscribers() {
@@ -85,15 +92,16 @@ namespace IngameScript {
             }));
         }
 
-        List<LogLCD> DiscoverMainSubscribers() {
+        List<MainLCD> DiscoverMainSubscribers() {
             List<IMyTextPanel> mainPanels = new List<IMyTextPanel>();
             GridTerminalSystem.GetBlocksOfType(
                 mainPanels,
                 block => MyIni.HasSection(block.CustomData, AUTO_MINER_VARIABLES.AUTO_MINER_HQ_MAIN_SUBSCRIBER_TAG)
                 && block.CubeGrid == Me.CubeGrid
             );
-            // todo: create main subscribers
-            return new List<LogLCD>();
+            return new List<MainLCD>(mainPanels.ConvertAll(panel => {
+                return new MainLCD(panel, 0);
+            }));
         }
 
         void HandleIncomingDroneLogs() {
@@ -172,6 +180,12 @@ namespace IngameScript {
             }
         }
 
+        void WriteAllMainScreens() {
+            foreach (var screen in _mainSubscribers) {
+                screen.Update(_miningDrones);
+            }
+        }
+
         void PublishExternalLog(STULog log) {
             foreach (var subscriber in _logSubscribers) {
                 subscriber.FlightLogs.Enqueue(log);
@@ -211,12 +225,13 @@ namespace IngameScript {
         }
 
         void DispatchDroneIfAvailable() {
-            var idleDrones = _miningDrones.Values.Where(d => d.State == MinerState.IDLE).ToList();
+            var idleDrones = new Stack<MiningDroneData>(_miningDrones.Values.Where(d => d.State == MinerState.IDLE));
             while (_jobQueue.Count > 0 && idleDrones.Count > 0) {
                 var job = _jobQueue.Dequeue();
                 var drone = idleDrones.Pop();
                 DispatchDrone(drone.Id, job.Item1, job.Item2, job.Item3);
                 CreateHQLog($"Drone {drone.Id} dispatched to {Vector3D.Round(job.Item1)} with depth {job.Item3}", STULogType.INFO);
+                CreateHQLog($"{_jobQueue.Count} remaining jobs", STULogType.INFO);
                 drone.State = MinerState.FLY_TO_JOB_SITE;
             }
         }
@@ -239,6 +254,39 @@ namespace IngameScript {
                 CreateHQLog($"Invalid drone ID: {droneId}", STULogType.ERROR);
             }
         }
+
+        void ParseStorage(string storage) {
+            _ini.TryParse(storage);
+            _jobQueue = DeserializeJobQueue(_ini.Get("HQ_STORAGE", "JobQueue").ToString(""));
+            Echo(_jobQueue.Count.ToString());
+        }
+
+        string SerializeQueue(Queue<MyTuple<Vector3D, PlaneD, int>> queue) {
+            return string.Join(";", queue.Select(t => $"{MiningDroneData.FormatVector3D(t.Item1)}|{MiningDroneData.FormatPlaneD(t.Item2)}|{t.Item3}"));
+        }
+
+        Queue<MyTuple<Vector3D, PlaneD, int>> DeserializeJobQueue(string queueString) {
+            Queue<MyTuple<Vector3D, PlaneD, int>> queue = new Queue<MyTuple<Vector3D, PlaneD, int>>();
+            if (queueString == "") {
+                CreateHQLog("No queue found in storage", STULogType.WARNING);
+                return queue;
+            }
+            try {
+                queue = new Queue<MyTuple<Vector3D, PlaneD, int>>(queueString.Split(';').Select(s => {
+                    var parts = s.Split('|');
+                    return new MyTuple<Vector3D, PlaneD, int>(
+                       MiningDroneData.DeserializeVector3D(parts[0]),
+                      MiningDroneData.DeserializePlaneD(parts[1]),
+                     int.Parse(parts[2]));
+                }));
+                CreateHQLog($"Queue deserialized successfully; {queue.Count} jobs loaded back into memory", STULogType.INFO);
+                return queue;
+            } catch (Exception e) {
+                CreateHQLog($"Error deserializing job queue: {e.Message}", STULogType.ERROR);
+                return queue;
+            }
+        }
+
 
     }
 }

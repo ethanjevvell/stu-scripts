@@ -1,0 +1,24 @@
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\MDK\MDK.options.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\MDK\MDK.paths.props
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\STU LIGMA Mission Control.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\STU LIGMA Mission Control.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\STU LIGMA Mission Control.pdb
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\VRage.Network.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\HavokWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\ProtoBuf.Net.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\System.Memory.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\VRage.NativeWrapper.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\System.Buffers.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.ImageSharp.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.Core.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\System.Numerics.Vectors.dll
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.ImageSharp.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.csproj.CopyComplete
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.exe
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA Mission Control\obj\x64\Debug\STU LIGMA Mission Control.pdb
