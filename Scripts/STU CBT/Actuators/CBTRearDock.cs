@@ -19,9 +19,6 @@ namespace IngameScript
             public static IMyMotorStator RearDockHinge1 { get; set; }
             public static IMyMotorStator RearDockHinge2 { get; set; }
             public static IMyShipConnector RearDockConnector { get; set; }
-            private float PistonTargetDistance { get; set; }
-            private float Hinge1TargetAngle { get; set; }
-            private float Hinge2TargetAngle { get; set; }
 
             public enum RearDockStates
             {
@@ -35,7 +32,6 @@ namespace IngameScript
                 public float Hinge1Angle;
                 public float Hinge2Angle;
             }
-            public static ActuatorPosition CurrentPosition { get; set; }
             public static int DesiredPosition { get; set; }
 
             public static ActuatorPosition[] KnownPorts = new ActuatorPosition[]
@@ -46,8 +42,8 @@ namespace IngameScript
                 new ActuatorPosition { PistonDistance = 3.5f, Hinge1Angle = DegToRad(-90), Hinge2Angle = DegToRad(-72) }, // herobrine on deck
             };
 
-            public RearDockStates CurrentRearDockState { get; set; } 
-            public static Queue<string> ManeuverQueue { get; set; } = new Queue<string>();
+            public RearDockStates CurrentRearDockPhase { get; set; } 
+            public static Queue<STUStateMachine> ManeuverQueue { get; set; } = new Queue<STUStateMachine>();
             public static STUStateMachine CurrentManeuver { get; set; }
 
             public static float DegToRad(float degrees)
@@ -67,21 +63,35 @@ namespace IngameScript
                 RearDockHinge2.BrakingTorque = HINGE_TORQUE;
             }
 
+            public void BuildManeuver()
+            {
+                ManeuverQueue.Enqueue(new CBT.MovePiston(RearDockPiston, KnownPorts[0].PistonDistance));
+                ManeuverQueue.Enqueue(new CBT.MoveHinge(RearDockHinge1, KnownPorts[DesiredPosition].Hinge1Angle));
+                ManeuverQueue.Enqueue(new CBT.MoveHinge(RearDockHinge2, KnownPorts[DesiredPosition].Hinge2Angle));
+                ManeuverQueue.Enqueue(new CBT.MovePiston(RearDockPiston, KnownPorts[DesiredPosition].PistonDistance));
+            }
+
             // state machine
             public void UpdateRearDock()
             {
                 // see if the user input position is different from the internal position variable
                 // if it is, then queue up that new position
                 // ideally, interrupt the current maneuver and start the new one
-                if (CBT.UserInputRearDockPosition != InternalPositionTarget)
+                if (CBT.UserInputRearDockPosition != DesiredPosition)
                 {
-                    if (KnownPorts.ContainsKey(InternalPositionTarget))
+                    try
                     {
-                        ManeuverQueue.Enqueue(KnownPorts[InternalPositionTarget].ToString());
+                        ManeuverQueue.Clear();
+                        BuildManeuver();
+                    }
+                    catch
+                    {
+                        CBT.AddToLogQueue("Tried to enqueue some actuator movements, but failed.");
+                        ManeuverQueue.Clear();
                     }
                 }
                 
-                switch (CurrentRearDockState)
+                switch (CurrentRearDockPhase)
                 {
                     case RearDockStates.Idle:
                         // check for work
@@ -90,95 +100,22 @@ namespace IngameScript
                             try
                             {
                                 CurrentManeuver = ManeuverQueue.Dequeue();
-
+                                CurrentRearDockPhase = RearDockStates.Moving;
                             }
                             catch
                             {
-
+                                CBT.AddToLogQueue("Tried to dequeue a maneuver, but failed.");
                             }
                         }
+                        break;
                     case RearDockStates.Moving:
                         if (CurrentManeuver.ExecuteStateMachine())
                         {
                             CurrentManeuver = null;
-                            CurrentRearDockState = RearDockStates.Idle;
+                            CurrentRearDockPhase = RearDockStates.Idle;
                         }
                         break;
                 }
-            }
-
-            // methods
-            private RearDockStates TryDetermineState()
-            {
-                ActuatorPosition currentPositions = new ActuatorPosition
-                {
-                    PistonDistance = RearDockPiston.CurrentPosition,
-                    Hinge1Angle = RearDockHinge1.Angle,
-                    Hinge2Angle = RearDockHinge2.Angle,
-                };
-                foreach (KeyValuePair<string, ActuatorPosition> port in KnownPorts)
-                {
-                    if (
-                        Math.Abs(currentPositions.PistonDistance - port.Value.PistonDistance) < PISTON_POSITION_TOLERANCE && 
-                        Math.Abs(currentPositions.Hinge1Angle - port.Value.Hinge1Angle) < HINGE_ANGLE_TOLERANCE && 
-                        Math.Abs(currentPositions.Hinge2Angle - port.Value.Hinge2Angle) < HINGE_ANGLE_TOLERANCE)
-                    {
-                        return RearDockStates.Idle;
-                    }
-                }
-                throw new Exception();
-            }
-
-            public bool CanGoToRequestedState(RearDockStates requestedState)
-            {
-                CBT.AddToLogQueue($"asking whether we can go to state {requestedState} from state {CurrentRearDockState}");
-                if (ValidStateTransitions[CurrentRearDockState].Contains(requestedState)) { return true; }
-                else return false;
-            }
-
-            private bool MovePiston()
-            {
-                if (RearDockPiston.CurrentPosition - PistonTargetDistance < PISTON_POSITION_TOLERANCE)
-                {
-                    RearDockPiston.Velocity = 0;
-                    return true;
-                }
-                else if (RearDockPiston.CurrentPosition < PistonTargetDistance)
-                {
-                    RearDockPiston.MaxLimit = PistonTargetDistance;
-                    RearDockPiston.Velocity = PISTON_TARGET_VELOCITY;
-                    return false;
-                }
-                else if (RearDockPiston.CurrentPosition > PistonTargetDistance)
-                {
-                    RearDockPiston.MinLimit = PistonTargetDistance;
-                    RearDockPiston.Velocity = -PISTON_TARGET_VELOCITY;
-                    return false;
-                }
-                else return false;
-            }
-
-            private bool MoveHinge(IMyMotorStator hinge)
-            {
-                hinge.Torque = HINGE_TORQUE;
-                if (Math.Abs(hinge.Angle - Hinge1TargetAngle) < HINGE_ANGLE_TOLERANCE)
-                {
-                    hinge.TargetVelocityRPM = 0;
-                    return true;
-                }
-                else if (hinge.Angle < Hinge1TargetAngle)
-                {
-                    hinge.UpperLimitRad = Hinge1TargetAngle;
-                    hinge.TargetVelocityRPM = HINGE_TARGET_VELOCITY;
-                    return false;
-                }
-                else if (hinge.Angle > Hinge1TargetAngle)
-                {
-                    hinge.LowerLimitRad = Hinge1TargetAngle;
-                    hinge.TargetVelocityRPM = -HINGE_TARGET_VELOCITY;
-                    return false;
-                }
-                else return false;
             }
 
         }

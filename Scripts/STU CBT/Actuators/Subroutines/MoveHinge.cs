@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +15,9 @@ namespace IngameScript
             public class MoveHinge : STUStateMachine
             {
                 public override string Name => "Move Hinge";
-                public IMyMotorStator Hinge { get; set; }
+                public Sandbox.ModAPI.Ingame.IMyMotorStator Hinge { get; set; }
                 public float TargetAngle { get; set; }
-                public MoveHinge(IMyMotorStator thisHinge, float angle)
+                public MoveHinge(Sandbox.ModAPI.Ingame.IMyMotorStator thisHinge, float angle)
                 {
                     Hinge = thisHinge;
                     TargetAngle = angle;
@@ -30,7 +31,25 @@ namespace IngameScript
 
                 public override bool Run()
                 {
-                    return true;
+                    Hinge.Torque = CBTRearDock.HINGE_TORQUE;
+                    if (Math.Abs(Hinge.Angle - TargetAngle) < CBTRearDock.HINGE_ANGLE_TOLERANCE)
+                    {
+                        Hinge.TargetVelocityRPM = 0;
+                        return true;
+                    }
+                    else if (Hinge.Angle < TargetAngle)
+                    {
+                        Hinge.UpperLimitRad = TargetAngle;
+                        Hinge.TargetVelocityRPM = CBTRearDock.HINGE_TARGET_VELOCITY;
+                        return false;
+                    }
+                    else if (Hinge.Angle > TargetAngle)
+                    {
+                        Hinge.LowerLimitRad = TargetAngle;
+                        Hinge.TargetVelocityRPM = -CBTRearDock.HINGE_TARGET_VELOCITY;
+                        return false;
+                    }
+                    else return false;
                 }
 
                 public override bool Closeout()

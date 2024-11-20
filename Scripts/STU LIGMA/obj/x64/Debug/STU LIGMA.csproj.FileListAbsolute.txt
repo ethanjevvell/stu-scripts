@@ -1,4 +1,0 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU LIGMA\obj\x64\Debug\STU LIGMA.csproj.CoreCompileInputs.cache

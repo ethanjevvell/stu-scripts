@@ -252,7 +252,16 @@ namespace IngameScript
                     CBT.UserInputGangwayState = CBTGangway.GangwayStates.Resetting;
                     return true;
                 case "STINGERRESET":
-                    CBT.UserInputRearDockPosition = "RESET";
+                    CBT.UserInputRearDockPosition = 1;
+                    return true;
+                case "STINGERSTOW":
+                    CBT.UserInputRearDockPosition = 0;
+                    return true;
+                case "STINGERLHQ":
+                    CBT.UserInputRearDockPosition = 2;
+                    return true;
+                case "STINGERHEROBRINE":
+                    CBT.UserInputRearDockPosition = 3;
                     return true;
                 case "PARK":
                     CBT.AddToLogQueue("Park maneuver not implemented yet.", STULogType.ERROR);

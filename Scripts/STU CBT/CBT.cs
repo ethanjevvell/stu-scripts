@@ -35,7 +35,7 @@ namespace IngameScript
             public static float UserInputYawVelocity = 0;
 
             public static CBTGangway.GangwayStates UserInputGangwayState;
-            public static string UserInputRearDockPosition;
+            public static int UserInputRearDockPosition;
             public static string UserInputRearDockPort;
 
             //public static Vector3D NextWaypoint;
@@ -953,7 +953,7 @@ namespace IngameScript
             public static void SetCruisingAltitude(double altitude)
             {
                 SetAutopilotControl(true, false, false);
-                FlightController.MaintainSeaLevelAltitude(altitude);
+                FlightController.MaintainSeaLevelAltitude(altitude, 5, 5);
             }
             #endregion
         }
