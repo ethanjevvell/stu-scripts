@@ -25,8 +25,8 @@ namespace IngameScript {
         public Program() {
 
             _ini = new MyIni();
-            _logBroadcaster = new STUMasterLogBroadcaster(GOOCH_NODE_LOG_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
-            _targetBroadcaster = new STUMasterLogBroadcaster(GOOCH_NODE_TARGET_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
+            _logBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_GOOCH_LOG_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
+            _targetBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_GOOCH_TARGET_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
             _customTurrentController = GridTerminalSystem.GetBlockWithName("NODE CONTROLLER") as IMyTurretControlBlock;
             if (_customTurrentController == null) {
                 Echo("Custom Turret Controller not found");
@@ -88,7 +88,7 @@ namespace IngameScript {
                 Message = "",
                 Sender = Me.CustomName,
                 Type = STULogType.INFO,
-                Metadata = STURaycaster.GetHitInfoDictionary(targetData, _customTurrentController)
+                Metadata = STURaycaster.GetHitInfoDictionary(targetData)
             };
             _targetBroadcaster.Log(_tempOutgoingLog);
         }

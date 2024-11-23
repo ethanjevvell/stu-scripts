@@ -33,9 +33,9 @@ namespace IngameScript {
                         // Only STULogs with a Message property should be displayed
                         // Anything else is just telemetry
                         if (!string.IsNullOrEmpty(newLog.Message)) {
-                            display.FlightLogs.Enqueue(newLog);
+                            display.Logs.Enqueue(newLog);
                             display.StartFrame();
-                            display.WriteWrappableLogs(display.FlightLogs);
+                            display.WriteWrappableLogs(display.Logs);
                             display.EndAndPaintFrame();
                             //display.UpdateDisplay();
                         }

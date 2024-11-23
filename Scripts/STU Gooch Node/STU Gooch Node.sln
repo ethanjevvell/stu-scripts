@@ -15,6 +15,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Image", "..\..\Shared P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Gooch HQ", "..\STU Gooch HQ\STU Gooch HQ.csproj", "{E82A074E-1F07-4C72-8AEA-2A6D9C93D5A9}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU LIGMA Variables", "..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU LIGMA Variables.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,9 +35,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
+		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{7d53f862-df1c-4fc4-92f8-49568e15c32b}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
+		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4

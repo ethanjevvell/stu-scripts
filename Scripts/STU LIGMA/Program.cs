@@ -13,12 +13,13 @@ namespace IngameScript {
 
         MyCommandLine CommandLineParser = new MyCommandLine();
 
-        LIGMA Missile;
-        MissileReadout Display;
-        STUMasterLogBroadcaster Broadcaster;
-        IMyBroadcastListener Listener;
+        LIGMA _missile;
+        MissileReadout _display;
+        static STUMasterLogBroadcaster s_telemetryBroadcaster;
+        static STUMasterLogBroadcaster s_logBroadcaster;
+        IMyUnicastListener _listener;
 
-        MissileMode Mode;
+        MissileMode _mode;
 
         LIGMA.ILaunchPlan MainLaunchPlan;
         LIGMA.IFlightPlan MainFlightPlan;
@@ -26,8 +27,6 @@ namespace IngameScript {
         LIGMA.ITerminalPlan MainTerminalPlan;
 
         STULog IncomingLog;
-
-        TEA Decryptor;
 
         enum Phase {
             Idle,
@@ -47,26 +46,26 @@ namespace IngameScript {
         }
 
         public Program() {
-            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_VEHICLE_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
-            Listener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_MISSION_CONTROL_BROADCASTER);
-            Missile = new LIGMA(Broadcaster, GridTerminalSystem, Me, Runtime);
-            Display = new MissileReadout(Me, 0, Missile);
+            s_telemetryBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_TELEMETRY_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
+            s_logBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_LOG_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
+            _listener = IGC.UnicastListener;
+            _missile = new LIGMA(s_telemetryBroadcaster, s_logBroadcaster, GridTerminalSystem, Me, Runtime);
+            _display = new MissileReadout(Me, 0, _missile);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
-            Decryptor = new TEA();
         }
 
         void Main(string argument) {
 
             try {
 
-                if (Listener.HasPendingMessage) {
-                    var message = Listener.AcceptMessage();
+                if (_listener.HasPendingMessage) {
+                    var message = _listener.AcceptMessage();
                     var command = message.Data.ToString();
-                    ParseIncomingCommand(Decryptor.Decrypt(command, "TEST"));
+                    ParseIncomingCommand(command);
                 }
 
                 LIGMA.UpdateState();
@@ -98,7 +97,6 @@ namespace IngameScript {
                         var finishedFlight = MainFlightPlan.Run();
                         if (finishedFlight) {
                             try {
-
                                 LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                                 LIGMA.CurrentPhase = LIGMA.Phase.Descent;
                                 LIGMA.CreateWarningBroadcast("Entering descent phase");
@@ -177,7 +175,7 @@ namespace IngameScript {
 
             DeduceFlightMode();
 
-            switch (Mode) {
+            switch (_mode) {
 
                 case MissileMode.Intraplanetary:
                     MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
@@ -233,15 +231,15 @@ namespace IngameScript {
             STUGalacticMap.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
 
             if (OnSamePlanet(launchPos, targetPos)) {
-                Mode = MissileMode.Intraplanetary;
+                _mode = MissileMode.Intraplanetary;
             } else if (!InSpace(launchPos) && InSpace(targetPos)) {
-                Mode = MissileMode.PlanetToSpace;
+                _mode = MissileMode.PlanetToSpace;
             } else if (InSpace(launchPos) && !InSpace(targetPos)) {
-                Mode = MissileMode.SpaceToPlanet;
+                _mode = MissileMode.SpaceToPlanet;
             } else if (InSpace(launchPos) && InSpace(targetPos)) {
-                Mode = MissileMode.SpaceToSpace;
+                _mode = MissileMode.SpaceToSpace;
             } else if (OnDifferentPlanets(launchPos, targetPos)) {
-                Mode = MissileMode.Interplanetary;
+                _mode = MissileMode.Interplanetary;
             } else {
                 LIGMA.CreateFatalErrorBroadcast("Invalid flight mode in DeduceFlightMode");
             }
@@ -292,7 +290,7 @@ namespace IngameScript {
         }
 
         public string GetModeString() {
-            switch (Mode) {
+            switch (_mode) {
                 case MissileMode.Intraplanetary:
                     return "intraplanetary flight";
                 case MissileMode.PlanetToSpace:

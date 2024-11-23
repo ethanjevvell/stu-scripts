@@ -189,9 +189,8 @@ namespace IngameScript {
                 ;
             }
 
-            public static Dictionary<string, string> GetHitInfoDictionary(MyDetectedEntityInfo hitInfo, IMyTerminalBlock reference) {
+            public static Dictionary<string, string> GetHitInfoDictionary(MyDetectedEntityInfo hitInfo) {
                 var hitPos = hitInfo.HitPosition ?? Vector3D.Zero;
-                var distance = hitPos == Vector3.Zero ? 0 : Vector3D.Distance(hitPos, reference.GetPosition());
                 return new Dictionary<string, string>
                 {
                     { "Name", hitInfo.Name },

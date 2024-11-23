@@ -31,7 +31,8 @@ namespace IngameScript {
             public static STUFlightController.STUInterceptCalculator InterceptCalculator { get; set; }
 
             public static IMyProgrammableBlock Me { get; set; }
-            public static STUMasterLogBroadcaster Broadcaster { get; set; }
+            public static STUMasterLogBroadcaster s_telemetryBroadcaster { get; set; }
+            public static STUMasterLogBroadcaster s_logBroadcaster { get; set; }
             public static IMyRemoteControl RemoteControl { get; set; }
             public static IMyGridProgramRuntimeInfo Runtime { get; set; }
 
@@ -67,9 +68,14 @@ namespace IngameScript {
                 Terminal,
             }
 
-            public LIGMA(STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime) {
+            public LIGMA(STUMasterLogBroadcaster telemetryBroadcaster,
+                         STUMasterLogBroadcaster logBroadcaster,
+                         IMyGridTerminalSystem grid,
+                         IMyProgrammableBlock me,
+                         IMyGridProgramRuntimeInfo runtime) {
                 Me = me;
-                Broadcaster = broadcaster;
+                s_telemetryBroadcaster = telemetryBroadcaster;
+                s_logBroadcaster = logBroadcaster;
                 Runtime = runtime;
 
                 LoadRemoteController(grid);
@@ -271,16 +277,6 @@ namespace IngameScript {
                 }
             }
 
-            public static void SendTelemetry() {
-                // Empty message means pure telemetry message
-                Broadcaster.Log(new STULog {
-                    Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
-                    Message = "",
-                    Type = STULogType.INFO,
-                    Metadata = GetTelemetryDictionary(),
-                });
-            }
-
             public static void ArmWarheads() {
                 foreach (IMyWarhead warhead in Warheads) {
                     warhead.IsArmed = true;
@@ -323,10 +319,12 @@ namespace IngameScript {
 
             public static Dictionary<string, string> GetTelemetryDictionary() {
                 return new Dictionary<string, string> {
+                    { "Id", Me.EntityId.ToString() },
+                    { "Name", Me.CustomName},
                     { "Timestamp", Timestamp.ToString() },
                     { "Phase", CurrentPhase.ToString() },
                     { "VelocityMagnitude", FlightController.VelocityMagnitude.ToString() },
-                    { "VelocityComponents", FlightController.CurrentVelocity.ToString() },
+                    { "VelocityComponents", FlightController.CurrentVelocity_LocalFrame.ToString() },
                     { "AccelerationComponents", FlightController.AccelerationComponents.ToString() },
                     { "CurrentFuel", CurrentFuel.ToString() },
                     { "CurrentPower", CurrentPower.ToString() },
@@ -336,29 +334,40 @@ namespace IngameScript {
             }
 
             public static void CreateFatalErrorBroadcast(string message) {
-                CreateBroadcast($"FATAL -- {message}", STULogType.ERROR);
+                CreateLogBroadcast($"FATAL -- {message}", STULogType.ERROR);
                 throw new Exception(message);
             }
 
             public static void CreateErrorBroadcast(string message) {
-                CreateBroadcast(message, STULogType.ERROR);
+                CreateLogBroadcast(message, STULogType.ERROR);
             }
 
             public static void CreateWarningBroadcast(string message) {
-                CreateBroadcast(message, STULogType.WARNING);
+                CreateLogBroadcast(message, STULogType.WARNING);
             }
 
             public static void CreateOkBroadcast(string message) {
-                CreateBroadcast(message, STULogType.OK);
+                CreateLogBroadcast(message, STULogType.OK);
             }
 
-            private static void CreateBroadcast(string message, string type) {
-                Broadcaster.Log(new STULog {
+            private static void CreateLogBroadcast(string message, string type) {
+                s_logBroadcaster.Log(new STULog {
                     Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
                     Message = message,
                     Type = type,
                 });
             }
+
+            public static void SendTelemetry() {
+                // Empty message means pure telemetry message
+                s_telemetryBroadcaster.Log(new STULog {
+                    Sender = LIGMA_VARIABLES.LIGMA_VEHICLE_NAME,
+                    Message = "",
+                    Type = STULogType.INFO,
+                    Metadata = GetTelemetryDictionary(),
+                });
+            }
+
 
             private static bool IsStagedLIGMA(IMyGridTerminalSystem grid) {
                 IMyShipMergeBlock mergeBlock = grid.GetBlockWithName("TERMINAL_TO_FLIGHT_MERGE_BLOCK") as IMyShipMergeBlock;

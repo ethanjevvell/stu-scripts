@@ -42,8 +42,8 @@ namespace IngameScript {
                 {
                     "Crait", new Planet {
                         Name = "Crait",
-                        Radius = 40700.6663,
-                        Center = new Vector3D(-386492.07388515, -2913876.81373743, -3014984.2073616)
+                        Radius = 40644.8713,
+                        Center = new Vector3D(415363, 125322, -94326)
                     }
                 }
             };
@@ -59,7 +59,7 @@ namespace IngameScript {
                 foreach (var kvp in CelestialBodies) {
                     Planet planet = kvp.Value;
                     BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + detectionBuffer);
-                    // if the point is inside the planet's detection sphere or intersects it, it is on the planet
+                    // if the point is inside the planet"s detection sphere or intersects it, it is on the planet
                     if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
                         return planet;
                     }

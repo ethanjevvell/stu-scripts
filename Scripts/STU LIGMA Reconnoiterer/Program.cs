@@ -22,7 +22,7 @@ namespace IngameScript {
             CockpitDisplay = InitCockpitDisplay(Cockpit);
             Raycaster = InitRaycaster();
             Raycaster.RaycastDistance = 10000;
-            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_RECONNOITERER_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
+            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_GOOCH_TARGET_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
 
             CommandLineParser = new MyCommandLine();
             ProgramCommands.Add("Raycast", Raycast);
@@ -66,7 +66,7 @@ namespace IngameScript {
                 var hit = Raycaster.Raycast();
                 if (!hit.IsEmpty()) {
                     var hitInfo = Raycaster.GetHitInfoString(hit);
-                    var metadata = STURaycaster.GetHitInfoDictionary(hit, Raycaster.Camera);
+                    var metadata = STURaycaster.GetHitInfoDictionary(hit);
                     CockpitDisplay.Surface.WriteText(hitInfo);
                     Echo(hitInfo);
 

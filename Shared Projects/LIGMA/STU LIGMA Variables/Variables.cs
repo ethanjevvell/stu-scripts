@@ -4,9 +4,16 @@
 
             public const string LIGMA_VEHICLE_NAME = "LIGMA-I";
             public const string LIGMA_RECONNOITERER_NAME = "SDC-3";
-            public const string LIGMA_VEHICLE_BROADCASTER = "LIGMA_VEHICLE_BROADCASTER";
-            public const string LIGMA_MISSION_CONTROL_BROADCASTER = "LIGMA_MISSION_CONTROL_BROADCASTER";
-            public const string LIGMA_RECONNOITERER_BROADCASTER = "LIGMA_RECONNOITERER_BROADCASTER";
+
+            public const string LIGMA_TELEMETRY_BROADCASTER = "LIGMA_TELEMETRY_BROADCASTER";
+            public const string LIGMA_LOG_BROADCASTER = "LIGMA_LOG_BROADCASTER";
+            public const string LIGMA_GOOCH_TARGET_BROADCASTER = "LIGMA_GOOCH_TARGET_BROADCASTER";
+            public const string LIGMA_GOOCH_LOG_BROADCASTER = "LIGMA_GOOCH_LOG_BROADCASTER";
+
+            public const string LIGMA_HQ_LOG_SUBSCRIBER_TAG = "LIGMA_HQ_LOG_SUBSCRIBER";
+            public const string LIGMA_HQ_TELEMETRY_BROADCASTER = "LIGMA_HQ_TELEMETRY_BROADCASTER";
+            public const string LIGMA_HQ_MAIN_SUBSCRIBER_TAG = "LIGMA_HQ_MAIN_SUBSCRIBER";
+            public const string LIGMA_HQ_NAME = "LIGMA_HQ";
 
             public const double PLANETARY_DETECTION_BUFFER = 2000;
 
