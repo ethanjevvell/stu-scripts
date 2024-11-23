@@ -9,11 +9,11 @@ namespace IngameScript
         public partial class CBTRearDock
         {
             // variables
-            public const float HINGE_ANGLE_TOLERANCE = 0.0071f;
-            public const float HINGE_TARGET_VELOCITY = 1f;
+            public const float HINGE_ANGLE_TOLERANCE = 0.0077f;
+            public const float HINGE_TARGET_VELOCITY = 4f;
             public const float HINGE_TORQUE = 7000000;
             public const float PISTON_POSITION_TOLERANCE = 0.01f;
-            public const float PISTON_TARGET_VELOCITY = 1.4f;
+            public const float PISTON_TARGET_VELOCITY = 1.7f;
             public const float PISTON_NEUTRAL_DISTANCE = 4f;
             public static IMyPistonBase RearDockPiston { get; set; }
             public static IMyMotorStator RearDockHinge1 { get; set; }
@@ -65,7 +65,7 @@ namespace IngameScript
 
             public void BuildManeuver()
             {
-                ManeuverQueue.Enqueue(new CBT.MovePiston(RearDockPiston, KnownPorts[0].PistonDistance));
+                ManeuverQueue.Enqueue(new CBT.MovePiston(RearDockPiston, PISTON_NEUTRAL_DISTANCE));
                 ManeuverQueue.Enqueue(new CBT.MoveHinge(RearDockHinge1, KnownPorts[DesiredPosition].Hinge1Angle));
                 ManeuverQueue.Enqueue(new CBT.MoveHinge(RearDockHinge2, KnownPorts[DesiredPosition].Hinge2Angle));
                 ManeuverQueue.Enqueue(new CBT.MovePiston(RearDockPiston, KnownPorts[DesiredPosition].PistonDistance));
@@ -82,6 +82,7 @@ namespace IngameScript
                     try
                     {
                         ManeuverQueue.Clear();
+                        DesiredPosition = CBT.UserInputRearDockPosition;
                         BuildManeuver();
                     }
                     catch
@@ -90,7 +91,7 @@ namespace IngameScript
                         ManeuverQueue.Clear();
                     }
                 }
-                
+
                 switch (CurrentRearDockPhase)
                 {
                     case RearDockStates.Idle:
@@ -109,12 +110,22 @@ namespace IngameScript
                         }
                         break;
                     case RearDockStates.Moving:
-                        if (CurrentManeuver.ExecuteStateMachine())
+                        try
                         {
-                            CurrentManeuver = null;
-                            CurrentRearDockPhase = RearDockStates.Idle;
+                            if (CurrentManeuver.ExecuteStateMachine())
+                            {
+                                CurrentManeuver = null;
+                                CurrentRearDockPhase = RearDockStates.Idle;
+                            }
+                            break;
                         }
-                        break;
+                        catch
+                        {
+                            CBT.AddToLogQueue("Current maneuver failed to execute. Likely a null value.");
+                            CurrentRearDockPhase = RearDockStates.Idle;
+                            break;
+                        }
+                    
                 }
             }
 

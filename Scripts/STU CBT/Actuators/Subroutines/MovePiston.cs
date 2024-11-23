@@ -30,7 +30,7 @@ namespace IngameScript
 
                 public override bool Run()
                 {
-                    if (RearDockPiston.CurrentPosition - TargetDistance < CBTRearDock.PISTON_POSITION_TOLERANCE)
+                    if (Math.Abs(RearDockPiston.CurrentPosition - TargetDistance) < CBTRearDock.PISTON_POSITION_TOLERANCE)
                     {
                         RearDockPiston.Velocity = 0;
                         return true;
