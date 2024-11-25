@@ -28,13 +28,13 @@ namespace IngameScript
     partial class Program : MyGridProgram
     {
 
-        CBT CBTShip;
-        STUMasterLogBroadcaster Broadcaster;
-        IMyBroadcastListener Listener;
-        STUInventoryEnumerator InventoryEnumerator;
-        MyCommandLine CommandLineParser = new MyCommandLine();
-        MyCommandLine WirelessMessageParser = new MyCommandLine();
-        Queue<STUStateMachine> ManeuverQueue = new Queue<STUStateMachine>();
+        CBT CBTShip { get; set; }
+        STUMasterLogBroadcaster Broadcaster { get; set; }
+        IMyBroadcastListener Listener { get; set; }
+        STUInventoryEnumerator InventoryEnumerator { get; set; }
+        MyCommandLine CommandLineParser { get; set; } = new MyCommandLine();
+        MyCommandLine WirelessMessageParser { get; set; } = new MyCommandLine();
+        Queue<STUStateMachine> ManeuverQueue { get; set; } = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
         public struct ManeuverQueueData
         {
@@ -71,7 +71,8 @@ namespace IngameScript
         {
             try 
             {
-                InventoryEnumerator.EnumerateInventories();
+                // fix and uncomment later
+                // InventoryEnumerator.EnumerateInventories();
 
                 HandleWirelessMessages();
                 
@@ -107,7 +108,7 @@ namespace IngameScript
                             catch
                             {
                                 CBT.AddToLogQueue("Could not pull maneuver from queue, despite the queue's count being greater than zero. Something is wrong, halting program...", STULogType.ERROR);
-
+                                CBT.CreateBroadcast("MAYDAY MAYDAY MAYDAY", false, STULogType.ERROR);
                                 Runtime.UpdateFrequency = UpdateFrequency.None;
                             }
                         }
@@ -125,7 +126,7 @@ namespace IngameScript
                 // update various subsystems that are independent of the maneuver queue
                 CBT.FlightController.UpdateState();
                 CBT.Gangway.UpdateGangway(CBT.UserInputGangwayState);
-                CBT.RearDock.UpdateRearDock(CBT.UserInputRearDockState);
+                CBT.RearDock.UpdateRearDock();
                 CBT.UpdateAutopilotScreens();
                 CBT.UpdateLogScreens();
                 CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
@@ -232,14 +233,12 @@ namespace IngameScript
                 case "AC130":
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     return true;
-
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
                     CBT.CreateBroadcast("PING I wonder, do special characters work?", false, STULogType.OK);
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
                     //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
                     return true;
-
                 case "GANGWAY":
                     CBT.Gangway.ToggleGangway();
                     return true;
@@ -252,7 +251,17 @@ namespace IngameScript
                 case "GANGWAYRESET":
                     CBT.UserInputGangwayState = CBTGangway.GangwayStates.Resetting;
                     return true;
-                case "STINGER":
+                case "STINGERRESET":
+                    CBT.UserInputRearDockPosition = 1;
+                    return true;
+                case "STINGERSTOW":
+                    CBT.UserInputRearDockPosition = 0;
+                    return true;
+                case "STINGERLHQ":
+                    CBT.UserInputRearDockPosition = 2;
+                    return true;
+                case "STINGERHEROBRINE":
+                    CBT.UserInputRearDockPosition = 3;
                     return true;
                 case "PARK":
                     CBT.AddToLogQueue("Park maneuver not implemented yet.", STULogType.ERROR);
@@ -333,8 +342,8 @@ namespace IngameScript
                     }
                     catch (Exception e)
                     {
-                        Echo($"EXCEPTION: {e.Message}");
-                        CBT.AddToLogQueue($"EXCEPTION: {e.Message}");
+                        Echo($"EXCEPTION: {e.Message} \n{e.StackTrace}");
+                        CBT.AddToLogQueue($"EXCEPTION: {e.Message}; {e.StackTrace}");
                         break;
                     }
                     float result;

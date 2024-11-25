@@ -35,7 +35,7 @@ namespace IngameScript
             public static float UserInputYawVelocity = 0;
 
             public static CBTGangway.GangwayStates UserInputGangwayState;
-            public static CBTRearDock.RearDockStates UserInputRearDockState;
+            public static int UserInputRearDockPosition;
             public static string UserInputRearDockPort;
 
             //public static Vector3D NextWaypoint;
@@ -104,7 +104,8 @@ namespace IngameScript
             public static bool LandingGearState { get; set; }
 
             
-            // define generic phases for executing flight plans, essentially a state machine
+            // define phases for the main state machine
+            // the one that will be used in conjunction with the ManeuverQueue
             public enum Phase
             {
                 Idle,
@@ -137,7 +138,7 @@ namespace IngameScript
                 { HardwareClassificationLevels.Other, new List<IMyTerminalBlock> { } },
             };
 
-            // CBT object instantiation
+            // CBT object constructor
             public CBT(Action<string> Echo, STUMasterLogBroadcaster broadcaster, STUInventoryEnumerator inventoryEnumerator, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
                 Me = me;
@@ -274,9 +275,10 @@ namespace IngameScript
                 {
                     screen.StartFrame();
                     screen.LoadAmmoData(
-                        inventory.ContainsKey("Gatling Ammo Box") ? (int)inventory["Gatling Ammo Box"] : 0,
-                        inventory.ContainsKey("Artillery Shell") ? (int)inventory["Artillery Shell"] : 0,
-                        inventory.ContainsKey("Large Railgun Sabot") ? (int)inventory["Large Railgun Sabot"] : 0
+                        0,0,0 // fix and remove later
+                        //inventory.ContainsKey("Gatling Ammo Box") ? (int)inventory["Gatling Ammo Box"] : 0,
+                        //inventory.ContainsKey("Artillery Shell") ? (int)inventory["Artillery Shell"] : 0,
+                        //inventory.ContainsKey("Large Railgun Sabot") ? (int)inventory["Large Railgun Sabot"] : 0
                         );
                     screen.BuildScreen(screen.CurrentFrame, screen.Center);
                     screen.EndAndPaintFrame();
@@ -951,7 +953,7 @@ namespace IngameScript
             public static void SetCruisingAltitude(double altitude)
             {
                 SetAutopilotControl(true, false, false);
-                FlightController.MaintainSeaLevelAltitude(altitude);
+                FlightController.MaintainSeaLevelAltitude(altitude, 5, 5);
             }
             #endregion
         }
