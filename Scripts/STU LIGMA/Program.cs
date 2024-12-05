@@ -17,7 +17,7 @@ namespace IngameScript {
         MissileReadout _display;
         static STUMasterLogBroadcaster s_telemetryBroadcaster;
         static STUMasterLogBroadcaster s_logBroadcaster;
-        IMyUnicastListener _listener;
+        IMyUnicastListener unicastListener;
 
         MissileMode _mode;
 
@@ -48,7 +48,7 @@ namespace IngameScript {
         public Program() {
             s_telemetryBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_TELEMETRY_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
             s_logBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_LOG_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
-            _listener = IGC.UnicastListener;
+            unicastListener = IGC.UnicastListener;
             _missile = new LIGMA(s_telemetryBroadcaster, s_logBroadcaster, GridTerminalSystem, Me, Runtime);
             _display = new MissileReadout(Me, 0, _missile);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
@@ -62,8 +62,8 @@ namespace IngameScript {
 
             try {
 
-                if (_listener.HasPendingMessage) {
-                    var message = _listener.AcceptMessage();
+                if (unicastListener.HasPendingMessage) {
+                    var message = unicastListener.AcceptMessage();
                     var command = message.Data.ToString();
                     ParseIncomingCommand(command);
                 }
@@ -84,7 +84,6 @@ namespace IngameScript {
                         if (finishedLaunch) {
                             LIGMA.CurrentPhase = LIGMA.Phase.Flight;
                             LIGMA.CreateWarningBroadcast("Entering flight phase");
-                            LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                             // Stop any roll created during this phase
                             LIGMA.FlightController.SetVr(0);
                             if (LIGMA.IS_STAGED_LIGMA) {
@@ -97,7 +96,6 @@ namespace IngameScript {
                         var finishedFlight = MainFlightPlan.Run();
                         if (finishedFlight) {
                             try {
-                                LIGMA.CreateOkBroadcast($"Ship mass: {LIGMA.FlightController.GetShipMass()} kg");
                                 LIGMA.CurrentPhase = LIGMA.Phase.Descent;
                                 LIGMA.CreateWarningBroadcast("Entering descent phase");
                                 // Stop any roll created during this phase
@@ -227,8 +225,8 @@ namespace IngameScript {
 
         public void DeduceFlightMode() {
 
-            STUGalacticMap.Planet? launchPos = GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition);
-            STUGalacticMap.Planet? targetPos = GetPlanetOfPoint(LIGMA.TargetData.Position);
+            STUGalacticMap.Planet? launchPos = STUGalacticMap.GetPlanetOfPoint(LIGMA.FlightController.CurrentPosition, LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
+            STUGalacticMap.Planet? targetPos = STUGalacticMap.GetPlanetOfPoint(LIGMA.TargetData.Position, LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
 
             if (OnSamePlanet(launchPos, targetPos)) {
                 _mode = MissileMode.Intraplanetary;
@@ -265,18 +263,6 @@ namespace IngameScript {
 
         public bool InSpace(STUGalacticMap.Planet? planet) {
             return planet == null;
-        }
-
-        public STUGalacticMap.Planet? GetPlanetOfPoint(Vector3D point) {
-            foreach (var kvp in STUGalacticMap.CelestialBodies) {
-                STUGalacticMap.Planet planet = kvp.Value;
-                BoundingSphereD sphere = new BoundingSphereD(planet.Center, planet.Radius + LIGMA_VARIABLES.PLANETARY_DETECTION_BUFFER);
-                // if the point is inside the planet's detection sphere or intersects it, it is on the planet
-                if (sphere.Contains(point) == ContainmentType.Contains || sphere.Contains(point) == ContainmentType.Intersects) {
-                    return planet;
-                }
-            }
-            return null;
         }
 
         public double ParseCoordinate(string doubleString) {

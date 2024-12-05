@@ -5,3 +5,5 @@
 **.vsidx
 **.exe
 **.pdb
+**/bin/
+**/obj/

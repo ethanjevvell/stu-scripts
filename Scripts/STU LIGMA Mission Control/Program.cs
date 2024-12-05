@@ -216,6 +216,7 @@ namespace IngameScript {
             SendLaunchCommand(missile["Id"]);
             CreateHQLog($"Dispatched LIGMA {missile["Id"]} to target {target["EntityId"]}", STULogType.OK);
             _TargetToLIGMA[target["EntityId"]] = missile["Id"];
+            missile["Phase"] = "Launch";
         }
 
         void SendLaunchCommand(string missileId) {

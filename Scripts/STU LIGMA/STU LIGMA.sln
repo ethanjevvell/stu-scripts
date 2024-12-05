@@ -33,6 +33,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Image", "..\..\Shared P
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU State Machine", "..\..\Shared Projects\Misc\STU State Machine\STU State Machine.shproj", "{4FB19E00-BD67-4421-AD35-D02F6C4C181B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Gooch Node", "..\STU Gooch Node\STU Gooch Node.csproj", "{A112A62A-2BA6-43CB-8D17-7D6B2B6A2E6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,6 +46,8 @@ Global
 		{77B2A5BF-4200-45F6-9060-B5803A82E9EC}.Debug|x64.Build.0 = Debug|x64
 		{CCADDDB9-50B2-4963-AC95-3DDE68101391}.Debug|x64.ActiveCfg = Debug|x64
 		{CCADDDB9-50B2-4963-AC95-3DDE68101391}.Debug|x64.Build.0 = Debug|x64
+		{A112A62A-2BA6-43CB-8D17-7D6B2B6A2E6D}.Debug|x64.ActiveCfg = Debug|x64
+		{A112A62A-2BA6-43CB-8D17-7D6B2B6A2E6D}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +84,11 @@ Global
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
+		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
+		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display Type\STU_Display_Type.projitems*{a2c2a7b0-3894-43f4-8eb5-71bfc87be730}*SharedItemsImports = 13
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{b77aa568-7b92-49e3-b6c3-61fa11e47ec0}*SharedItemsImports = 13
 		..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems*{c606c84c-c957-4859-be77-23907a2b1b72}*SharedItemsImports = 13

@@ -33,13 +33,14 @@ namespace IngameScript {
                 return;
             }
 
-            ConfigureTurretController(_customTurrentController, true);
+            ConfigureTurretController(_customTurrentController, false);
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
 
         }
 
         public void Main() {
 
+            Echo("Scanning...");
             ScanForTargets();
 
         }
@@ -52,6 +53,7 @@ namespace IngameScript {
                     Echo("TARGET LOCK -- TRANSMITTING");
                     StreamTargetData(_tempDetectedEntity);
                     Echo(_tempOutgoingLog.Metadata["Name"]);
+                    Echo(_tempOutgoingLog.Metadata["Relationship"]);
                 }
                 yield return true;
             }
@@ -81,6 +83,8 @@ namespace IngameScript {
             controller.TargetSmallGrids = true;
             controller.TargetStations = true;
             controller.TargetNeutrals = true;
+            controller.TargetCharacters = false;
+            Echo("Config");
         }
 
         void StreamTargetData(MyDetectedEntityInfo targetData) {
