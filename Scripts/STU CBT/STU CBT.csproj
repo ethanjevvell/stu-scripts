@@ -42,6 +42,7 @@
     <Compile Include="Actuators\Subroutines\MovePiston.cs" />
     <Compile Include="CBT Displays\LCDs\CBTAmmoLCD.cs" />
     <Compile Include="CBT Displays\LCDs\CBTManeuverQueueLCD.cs" />
+    <Compile Include="CBTDockingModule.cs" />
     <Compile Include="Maneuvers\CruisingSpeedManeuver.cs" />
     <Compile Include="CBT Displays\Adapters\FlightSeat.cs" />
     <Compile Include="CBT.cs" />

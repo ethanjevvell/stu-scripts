@@ -1,5 +1,6 @@
 ﻿using Sandbox.Game.EntityComponents;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.SessionComponents;
 using Sandbox.Game.WorldEnvironment.Modules;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
@@ -131,12 +132,13 @@ namespace IngameScript
                 CBT.UpdateLogScreens();
                 CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
                 CBT.UpdateAmmoScreens();
+                CBT.DockingModule.UpdateDockingModule();
             }
 
             catch (Exception e)
             {
-                Echo($"Program.cs: Caught exception: {e}");
-                CBT.AddToLogQueue($"Caught exception: {e}", STULogType.ERROR);
+                Echo($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}");
+                CBT.AddToLogQueue($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}", STULogType.ERROR);
                 CBT.AddToLogQueue("");
                 CBT.AddToLogQueue("");
                 CBT.AddToLogQueue("HALTING PROGRAM EXECUTION!", STULogType.ERROR);
@@ -182,10 +184,17 @@ namespace IngameScript
 
                 if (WirelessMessageParser.TryParse(incomingLog.Message.ToUpper()))
                 {
+                    foreach (var arg in WirelessMessageParser.Items)
+                    {
+                        CBT.AddToLogQueue($"Argument: {arg}", STULogType.INFO);
+                    }
                     switch (WirelessMessageParser.Argument(0))
                     {
                         case "PING":
                             CBT.CreateBroadcast("PONG");
+                            break;
+                        case "READY":
+                            CBT.AddToLogQueue("Received READY message from Hyperdrive Ring.", STULogType.INFO);
                             break;
                         case "POSITION":
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
@@ -195,14 +204,21 @@ namespace IngameScript
                             Vector3D position = new Vector3D(x, y, z);
                             ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, position, 10));
                             break;
+                        default:
+                            foreach (var arg in WirelessMessageParser.Items)
+                            {
+                                CBT.AddToLogQueue($"Argument: {arg}", STULogType.INFO);
+                            }
+                            break;
                     }
                 }
                 
-                if (incomingLog.Message == "PING")
-                {
-                    CBT.AddToLogQueue("PONG", STULogType.OK);
-                    CBT.CreateBroadcast("PONG", false, STULogType.OK);
-                }
+                //if (incomingLog.Message == "PING")
+                //{
+                //    CBT.AddToLogQueue("PONG", STULogType.OK);
+                //    CBT.CreateBroadcast("PONG", false, STULogType.OK);
+                //} 
+                // I think this is already handled above //
 
             }
         }
@@ -230,14 +246,17 @@ namespace IngameScript
                     CBT.AddToLogQueue("Resetting autopilot...", STULogType.INFO);
                     ResetAutopilot();
                     return true;
+                case "PING":
+                    CBT.AddToLogQueue("Broadcasting PING", STULogType.INFO);
+                    CBT.CreateBroadcast("PING", false, STULogType.INFO);
+                    return true;
                 case "AC130":
                     CBT.AddToLogQueue("AC130 command not implemented yet.", STULogType.ERROR);
                     return true;
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    CBT.CreateBroadcast("PING I wonder, do special characters work?", false, STULogType.OK);
-                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10));
-                    //ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT2"), 20));
+                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10, CBT.MergeBlock));
+                    ManeuverQueue.Enqueue(new CBT.HoverManeuver());
                     return true;
                 case "GANGWAY":
                     CBT.Gangway.ToggleGangway();
@@ -263,8 +282,18 @@ namespace IngameScript
                 case "STINGERHEROBRINE":
                     CBT.UserInputRearDockPosition = 3;
                     return true;
+                case "DOCK":
+                    CBT.AddToLogQueue("Sending dock request to Hyperdrive Ring...", STULogType.INFO);
+                    CBT.DockingModule.SendDockRequestFlag = true;
+                    return true;
                 case "PARK":
                     CBT.AddToLogQueue("Park maneuver not implemented yet.", STULogType.ERROR);
+                    return true;
+                case "POS":
+                    CBT.AddToLogQueue($"Current position:", STULogType.INFO);
+                    CBT.AddToLogQueue($"X: {CBT.FlightController.CurrentPosition.X}", STULogType.INFO);
+                    CBT.AddToLogQueue($"Y: {CBT.FlightController.CurrentPosition.Y}", STULogType.INFO);
+                    CBT.AddToLogQueue($"Z: {CBT.FlightController.CurrentPosition.Z}", STULogType.INFO);
                     return true;
                 case "HELP":
                     CBT.AddToLogQueue("CBT Help Menu:", STULogType.OK);
@@ -297,7 +326,7 @@ namespace IngameScript
                     CBT.AddToLogQueue("G1 - Extend gangway", STULogType.OK);
                     return true;
                 default:
-                    CBT.AddToLogQueue($"String \"{arg}\" was not a special command word. Handing off to ParseCommand()...", STULogType.WARNING);
+                    CBT.AddToLogQueue($"String \"{arg}\" is not a special command word.", STULogType.INFO);
                     return false;
             }
         }
@@ -342,8 +371,9 @@ namespace IngameScript
                     }
                     catch (Exception e)
                     {
-                        Echo($"EXCEPTION: {e.Message} \n{e.StackTrace}");
-                        CBT.AddToLogQueue($"EXCEPTION: {e.Message}; {e.StackTrace}");
+                        CBT.AddToLogQueue($"Failed to parse command '{command}'. Skipping...", STULogType.WARNING);
+                        Echo($"Program.cs: Exception: {e.Message} \n{e.StackTrace}");
+                        Echo("Continuing...");
                         break;
                     }
                     float result;

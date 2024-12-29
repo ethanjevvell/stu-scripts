@@ -37,6 +37,8 @@ namespace IngameScript
 
                 public override bool Closeout()
                 {
+                    // relinquish control of the thrusters and gyros, keep dampeners on 
+                    SetAutopilotControl(false, false, true);
                     return true;
                 }
             }

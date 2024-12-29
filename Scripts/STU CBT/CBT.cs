@@ -38,6 +38,8 @@ namespace IngameScript
             public static int UserInputRearDockPosition;
             public static string UserInputRearDockPort;
 
+            public bool CanDockWithCR = false;
+
             //public static Vector3D NextWaypoint;
 
             /// <summary>
@@ -54,6 +56,7 @@ namespace IngameScript
             public static List<CBTManeuverQueueLCD> ManeuverQueueChannel = new List<CBTManeuverQueueLCD>();
             public static List<CBTAmmoLCD> AmmoChannel = new List<CBTAmmoLCD>();
             public static STUFlightController FlightController { get; set; }
+            public static CBTDockingModule DockingModule { get; set; }
             public static CBTGangway Gangway { get; set; }
             public static CBTRearDock RearDock { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
@@ -82,7 +85,7 @@ namespace IngameScript
             public static IMyLandingGear[] LandingGear { get; set; }
             public static IMyGasTank[] OxygenTanks { get; set; }
             public static IMyCargoContainer[] CargoContainers { get; set; }
-
+            public static IMyShipMergeBlock MergeBlock { get; set; }
             public static IMyMedicalRoom MedicalRoom { get; set; }
             public static IMyGasGenerator[] H2O2Generators { get; set; }
             public static IMyPowerProducer[] HydrogenEngines { get; set; }
@@ -168,12 +171,15 @@ namespace IngameScript
                 LoadOxygenTanks(grid);
                 LoadHydrogenEngines(grid);
                 LoadGravityGenerators(grid);
+                LoadMergeBlock(grid);
                 LoadCargoContainers(grid);
                 LoadGatlingGuns(grid);
                 LoadAssaultCannonTurrets(grid);
                 LoadRailguns(grid);
 
                 FlightController = new STUFlightController(grid, RemoteControl, me);
+
+                DockingModule = new CBTDockingModule();
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }
@@ -247,12 +253,13 @@ namespace IngameScript
                 foreach (var screen in AutopilotStatusChannel)
                 {
                     screen.StartFrame();
-                    if (GetAutopilotState() != 0) { 
-                        screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, screen.Center); 
-                    }
-                    else { 
-                        screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, screen.Center); 
-                    }
+                    //if (GetAutopilotState() != 0) { 
+                    //    screen.DrawAutopilotEnabledSprite(screen.CurrentFrame, screen.Center); 
+                    //}
+                    //else { 
+                    //    screen.DrawAutopilotDisabledSprite(screen.CurrentFrame, screen.Center); 
+                    //}
+                    screen.DrawAutopilotStatus(screen.CurrentFrame, screen.Center);
                     screen.EndAndPaintFrame();
                 }
             }
@@ -813,6 +820,21 @@ namespace IngameScript
                 AddToLogQueue("Railguns ... loaded", STULogType.INFO);
             }
             #endregion Weaponry
+
+            #region Other
+
+            private static void LoadMergeBlock(IMyGridTerminalSystem grid)
+            {
+                var mergeBlock = grid.GetBlockWithName("CBT Merge Block");
+                if (mergeBlock == null)
+                {
+                    AddToLogQueue("Could not locate \"CBT Merge Block\"; ensure merge block is named appropriately", STULogType.ERROR);
+                    return;
+                }
+                MergeBlock = mergeBlock as IMyShipMergeBlock;
+                AddToLogQueue("Merge block ... loaded", STULogType.INFO);
+            }
+            #endregion Other
             #endregion Hardware Initialization
 
             // inventory management methods
