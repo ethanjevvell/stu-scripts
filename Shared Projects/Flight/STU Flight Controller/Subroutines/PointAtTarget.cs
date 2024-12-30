@@ -1,4 +1,5 @@
-﻿using VRageMath;
+﻿using Sandbox.ModAPI.Ingame;
+using VRageMath;
 
 namespace IngameScript
 {
@@ -12,11 +13,13 @@ namespace IngameScript
 
                 private STUFlightController FC;
                 Vector3D PointToLookAt;
+                IMyTerminalBlock ReferenceBlock;
 
-                public PointAtTarget(STUFlightController thisFlightController, Vector3D pointToLookAt)
+                public PointAtTarget(STUFlightController thisFlightController, Vector3D pointToLookAt, IMyTerminalBlock reference = null)
                 {
                     FC = thisFlightController;
                     PointToLookAt = pointToLookAt;
+                    ReferenceBlock = reference;
                 }
 
                 public override bool Init()
@@ -27,7 +30,7 @@ namespace IngameScript
 
                 public override bool Run()
                 {
-                    return FC.AlignShipToTarget(PointToLookAt);
+                    return FC.AlignShipToTarget(PointToLookAt, ReferenceBlock);
                 }
 
                 public override bool Closeout()

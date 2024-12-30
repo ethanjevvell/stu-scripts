@@ -37,7 +37,6 @@ namespace IngameScript
             public static IMyShipConnector MainDockConnector { get; set; }
 
             public static CRDockingModule DockingModule { get; set;}
-            public bool CanDockWithCBT = false;
 
             public CR(Action<string> echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
@@ -47,6 +46,8 @@ namespace IngameScript
                 CRGrid = grid;
                 Echo = echo;
 
+                AddLogSubscribers(grid);
+
                 LoadGangwayHinge(grid);
                 LoadMainDockHinge1(grid);
                 LoadMainDockHinge2(grid);
@@ -54,9 +55,7 @@ namespace IngameScript
                 LoadMainDockConnector(grid);
                 LoadMergeBlock(grid);
 
-                AddLogSubscribers(grid);
-
-                DockingModule = new CRDockingModule();
+                DockingModule = new CRDockingModule(GangwayHinge, MainDockHinge1, MainDockHinge2, MainDockPiston, MergeBlock, MainDockConnector);
 
                 AddToLogQueue("CR Initialized", STULogType.INFO);
                 echo("CR Initialized");

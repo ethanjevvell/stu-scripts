@@ -229,6 +229,16 @@ namespace IngameScript
                     Color = dampenersBGColor,
                     RotationOrScale = 0f
                 }; // Dampeners BG
+                MySprite CBTStateMachineStatus = new MySprite()
+                {
+                    Type = SpriteType.TEXT,
+                    Alignment = TextAlignment.CENTER,
+                    Data = CBT.CurrentPhase.ToString(),
+                    Position = new Vector2(0f, 51f) * scale + centerPos,
+                    Color = new Color(255, 255, 255, 255),
+                    FontId = "Debug",
+                    RotationOrScale = scale
+                };
 
                 frame.Add(background_sprite);
                 frame.Add(title);
@@ -238,6 +248,7 @@ namespace IngameScript
                 frame.Add(gyro);
                 frame.Add(dampenersBG);
                 frame.Add(dampeners);
+                frame.Add(CBTStateMachineStatus);
             }
         }
     }

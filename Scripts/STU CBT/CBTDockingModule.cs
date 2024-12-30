@@ -22,14 +22,15 @@ namespace IngameScript
             }
             public DockingModuleStates CurrentDockingModuleState { get; set; }
             public bool SendDockRequestFlag { get; set; }
+            public bool CRReadyFlag { get; set; }
             public bool PilotConfirmation { get; set; }
-            public Vector3D? DockingPosition { get; set; }
+            public Vector3D DockingPosition { get; set; }
+            public MatrixD CRWorldMatrix { get; set; }
 
             // constructor
             public CBTDockingModule()
             {
                 SendDockRequestFlag = false;
-                DockingPosition = null;
                 PilotConfirmation = false;
             }
 
@@ -39,7 +40,6 @@ namespace IngameScript
                 switch (CurrentDockingModuleState)
                 {
                     case DockingModuleStates.Idle:
-                        DockingPosition = null;
                         if (SendDockRequestFlag)
                         {
                             CBT.AddToLogQueue($"Requesting to dock with the Hyperdrive Ring...", STULogType.INFO);
@@ -49,7 +49,7 @@ namespace IngameScript
                         }
                         break;
                     case DockingModuleStates.WaitingForCRReady:
-                        if (DockingPosition != null)
+                        if (CRReadyFlag)
                         {
                             CBT.AddToLogQueue($"Received docking position from the Hyperdrive Ring.", STULogType.INFO);
                             CBT.AddToLogQueue($"Enter \"DOCK\" to proceed.", STULogType.WARNING);

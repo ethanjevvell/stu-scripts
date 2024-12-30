@@ -180,8 +180,6 @@ namespace IngameScript
                 STULog incomingLog = STULog.Deserialize(message);
                 // string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
                 
-                CBT.AddToLogQueue($"Received message: {incomingLog.Message}", STULogType.INFO);
-
                 if (WirelessMessageParser.TryParse(incomingLog.Message.ToUpper()))
                 {
                     foreach (var arg in WirelessMessageParser.Items)
@@ -198,17 +196,32 @@ namespace IngameScript
                             break;
                         case "POSITION":
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
-                            double x = double.Parse(WirelessMessageParser.Argument(1));
-                            double y = double.Parse(WirelessMessageParser.Argument(2));
-                            double z = double.Parse(WirelessMessageParser.Argument(3));
-                            Vector3D position = new Vector3D(x, y, z);
-                            ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, position, 10));
+                            try
+                            {
+                                double x = double.Parse(WirelessMessageParser.Argument(1));
+                                double y = double.Parse(WirelessMessageParser.Argument(2));
+                                double z = double.Parse(WirelessMessageParser.Argument(3));
+                                double a = double.Parse(WirelessMessageParser.Argument(4));
+                                double b = double.Parse(WirelessMessageParser.Argument(5));
+                                double c = double.Parse(WirelessMessageParser.Argument(6));
+                                double d = double.Parse(WirelessMessageParser.Argument(7));
+                                double e = double.Parse(WirelessMessageParser.Argument(8));
+                                double f = double.Parse(WirelessMessageParser.Argument(9));
+                                double g = double.Parse(WirelessMessageParser.Argument(10));
+                                double h = double.Parse(WirelessMessageParser.Argument(11));
+                                double i = double.Parse(WirelessMessageParser.Argument(12));
+                                CBT.DockingModule.DockingPosition = new Vector3D(x, y, z);
+                                CBT.DockingModule.CRWorldMatrix = new MatrixD(a, b, c, 0, d, e, f, 0, g, h, i, 0, 0, 0, 0, 1);
+                            }
+                            catch (Exception e)
+                            {
+                                CBT.AddToLogQueue($"Failed to parse position message: {e.Message}", STULogType.ERROR);
+                                Echo($"Failed to parse position message: {e.Message}");
+                            }
+                            CBT.AddToLogQueue($"{CBT.DockingModule.CRWorldMatrix}", STULogType.INFO);
                             break;
                         default:
-                            foreach (var arg in WirelessMessageParser.Items)
-                            {
-                                CBT.AddToLogQueue($"Argument: {arg}", STULogType.INFO);
-                            }
+                            CBT.AddToLogQueue($"Received message: {incomingLog.Message}", STULogType.INFO);
                             break;
                     }
                 }
@@ -255,7 +268,9 @@ namespace IngameScript
                     return true;
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10, CBT.MergeBlock));
+                    // ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10, CBT.MergeBlock));
+                    
+                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition));
                     ManeuverQueue.Enqueue(new CBT.HoverManeuver());
                     return true;
                 case "GANGWAY":
