@@ -26,17 +26,17 @@ namespace IngameScript {
                 /// </summary>
                 /// <param name="target"></param>
                 /// <param name="currentPosition"></param>
-                /// <param name="reference"></param>
+                /// <param name="referenceBlock"></param>
                 /// <returns></returns>
-                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, IMyTerminalBlock reference = null) {
+                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, IMyTerminalBlock referenceBlock = null) {
 
                     // If we don't pass in a reference block, use the remote control
-                    if (reference == null) {
-                        reference = RemoteControl;
+                    if (referenceBlock == null) {
+                        referenceBlock = RemoteControl;
                     }
 
                     Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
-                    Vector3D forwardVector = Vector3D.Normalize(reference.WorldMatrix.Forward);
+                    Vector3D forwardVector = Vector3D.Normalize(referenceBlock.WorldMatrix.Forward);
 
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
@@ -67,6 +67,49 @@ namespace IngameScript {
 
                     return false;
                 }
+
+                /// <summary>
+                /// Aligns the ship's forward vector to the target vector
+                /// </summary>
+                /// <param name="target"></param>
+                /// <param name="currentPosition"></param>
+                /// <param name="referenceBlock"></param>
+                /// <returns></returns>
+                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, Vector3D referenceVector) {
+
+                    Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
+                    Vector3D forwardVector = Vector3D.Normalize(referenceVector);
+
+                    double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
+                    double rotationAngle = Math.Acos(dotProduct);
+
+                    if (Math.Abs(rotationAngle) < ANGLE_ERROR_TOLERANCE) {
+                        foreach (var gyro in Gyros) {
+                            gyro.Pitch = 0;
+                            gyro.Yaw = 0;
+                            gyro.Roll = 0;
+                        }
+                        return true;
+                    }
+
+                    Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
+                    rotationAxis.Normalize();
+
+                    double proportionalError = rotationAngle * -1.8;
+
+                    Vector3D angularVelocity = rotationAxis * proportionalError;
+
+                    // Map the local angular velocity to gyro controls
+                    foreach (var gyro in Gyros) {
+                        Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
+                        gyro.Pitch = (float)localAngularVelocity.X;
+                        gyro.Yaw = (float)localAngularVelocity.Y;
+                        gyro.Roll = (float)localAngularVelocity.Z;
+                    }
+
+                    return false;
+                }
+
 
 
                 public bool AlignCounterVelocity(Vector3D currentVelocity, Vector3D localCounterVelocity) {
