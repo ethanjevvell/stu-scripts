@@ -73,7 +73,7 @@ namespace IngameScript {
                 /// </summary>
                 /// <param name="target"></param>
                 /// <param name="currentPosition"></param>
-                /// <param name="referenceBlock"></param>
+                /// <param name="referenceVector"></param>
                 /// <returns></returns>
                 public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, Vector3D referenceVector) {
 

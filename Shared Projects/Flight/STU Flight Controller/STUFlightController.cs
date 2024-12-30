@@ -252,9 +252,15 @@ namespace IngameScript {
             /// </summary>
             /// <param name="targetPos"></param>
             /// <returns></returns>
-            public bool AlignShipToTarget(Vector3D targetPos, IMyTerminalBlock reference = null) {
+            public bool AlignShipToTarget(Vector3D targetPos, IMyTerminalBlock referenceBlock = null) {
                 ReinstateGyroControl();
-                return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, reference);
+                return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, referenceBlock);
+            }
+
+            public bool AlignShipToTarget(Vector3D targetPos, Vector3D referenceBlockFace)
+            {
+                ReinstateGyroControl();
+                return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, referenceBlockFace);
             }
 
             /// <summary>

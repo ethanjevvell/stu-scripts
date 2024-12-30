@@ -198,41 +198,22 @@ namespace IngameScript
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
                             try
                             {
-                                double x = double.Parse(WirelessMessageParser.Argument(1));
-                                double y = double.Parse(WirelessMessageParser.Argument(2));
-                                double z = double.Parse(WirelessMessageParser.Argument(3));
-                                double a = double.Parse(WirelessMessageParser.Argument(4));
-                                double b = double.Parse(WirelessMessageParser.Argument(5));
-                                double c = double.Parse(WirelessMessageParser.Argument(6));
-                                double d = double.Parse(WirelessMessageParser.Argument(7));
-                                double e = double.Parse(WirelessMessageParser.Argument(8));
-                                double f = double.Parse(WirelessMessageParser.Argument(9));
-                                double g = double.Parse(WirelessMessageParser.Argument(10));
-                                double h = double.Parse(WirelessMessageParser.Argument(11));
-                                double i = double.Parse(WirelessMessageParser.Argument(12));
+                                double x = double.Parse(WirelessMessageParser.Argument(1).Trim());
+                                double y = double.Parse(WirelessMessageParser.Argument(2).Trim());
+                                double z = double.Parse(WirelessMessageParser.Argument(3).Trim());
                                 CBT.DockingModule.DockingPosition = new Vector3D(x, y, z);
-                                CBT.DockingModule.CRWorldMatrix = new MatrixD(a, b, c, 0, d, e, f, 0, g, h, i, 0, 0, 0, 0, 1);
                             }
                             catch (Exception e)
                             {
                                 CBT.AddToLogQueue($"Failed to parse position message: {e.Message}", STULogType.ERROR);
                                 Echo($"Failed to parse position message: {e.Message}");
                             }
-                            CBT.AddToLogQueue($"{CBT.DockingModule.CRWorldMatrix}", STULogType.INFO);
                             break;
                         default:
                             CBT.AddToLogQueue($"Received message: {incomingLog.Message}", STULogType.INFO);
                             break;
                     }
                 }
-                
-                //if (incomingLog.Message == "PING")
-                //{
-                //    CBT.AddToLogQueue("PONG", STULogType.OK);
-                //    CBT.CreateBroadcast("PONG", false, STULogType.OK);
-                //} 
-                // I think this is already handled above //
-
             }
         }
 
@@ -269,8 +250,10 @@ namespace IngameScript
                 case "TEST": // should only be used for testing purposes. hard-code stuff in the test maneuver.
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
                     // ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10, CBT.MergeBlock));
-                    
-                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition));
+
+                    CBT.AddToLogQueue($"{CBT.DockingModule.DockingPosition}", STULogType.INFO);
+                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition, null, CBT.MergeBlock.WorldMatrix.Forward));
+
                     ManeuverQueue.Enqueue(new CBT.HoverManeuver());
                     return true;
                 case "GANGWAY":
