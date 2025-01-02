@@ -10,8 +10,9 @@ namespace IngameScript {
                 IMyRemoteControl RemoteControl { get; set; }
                 IMyGyro[] Gyros { get; set; }
 
-                private const double ANGLE_ERROR_TOLERANCE = 1e-2;
-                private const double DOT_PRODUCT_TOLERANCE = 1e-6;
+                const double ANGLE_ERROR_TOLERANCE = 1e-2;
+                const double DOT_PRODUCT_TOLERANCE = 1e-6;
+                const double ANGULAR_VELOCITY_GAIN = 1.8;
 
                 public STUOrientationController(IMyRemoteControl remoteControl, IMyGyro[] gyros) {
                     Gyros = gyros;
@@ -45,28 +46,18 @@ namespace IngameScript {
                     double rotationAngle = Math.Acos(dotProduct);
 
                     if (Math.Abs(rotationAngle) < ANGLE_ERROR_TOLERANCE) {
-                        foreach (var gyro in Gyros) {
-                            gyro.Pitch = 0;
-                            gyro.Yaw = 0;
-                            gyro.Roll = 0;
-                        }
+                        HardStopGyros();
                         return true;
                     }
 
                     Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
                     rotationAxis.Normalize();
 
-                    double proportionalError = rotationAngle * -1.8;
+                    double proportionalError = rotationAngle * -ANGULAR_VELOCITY_GAIN;
 
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
-                    // Map the local angular velocity to gyro controls
-                    foreach (var gyro in Gyros) {
-                        Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
-                        gyro.Pitch = (float)localAngularVelocity.X;
-                        gyro.Yaw = (float)localAngularVelocity.Y;
-                        gyro.Roll = (float)localAngularVelocity.Z;
-                    }
+                    ApplyGyroTransformedAngularVelocity(angularVelocity);
 
                     return false;
                 }
@@ -87,18 +78,14 @@ namespace IngameScript {
                     double rotationAngle = Math.Acos(dotProduct);
 
                     if (Math.Abs(rotationAngle) < ANGLE_ERROR_TOLERANCE) {
-                        foreach (var gyro in Gyros) {
-                            gyro.Pitch = 0;
-                            gyro.Yaw = 0;
-                            gyro.Roll = 0;
-                        }
+                        HardStopGyros();
                         return true;
                     }
 
                     Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
                     rotationAxis.Normalize();
 
-                    double proportionalError = rotationAngle * -1.8;
+                    double proportionalError = rotationAngle * -ANGULAR_VELOCITY_GAIN;
 
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
@@ -109,11 +96,10 @@ namespace IngameScript {
                         gyro.Yaw = (float)localAngularVelocity.Y;
                         // gyro.Roll = (float)localAngularVelocity.Z;
                     }
+                    ApplyGyroTransformedAngularVelocity(angularVelocity);
 
                     return false;
                 }
-
-
 
                 public bool AlignCounterVelocity(Vector3D currentVelocity, Vector3D localCounterVelocity) {
 
@@ -132,11 +118,7 @@ namespace IngameScript {
 
                     // Check if alignment is within acceptable tolerance
                     if (Math.Abs(Math.PI - rotationAngle) < ANGLE_ERROR_TOLERANCE) {
-                        foreach (var gyro in Gyros) {
-                            gyro.Yaw = 0;
-                            gyro.Pitch = 0;
-                            gyro.Roll = 0;
-                        }
+                        HardStopGyros();
                         return true;
                     }
 
@@ -147,17 +129,26 @@ namespace IngameScript {
                     double error = Math.PI - rotationAngle;
                     Vector3D angularVelocity = rotationAxis * rotationAngle * error;
 
-                    // Transform angular velocity to local coordinates
-                    Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(RemoteControl, angularVelocity);
+                    ApplyGyroTransformedAngularVelocity(angularVelocity);
 
-                    // Correctly map the local angular velocity to gyro controls
+                    return false;
+                }
+
+                public void ApplyGyroTransformedAngularVelocity(Vector3D angularVelocity) {
                     foreach (var gyro in Gyros) {
+                        Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
                         gyro.Pitch = (float)localAngularVelocity.X;
                         gyro.Yaw = (float)localAngularVelocity.Y;
                         gyro.Roll = (float)localAngularVelocity.Z;
                     }
+                }
 
-                    return false;
+                public void HardStopGyros() {
+                    foreach (var gyro in Gyros) {
+                        gyro.Pitch = 0;
+                        gyro.Yaw = 0;
+                        gyro.Roll = 0;
+                    }
                 }
 
                 public void SetVr(double rollSpeed) {
