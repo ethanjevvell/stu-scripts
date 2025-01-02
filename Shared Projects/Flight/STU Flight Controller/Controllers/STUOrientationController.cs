@@ -32,8 +32,11 @@ namespace IngameScript {
 
                     // If we don't pass in a reference block, use the remote control
                     if (referenceBlock == null) {
+                        CBT.AddToLogQueue("No reference block provided, using remote control");
                         referenceBlock = RemoteControl;
                     }
+
+                    CBT.AddToLogQueue($"Reference block: {referenceBlock.CustomName}");
 
                     Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
                     Vector3D forwardVector = Vector3D.Normalize(referenceBlock.WorldMatrix.Forward);
@@ -104,7 +107,7 @@ namespace IngameScript {
                         Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
                         gyro.Pitch = (float)localAngularVelocity.X;
                         gyro.Yaw = (float)localAngularVelocity.Y;
-                        gyro.Roll = (float)localAngularVelocity.Z;
+                        // gyro.Roll = (float)localAngularVelocity.Z;
                     }
 
                     return false;

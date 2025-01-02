@@ -251,8 +251,8 @@ namespace IngameScript
                     CBT.AddToLogQueue("Performing test", STULogType.INFO);
                     // ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, STUGalacticMap.Waypoints.GetValueOrDefault("CBT"), 10, CBT.MergeBlock));
 
-                    CBT.AddToLogQueue($"{CBT.DockingModule.DockingPosition}", STULogType.INFO);
-                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition, null, CBT.MergeBlock.WorldMatrix.Forward));
+                    // CBT.AddToLogQueue($"{CBT.DockingModule.DockingPosition}", STULogType.INFO);
+                    ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition, CBT.MergeBlock));
 
                     ManeuverQueue.Enqueue(new CBT.HoverManeuver());
                     return true;
