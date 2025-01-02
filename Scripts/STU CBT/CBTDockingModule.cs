@@ -52,7 +52,8 @@ namespace IngameScript
                         if (CRReadyFlag)
                         {
                             CBT.AddToLogQueue($"Received docking position from the Hyperdrive Ring.", STULogType.INFO);
-                            CBT.AddToLogQueue($"Enter \"DOCK\" to proceed.", STULogType.WARNING);
+                            CBT.AddToLogQueue($"{DockingPosition}", STULogType.INFO);
+                            CBT.AddToLogQueue($"Enter \"CONTINUE\" to proceed or \"CANCEL\" to abort.", STULogType.WARNING);
                             CurrentDockingModuleState = DockingModuleStates.ConfirmWithPilot;
                         }
                         break;

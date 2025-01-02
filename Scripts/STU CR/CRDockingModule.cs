@@ -85,15 +85,7 @@ namespace IngameScript
                                 $"{TransmitPosition.X} " +
                                 $"{TransmitPosition.Y} " +
                                 $"{TransmitPosition.Z} " +
-                                $"{ThisGridWorldMatrix.Up.X} " +
-                                $"{ThisGridWorldMatrix.Up.Y} " +
-                                $"{ThisGridWorldMatrix.Up.Z} " +
-                                $"{ThisGridWorldMatrix.Left.X} " +
-                                $"{ThisGridWorldMatrix.Left.Y} " +
-                                $"{ThisGridWorldMatrix.Left.Z} " +
-                                $"{ThisGridWorldMatrix.Forward.X} " +
-                                $"{ThisGridWorldMatrix.Forward.Y} " +
-                                $"{ThisGridWorldMatrix.Forward.Z}");
+                                $"EOT");
                             CurrentDockingModuleState = DockingModuleStates.Ready;
                         }
                         break;
