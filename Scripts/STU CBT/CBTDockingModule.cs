@@ -51,7 +51,7 @@ namespace IngameScript
                     case DockingModuleStates.WaitingForCRReady:
                         if (CRReadyFlag)
                         {
-                            CBT.AddToLogQueue($"Received docking position from the Hyperdrive Ring.", STULogType.INFO);
+                            CBT.AddToLogQueue($"Received docking data from the Hyperdrive Ring.", STULogType.INFO);
                             CBT.AddToLogQueue($"{DockingPosition}", STULogType.INFO);
                             CBT.AddToLogQueue($"Enter \"CONTINUE\" to proceed or \"CANCEL\" to abort.", STULogType.WARNING);
                             CurrentDockingModuleState = DockingModuleStates.ConfirmWithPilot;
@@ -66,6 +66,17 @@ namespace IngameScript
                         }
                         break;
                     case DockingModuleStates.Docking:
+                        // go to point in space behind the CR
+                        // align ship to CR
+                        // move forward
+                        // hover
+                        // relinquish control to pilot
+                        if (CBT.MergeBlock.IsConnected)
+                        {
+                            CBT.AddToLogQueue($"Docking sequence complete.", STULogType.OK);
+                            CBT.CreateBroadcast("DOCKED", false, STULogType.OK);
+                            CurrentDockingModuleState = DockingModuleStates.Idle;
+                        }
                         break;
                 }
             }

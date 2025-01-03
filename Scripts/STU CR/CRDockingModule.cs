@@ -80,12 +80,12 @@ namespace IngameScript
                         if (Math.Abs(MainDockHinge1.Angle) < 0.1 && Math.Abs(MainDockHinge2.Angle) - Math.PI/2 < 0.1 && MainDockPiston.CurrentPosition < 0.1 && Math.Abs(GangwayHinge.Angle) < 0.1)
                         {
                             CR.AddToLogQueue("Auxiliary hardware reset complete. Ready for docking...", STULogType.INFO);
-                            CR.CreateBroadcast("READY", false, STULogType.INFO);
                             CR.CreateBroadcast($"POSITION " +
                                 $"{TransmitPosition.X} " +
                                 $"{TransmitPosition.Y} " +
                                 $"{TransmitPosition.Z} " +
                                 $"EOT");
+                            CR.CreateBroadcast("READY", false, STULogType.INFO);
                             CurrentDockingModuleState = DockingModuleStates.Ready;
                         }
                         break;

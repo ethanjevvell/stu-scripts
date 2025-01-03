@@ -138,7 +138,7 @@ namespace IngameScript
             catch (Exception e)
             {
                 Echo($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}");
-                CBT.AddToLogQueue($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}", STULogType.ERROR);
+                CBT.AddToLogQueue($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}", STULogType.WARNING);
                 CBT.AddToLogQueue("");
                 CBT.AddToLogQueue("");
                 CBT.AddToLogQueue("HALTING PROGRAM EXECUTION!", STULogType.ERROR);
@@ -193,6 +193,7 @@ namespace IngameScript
                             break;
                         case "READY":
                             CBT.AddToLogQueue("Received READY message from Hyperdrive Ring.", STULogType.INFO);
+                            CBT.DockingModule.CRReadyFlag = true;
                             break;
                         case "POSITION":
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
@@ -202,6 +203,8 @@ namespace IngameScript
                                 double y = double.Parse(WirelessMessageParser.Argument(2).Trim());
                                 double z = double.Parse(WirelessMessageParser.Argument(3).Trim());
                                 CBT.DockingModule.DockingPosition = new Vector3D(x, y, z);
+                                CBT.AddToLogQueue($"CBT Merge Block forward world vector: {CBT.MergeBlock.WorldMatrix.Forward}", STULogType.OK);
+                                CBT.AddToLogQueue($"CBT Remote Control forward world vector: {CBT.RemoteControl.WorldMatrix.Forward}", STULogType.OK);
                             }
                             catch (Exception e)
                             {
