@@ -37,7 +37,10 @@ namespace IngameScript {
                         referenceBlock = RemoteControl;
                     }
 
-                    Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
+                    // Adjust the target vector to account for the spatial offset of the reference block. 
+                    Vector3D targetVector = Vector3D.Normalize(target - referenceBlock.GetPosition());
+
+                    // Default to the forward vector of the reference block. Fix later?
                     Vector3D forwardVector = Vector3D.Normalize(referenceBlock.WorldMatrix.Forward);
 
                     CBT.AddToLogQueue($"forwardVector: {forwardVector}");

@@ -29,7 +29,8 @@ namespace IngameScript
             public static IMyMotorStator MainDockHinge2 { get; set; }
             public static IMyPistonBase MainDockPiston { get; set; }
             public static IMyShipConnector MainDockConnector { get; set; }
-            private static Vector3D TransmitPosition { get; set; }
+            private static Vector3D CBTLineUpPosition { get; set; }
+            private static Vector3D CBTFinalDockingPosition { get; set; }
             private static MatrixD ThisGridWorldMatrix { get; set; }
             
             public bool DockRequestReceivedFlag = false;
@@ -51,7 +52,8 @@ namespace IngameScript
             public void UpdateDockingModule()
             {
                 ThisGridWorldMatrix = CR.Me.CubeGrid.WorldMatrix;
-                TransmitPosition = CR.MergeBlock.GetPosition() + (CR.Me.CubeGrid.WorldMatrix.Up * 3.5);
+                CBTLineUpPosition = CR.MergeBlock.GetPosition() + (CR.Me.CubeGrid.WorldMatrix.Right * 120);
+                CBTFinalDockingPosition = CR.MergeBlock.GetPosition() + (CR.Me.CubeGrid.WorldMatrix.Up * 7);
                 
                 switch (CurrentDockingModuleState)
                 {
@@ -81,9 +83,12 @@ namespace IngameScript
                         {
                             CR.AddToLogQueue("Auxiliary hardware reset complete. Ready for docking...", STULogType.INFO);
                             CR.CreateBroadcast($"POSITION " +
-                                $"{TransmitPosition.X} " +
-                                $"{TransmitPosition.Y} " +
-                                $"{TransmitPosition.Z} " +
+                                $"{CBTLineUpPosition.X} " +
+                                $"{CBTLineUpPosition.Y} " +
+                                $"{CBTLineUpPosition.Z} " +
+                                $"{CBTFinalDockingPosition.X} " +
+                                $"{CBTFinalDockingPosition.Y} " +
+                                $"{CBTFinalDockingPosition.Z} " +
                                 $"EOT");
                             CR.CreateBroadcast("READY", false, STULogType.INFO);
                             CurrentDockingModuleState = DockingModuleStates.Ready;

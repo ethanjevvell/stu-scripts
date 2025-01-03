@@ -133,6 +133,26 @@ namespace IngameScript
                 CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
                 CBT.UpdateAmmoScreens();
                 CBT.DockingModule.UpdateDockingModule();
+                if (CBT.DockingModule.CurrentDockingModuleState == CBTDockingModule.DockingModuleStates.QueueManeuvers)
+                {
+                    try
+                    {
+                        // go to point in space behind the CR
+                        ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, CBT.DockingModule.LineUpPosition, 5, CBT.MergeBlock));
+                        // align ship to point at CR docking position
+                        ManeuverQueue.Enqueue(new STUFlightController.PointAtTarget(CBT.FlightController, CBT.DockingModule.DockingPosition, CBT.MergeBlock));
+                        // move into position
+                        ManeuverQueue.Enqueue(new STUFlightController.GotoAndStop(CBT.FlightController, CBT.DockingModule.DockingPosition, 5, CBT.MergeBlock));
+                        // hover
+                        ManeuverQueue.Enqueue(new CBT.HoverManeuver());
+                        // ensure that this block is only hit once
+                        CBT.DockingModule.CurrentDockingModuleState = CBTDockingModule.DockingModuleStates.Docking;
+                    }
+                    catch (Exception e)
+                    {
+                        CBT.AddToLogQueue($"Docking sequence failed: {e.Message}", STULogType.ERROR);
+                    }
+                }
             }
 
             catch (Exception e)
@@ -199,12 +219,14 @@ namespace IngameScript
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
                             try
                             {
-                                double x = double.Parse(WirelessMessageParser.Argument(1).Trim());
-                                double y = double.Parse(WirelessMessageParser.Argument(2).Trim());
-                                double z = double.Parse(WirelessMessageParser.Argument(3).Trim());
+                                double a = double.Parse(WirelessMessageParser.Argument(1).Trim());
+                                double b = double.Parse(WirelessMessageParser.Argument(2).Trim());
+                                double c = double.Parse(WirelessMessageParser.Argument(3).Trim());
+                                double x = double.Parse(WirelessMessageParser.Argument(4).Trim());
+                                double y = double.Parse(WirelessMessageParser.Argument(5).Trim());
+                                double z = double.Parse(WirelessMessageParser.Argument(6).Trim());
+                                CBT.DockingModule.LineUpPosition = new Vector3D(a, b, c);
                                 CBT.DockingModule.DockingPosition = new Vector3D(x, y, z);
-                                CBT.AddToLogQueue($"CBT Merge Block forward world vector: {CBT.MergeBlock.WorldMatrix.Forward}", STULogType.OK);
-                                CBT.AddToLogQueue($"CBT Remote Control forward world vector: {CBT.RemoteControl.WorldMatrix.Forward}", STULogType.OK);
                             }
                             catch (Exception e)
                             {
@@ -286,6 +308,20 @@ namespace IngameScript
                 case "DOCK":
                     CBT.AddToLogQueue("Sending dock request to Hyperdrive Ring...", STULogType.INFO);
                     CBT.DockingModule.SendDockRequestFlag = true;
+                    return true;
+                case "CONTINUE":
+                    CBT.DockingModule.PilotConfirmation = true;
+                    return true;
+                case "CANCEL":
+                    if (CBT.DockingModule.CurrentDockingModuleState == CBTDockingModule.DockingModuleStates.ConfirmWithPilot)
+                    {
+                        CBT.AddToLogQueue("Docking sequence cancelled. Returning docking module state to idle...", STULogType.WARNING);
+                        CBT.DockingModule.CurrentDockingModuleState = CBTDockingModule.DockingModuleStates.Idle;
+                    }
+                    else 
+                    {
+                        CBT.AddToLogQueue("Didn't find anything to cancel. Skipping...", STULogType.WARNING);
+                    }
                     return true;
                 case "PARK":
                     CBT.AddToLogQueue("Park maneuver not implemented yet.", STULogType.ERROR);

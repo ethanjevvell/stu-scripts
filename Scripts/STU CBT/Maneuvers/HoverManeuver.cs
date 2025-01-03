@@ -39,6 +39,7 @@ namespace IngameScript
                 {
                     // relinquish control of the thrusters and gyros, keep dampeners on 
                     SetAutopilotControl(false, false, true);
+                    CBT.ResetUserInputVelocities();
                     return true;
                 }
             }
