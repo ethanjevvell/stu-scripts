@@ -37,6 +37,7 @@ namespace IngameScript
             public static IMyShipConnector MainDockConnector { get; set; }
 
             public static CRDockingModule DockingModule { get; set;}
+            public static AirlockControlModule ACM { get; set; }
 
             public CR(Action<string> echo, STUMasterLogBroadcaster broadcaster, IMyGridTerminalSystem grid, IMyProgrammableBlock me, IMyGridProgramRuntimeInfo runtime)
             {
@@ -56,6 +57,8 @@ namespace IngameScript
                 LoadMergeBlock(grid);
 
                 DockingModule = new CRDockingModule(GangwayHinge, MainDockHinge1, MainDockHinge2, MainDockPiston, MergeBlock, MainDockConnector);
+                ACM = new AirlockControlModule();
+                ACM.LoadAirlocks(grid, me);
 
                 AddToLogQueue("CR Initialized", STULogType.INFO);
                 echo("CR Initialized");

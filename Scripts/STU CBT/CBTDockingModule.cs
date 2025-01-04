@@ -26,6 +26,7 @@ namespace IngameScript
             public bool CRReadyFlag { get; set; }
             public bool PilotConfirmation { get; set; }
             public Vector3D LineUpPosition { get; set; }
+            public Vector3D RollReference { get; set; }
             public Vector3D DockingPosition { get; set; }
             public MatrixD CRWorldMatrix { get; set; }
 
@@ -75,6 +76,10 @@ namespace IngameScript
                     case DockingModuleStates.Docking:
                         if (CBT.MergeBlock.IsConnected)
                         {
+                            foreach (var g in CBT.GravityGenerators)
+                            {
+                                g.Enabled = false;
+                            }
                             CBT.AddToLogQueue($"Docking sequence complete.", STULogType.OK);
                             CBT.CreateBroadcast("DOCKED", false, STULogType.OK);
                             CurrentDockingModuleState = DockingModuleStates.Idle;

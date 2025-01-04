@@ -22,21 +22,19 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        
-
+        AirlockControlModule ACM = new AirlockControlModule();
         public Program()
         {
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
             
+            
+            ACM.LoadAirlocks(GridTerminalSystem, Me);
         }
 
-        public void Save()
-        {
-            
-        }
 
         public void Main(string argument, UpdateType updateSource)
         {
-            
+            ACM.UpdateAirlocks();
         }
     }
 }

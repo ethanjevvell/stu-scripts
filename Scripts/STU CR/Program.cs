@@ -47,6 +47,7 @@ namespace IngameScript {
             } 
             finally {
                 CR.UpdateLogScreens();
+                CR.ACM.UpdateAirlocks();
             }
 
         }

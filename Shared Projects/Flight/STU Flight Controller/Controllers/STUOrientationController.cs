@@ -22,47 +22,33 @@ namespace IngameScript {
                     });
                 }
 
-                /// <summary>
-                /// Aligns the ship's forward vector to the target vector
-                /// </summary>
-                /// <param name="target"></param>
-                /// <param name="currentPosition"></param>
-                /// <param name="referenceBlock"></param>
-                /// <returns></returns>
-                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, IMyTerminalBlock referenceBlock = null) {
-
-                    // If we don't pass in a reference block, use the remote control
-                    if (referenceBlock == null) {
-                        CBT.AddToLogQueue("No reference block provided, using remote control");
-                        referenceBlock = RemoteControl;
+                public static Vector3D GetVectorOfReferenceBlock(IMyTerminalBlock referenceBlock, string direction)
+                {
+                    if (direction == null)
+                    {
+                        return referenceBlock.WorldMatrix.Forward;
                     }
-
-                    // Adjust the target vector to account for the spatial offset of the reference block. 
-                    Vector3D targetVector = Vector3D.Normalize(target - referenceBlock.GetPosition());
-
-                    // Default to the forward vector of the reference block. Fix later?
-                    Vector3D forwardVector = Vector3D.Normalize(referenceBlock.WorldMatrix.Forward);
-
-                    CBT.AddToLogQueue($"forwardVector: {forwardVector}");
-
-                    double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
-                    double rotationAngle = Math.Acos(dotProduct);
-
-                    if (Math.Abs(rotationAngle) < ANGLE_ERROR_TOLERANCE) {
-                        HardStopGyros();
-                        return true;
+                    else
+                    {
+                        direction = direction.Trim().ToLower();
                     }
-
-                    Vector3D rotationAxis = Vector3D.Cross(forwardVector, targetVector);
-                    rotationAxis.Normalize();
-
-                    double proportionalError = rotationAngle * -ANGULAR_VELOCITY_GAIN;
-
-                    Vector3D angularVelocity = rotationAxis * proportionalError;
-
-                    ApplyGyroTransformedAngularVelocity(angularVelocity);
-
-                    return false;
+                    switch (direction)
+                    {
+                        case "forward":
+                            return referenceBlock.WorldMatrix.Forward;
+                        case "backward":
+                            return referenceBlock.WorldMatrix.Backward;
+                        case "up":
+                            return referenceBlock.WorldMatrix.Up;
+                        case "down":
+                            return referenceBlock.WorldMatrix.Down;
+                        case "left":
+                            return referenceBlock.WorldMatrix.Left;
+                        case "right":
+                            return referenceBlock.WorldMatrix.Right;
+                        default:
+                            return referenceBlock.WorldMatrix.Forward;
+                    }
                 }
 
                 /// <summary>
@@ -70,12 +56,23 @@ namespace IngameScript {
                 /// </summary>
                 /// <param name="target"></param>
                 /// <param name="currentPosition"></param>
-                /// <param name="referenceVector"></param>
+                /// <param name="referenceBlock"></param>
                 /// <returns></returns>
-                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, Vector3D referenceVector) {
+                public bool AlignShipToTarget(Vector3D target, Vector3D currentPosition, IMyTerminalBlock referenceBlock = null, string desiredReferenceBlockFace = null) {
+                    Vector3D referenceBlockFace = new Vector3D();
+                    // If we don't pass in a reference block, use the remote control
+                    if (referenceBlock == null) {
+                        referenceBlock = RemoteControl;
+                    }
 
-                    Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
-                    Vector3D forwardVector = Vector3D.Normalize(referenceVector);
+                    // If we don't pass in a desired reference block face, use the forward vector
+                    referenceBlockFace = GetVectorOfReferenceBlock(referenceBlock, desiredReferenceBlockFace);
+
+                    // Adjust the target vector to account for the spatial offset of the reference block. 
+                    Vector3D targetVector = Vector3D.Normalize(target - referenceBlock.GetPosition());
+
+                    // Calculate the "forward vector", which really should be called the alignment vector, based on the reference block face
+                    Vector3D forwardVector = Vector3D.Normalize(referenceBlockFace);
 
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);
@@ -92,13 +89,6 @@ namespace IngameScript {
 
                     Vector3D angularVelocity = rotationAxis * proportionalError;
 
-                    // Map the local angular velocity to gyro controls
-                    foreach (var gyro in Gyros) {
-                        Vector3D localAngularVelocity = STUTransformationUtils.WorldDirectionToLocalDirection(gyro, angularVelocity);
-                        gyro.Pitch = (float)localAngularVelocity.X;
-                        gyro.Yaw = (float)localAngularVelocity.Y;
-                        // gyro.Roll = (float)localAngularVelocity.Z;
-                    }
                     ApplyGyroTransformedAngularVelocity(angularVelocity);
 
                     return false;
