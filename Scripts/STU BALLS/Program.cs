@@ -22,9 +22,20 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+        BALLS BALLSLauncher { get; set; }
+        STUMasterLogBroadcaster Broadcaster { get; set; }
+        IMyBroadcastListener Listener { get; set; }
+        STUInventoryEnumerator InventoryEnumerator { get; set; }
+        MyCommandLine CommandLineParser { get; set; } = new MyCommandLine();
+        MyCommandLine WirelessMessageParser { get; set; } = new MyCommandLine();
+        Queue<STUStateMachine> ManeuverQueue { get; set; } = new Queue<STUStateMachine>();
+        STUStateMachine CurrentManeuver { get; set; }
         public Program()
         {
-            
+            Broadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_HQ_NAME, IGC, TransmissionDistance.AntennaRelay);
+            Listener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_HQ_NAME);
+            InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
+            BALLSLauncher = new BALLS(Echo, Broadcaster, InventoryEnumerator, GridTerminalSystem, Me, Runtime);
         }
         
         public void Main(string argument, UpdateType updateSource)
