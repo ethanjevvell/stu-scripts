@@ -63,6 +63,16 @@ namespace IngameScript
                 }
             }
 
+            public string GetAirlockPairs()
+            {
+                string result = "Airlocks:\n\n";
+                foreach (Airlock airlock in Airlocks)
+                {
+                    result += $"{airlock.SideA.CustomName} <-> {airlock.SideB.CustomName}\n";
+                }
+                return result;
+            }
+
             public void UpdateAirlocks()
             {
                 foreach (Airlock airlock in Airlocks)
