@@ -33,14 +33,11 @@ namespace IngameScript {
 
                     // If we don't pass in a reference block, use the remote control
                     if (referenceBlock == null) {
-                        CBT.AddToLogQueue("No reference block provided, using remote control");
                         referenceBlock = RemoteControl;
                     }
 
                     Vector3D targetVector = Vector3D.Normalize(target - currentPosition);
                     Vector3D forwardVector = Vector3D.Normalize(referenceBlock.WorldMatrix.Forward);
-
-                    CBT.AddToLogQueue($"forwardVector: {forwardVector}");
 
                     double dotProduct = MathHelper.Clamp(Vector3D.Dot(forwardVector, targetVector), -1, 1);
                     double rotationAngle = Math.Acos(dotProduct);

@@ -42,6 +42,9 @@ namespace IngameScript {
             public static IMyGasTank[] GasTanks { get; set; }
             public static IMyWarhead[] Warheads { get; set; }
             public static IMyShipConnector[] Connectors { get; set; }
+            public static IMyShipMergeBlock s_mainMergeBlock { get; set; }
+
+            IEnumerator<bool> _hardwareLoadStateMachine;
 
             /// <summary>
             /// Missile's current fuel level in liters
@@ -77,20 +80,62 @@ namespace IngameScript {
                 s_telemetryBroadcaster = telemetryBroadcaster;
                 s_logBroadcaster = logBroadcaster;
                 Runtime = runtime;
+            }
 
-                LoadRemoteController(grid);
-                LoadBatteries(grid);
-                LoadFuelTanks(grid);
-                LoadWarheads(grid);
-                LoadConnectors(grid);
-                LoadDetonationSensor(grid);
+            public bool LoadHardware(IMyGridTerminalSystem grid) {
+
+                if (_hardwareLoadStateMachine == null) {
+                    _hardwareLoadStateMachine = LoadHardwareCoroutine(grid).GetEnumerator();
+                }
+
+                if (!_hardwareLoadStateMachine.MoveNext()) {
+                    _hardwareLoadStateMachine.Dispose();
+                    _hardwareLoadStateMachine = null;
+                    return true;
+                }
+
+                return false;
+
+            }
+
+            IEnumerable<bool> LoadHardwareCoroutine(IMyGridTerminalSystem grid) {
+
+                while (!LoadRemoteController(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadBatteries(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadFuelTanks(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadWarheads(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadConnectors(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadMainMergeBlock(grid)) {
+                    yield return true;
+                }
+
+                while (!LoadDetonationSensor(grid)) {
+                    yield return true;
+                }
 
                 MeasureTotalPowerCapacity();
                 MeasureTotalFuelCapacity();
                 MeasureCurrentFuel();
                 MeasureCurrentPower();
 
-                CreateOkBroadcast("ALL SYSTEMS GO");
+                foreach (var tank in GasTanks) {
+                    tank.Stockpile = true;
+                }
 
                 if (IsStagedLIGMA(grid)) {
                     IS_STAGED_LIGMA = true;
@@ -116,6 +161,14 @@ namespace IngameScript {
                     TerminalStage.ToggleLateralThrusters(false);
                 }
 
+                int i = 0;
+
+                // Wait three seconds to allow construction of all thrusters to finish before script initilaises
+                while (i < 18) {
+                    i += 1;
+                    yield return true;
+                }
+
                 FlightController = new STUFlightController(grid, RemoteControl, Me);
                 AllThrusters = FlightController.ActiveThrusters;
                 LaunchCoordinates = FlightController.CurrentPosition;
@@ -124,23 +177,35 @@ namespace IngameScript {
                 // Keep dampeners on while LIGMA is still on the launch pad; these will be disabled on launch
                 RemoteControl.DampenersOverride = true;
 
+                CreateOkBroadcast("ALL SYSTEMS GO");
             }
 
-            private static void LoadRemoteController(IMyGridTerminalSystem grid) {
+            private static bool LoadMainMergeBlock(IMyGridTerminalSystem grid) {
+                var mergeBlock = grid.GetBlockWithName("Main Merge Block");
+                if (mergeBlock == null) {
+                    return false;
+                }
+                s_mainMergeBlock = mergeBlock as IMyShipMergeBlock;
+                CreateOkBroadcast("Merge block... nominal");
+                return true;
+            }
+
+            private static bool LoadRemoteController(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> remoteControlBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyRemoteControl>(remoteControlBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (remoteControlBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No remote control blocks found on grid");
+                    return false;
                 }
                 RemoteControl = remoteControlBlocks[0] as IMyRemoteControl;
                 CreateOkBroadcast("Remote control... nominal");
+                return true;
             }
 
-            private static void LoadBatteries(IMyGridTerminalSystem grid) {
+            private static bool LoadBatteries(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> batteryBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyBatteryBlock>(batteryBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (batteryBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No batteries found on grid");
+                    return false;
                 }
                 IMyBatteryBlock[] batteries = new IMyBatteryBlock[batteryBlocks.Count];
                 for (int i = 0; i < batteryBlocks.Count; i++) {
@@ -148,13 +213,14 @@ namespace IngameScript {
                 }
                 CreateOkBroadcast("Batteries... nominal");
                 Batteries = batteries;
+                return true;
             }
 
-            private static void LoadFuelTanks(IMyGridTerminalSystem grid) {
+            private static bool LoadFuelTanks(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> gasTankBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyGasTank>(gasTankBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (gasTankBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No fuel tanks found on grid");
+                    return false;
                 }
                 IMyGasTank[] fuelTanks = new IMyGasTank[gasTankBlocks.Count];
                 for (int i = 0; i < gasTankBlocks.Count; i++) {
@@ -162,13 +228,14 @@ namespace IngameScript {
                 }
                 CreateOkBroadcast("Fuel tanks... nominal");
                 GasTanks = fuelTanks;
+                return true;
             }
 
-            private static void LoadWarheads(IMyGridTerminalSystem grid) {
+            private static bool LoadWarheads(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> warheadBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyWarhead>(warheadBlocks);
                 if (warheadBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No warheads found on grid");
+                    return false;
                 }
                 IMyWarhead[] warheads = new IMyWarhead[warheadBlocks.Count];
                 for (int i = 0; i < warheadBlocks.Count; i++) {
@@ -176,13 +243,14 @@ namespace IngameScript {
                 }
                 CreateOkBroadcast("Warheads... nominal");
                 Warheads = warheads;
+                return true;
             }
 
-            private static void LoadConnectors(IMyGridTerminalSystem grid) {
+            private static bool LoadConnectors(IMyGridTerminalSystem grid) {
                 List<IMyTerminalBlock> connectorBlocks = new List<IMyTerminalBlock>();
                 grid.GetBlocksOfType<IMyShipConnector>(connectorBlocks, block => block.CubeGrid == Me.CubeGrid);
                 if (connectorBlocks.Count == 0) {
-                    CreateFatalErrorBroadcast("No connectors found on grid");
+                    return false;
                 }
                 IMyShipConnector[] connectors = new IMyShipConnector[connectorBlocks.Count];
                 for (int i = 0; i < connectorBlocks.Count; i++) {
@@ -190,12 +258,13 @@ namespace IngameScript {
                 }
                 CreateOkBroadcast("Connectors... nominal");
                 Connectors = connectors;
+                return true;
             }
 
-            private static void LoadDetonationSensor(IMyGridTerminalSystem grid) {
+            private static bool LoadDetonationSensor(IMyGridTerminalSystem grid) {
                 var sensor = grid.GetBlockWithName("Detonation Sensor");
                 if (sensor == null) {
-                    CreateFatalErrorBroadcast("No detonation sensor detected on grid.");
+                    return false;
                 }
                 CreateOkBroadcast("Detonation sensor... nominal");
                 DetonationSensor = sensor as IMySensorBlock;
@@ -224,6 +293,7 @@ namespace IngameScript {
                 DetonationSensor.DetectFriendly = false;
                 DetonationSensor.DetectOwner = false;
                 DetonationSensor.DetectPlayers = false;
+                return true;
             }
 
             private static void MeasureTotalPowerCapacity() {

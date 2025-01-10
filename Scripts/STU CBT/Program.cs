@@ -1,33 +1,13 @@
-﻿using Sandbox.Game.EntityComponents;
-using Sandbox.Game.Screens.Helpers;
-using Sandbox.Game.SessionComponents;
-using Sandbox.Game.WorldEnvironment.Modules;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
-using SpaceEngineers.Game.ModAPI.Ingame;
+﻿using Sandbox.ModAPI.Ingame;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using VRage;
-using VRage.Collections;
-using VRage.Game;
-using VRage.Game.Components;
-using VRage.Game.GUI.TextPanel;
-using VRage.Game.ModAPI.Ingame;
 using VRage.Game.ModAPI.Ingame.Utilities;
-using VRage.Game.ObjectBuilders.Definitions;
 using VRageMath;
 // using static VRage.Game.VisualScripting.ScriptBuilder.MyVSAssemblyProvider;
 
-namespace IngameScript
-{
-    partial class Program : MyGridProgram
-    {
+namespace IngameScript {
+    partial class Program : MyGridProgram {
 
         CBT CBTShip { get; set; }
         STUMasterLogBroadcaster Broadcaster { get; set; }
@@ -37,8 +17,7 @@ namespace IngameScript
         MyCommandLine WirelessMessageParser { get; set; } = new MyCommandLine();
         Queue<STUStateMachine> ManeuverQueue { get; set; } = new Queue<STUStateMachine>();
         STUStateMachine CurrentManeuver;
-        public struct ManeuverQueueData
-        {
+        public struct ManeuverQueueData {
             public string CurrentManeuverName;
             public bool CurrentManeuverInitStatus;
             public bool CurrentManeuverRunStatus;
@@ -49,17 +28,16 @@ namespace IngameScript
             public string FourthManeuverName;
             public bool Continuation;
         }
-        
-        public Program()
-        {
+
+        public Program() {
             // instantiate the actual CBT at the Program level so that all the methods in here will be directed towards a specific CBT object (the one that I fly around in game)
             Broadcaster = new STUMasterLogBroadcaster(CBT_VARIABLES.CBT_BROADCAST_CHANNEL, IGC, TransmissionDistance.AntennaRelay);
             Listener = IGC.RegisterBroadcastListener(CBT_VARIABLES.CBT_BROADCAST_CHANNEL);
             InventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
             CBTShip = new CBT(Echo, Broadcaster, InventoryEnumerator, GridTerminalSystem, Me, Runtime);
             CBT.SetAutopilotControl(true, true, false);
-            
-        
+
+
             ResetAutopilot();
 
             // at compile time, Runtime.UpdateFrequency needs to be set to update every 10 ticks. 
@@ -68,46 +46,36 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
-        public void Main(string argument, UpdateType updateSource)
-        {
-            try 
-            {
+        public void Main(string argument, UpdateType updateSource) {
+            try {
                 // fix and uncomment later
                 // InventoryEnumerator.EnumerateInventories();
 
                 HandleWirelessMessages();
-                
+
                 argument = argument.Trim().ToUpper();
 
                 // check whether the passed argument is a special command word, if it's not, hand it off to the command parser
-                if (argument != "")
-                {
-                    if (!CheckSpecialCommandWord(argument))
-                    {
-                        if (!ParseCommand(argument))
-                        {
+                if (argument != "") {
+                    if (!CheckSpecialCommandWord(argument)) {
+                        if (!ParseCommand(argument)) {
                             CBT.AddToLogQueue($"cbt machine broke", STULogType.ERROR);
                         }
                     }
                 }
-                
+
                 /// main state machine:
                 /// Idle phase: look for work, so to speak. If there's something in the queue, pull it out and start executing it.
                 /// Executing Phase: ultimately defers to the current maneuver's internal state machine.
                 ///     if it ever gets to the "Done" state, it will return to the Idle phase.
-                switch (CBT.CurrentPhase)
-                {
+                switch (CBT.CurrentPhase) {
                     case CBT.Phase.Idle:
-                        if (ManeuverQueue.Count > 0)
-                        {
-                            try
-                            { 
+                        if (ManeuverQueue.Count > 0) {
+                            try {
                                 CurrentManeuver = ManeuverQueue.Dequeue();
                                 CBT.AddToLogQueue($"Executing {CurrentManeuver.Name} maneuver...", STULogType.INFO);
                                 CBT.CurrentPhase = CBT.Phase.Executing;
-                            }
-                            catch
-                            {
+                            } catch {
                                 CBT.AddToLogQueue("Could not pull maneuver from queue, despite the queue's count being greater than zero. Something is wrong, halting program...", STULogType.ERROR);
                                 CBT.CreateBroadcast("MAYDAY MAYDAY MAYDAY", false, STULogType.ERROR);
                                 Runtime.UpdateFrequency = UpdateFrequency.None;
@@ -116,8 +84,7 @@ namespace IngameScript
                         break;
 
                     case CBT.Phase.Executing:
-                        if (CurrentManeuver.ExecuteStateMachine())
-                        {
+                        if (CurrentManeuver.ExecuteStateMachine()) {
                             CurrentManeuver = null;
                             CBT.CurrentPhase = CBT.Phase.Idle;
                         }
@@ -133,10 +100,7 @@ namespace IngameScript
                 CBT.UpdateManeuverQueueScreens(GatherManeuverQueueData());
                 CBT.UpdateAmmoScreens();
                 CBT.DockingModule.UpdateDockingModule();
-            }
-
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Echo($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}");
                 CBT.AddToLogQueue($"Program.cs: Caught exception: {e} | source: {e.Source} | stacktrace: {e.StackTrace}", STULogType.WARNING);
                 CBT.AddToLogQueue("");
@@ -147,8 +111,7 @@ namespace IngameScript
             }
         }
 
-        public ManeuverQueueData GatherManeuverQueueData()
-        {
+        public ManeuverQueueData GatherManeuverQueueData() {
             ManeuverQueueData data = new ManeuverQueueData();
             data.CurrentManeuverName = CurrentManeuver?.Name;
             data.CurrentManeuverInitStatus = CurrentManeuver?.CurrentInternalState == STUStateMachine.InternalStates.Init;
@@ -162,8 +125,7 @@ namespace IngameScript
             return data;
         }
 
-        public void ResetAutopilot()
-        {
+        public void ResetAutopilot() {
             CBT.SetAutopilotControl(false, false, true);
             ManeuverQueue.Clear();
             CBT.ResetUserInputVelocities();
@@ -171,23 +133,18 @@ namespace IngameScript
             CBT.CurrentPhase = CBT.Phase.Idle;
         }
 
-        public void HandleWirelessMessages()
-        {
-            if (Listener.HasPendingMessage)
-            {
+        public void HandleWirelessMessages() {
+            if (Listener.HasPendingMessage) {
                 var rawMessage = Listener.AcceptMessage();
                 string message = rawMessage.Data.ToString();
                 STULog incomingLog = STULog.Deserialize(message);
                 // string decryptedMessage = Modem.Decrypt(incomingLog.Message, CBT_VARIABLES.TEA_KEY);
-                
-                if (WirelessMessageParser.TryParse(incomingLog.Message.ToUpper()))
-                {
-                    foreach (var arg in WirelessMessageParser.Items)
-                    {
+
+                if (WirelessMessageParser.TryParse(incomingLog.Message.ToUpper())) {
+                    foreach (var arg in WirelessMessageParser.Items) {
                         CBT.AddToLogQueue($"Argument: {arg}", STULogType.INFO);
                     }
-                    switch (WirelessMessageParser.Argument(0))
-                    {
+                    switch (WirelessMessageParser.Argument(0)) {
                         case "PING":
                             CBT.CreateBroadcast("PONG");
                             break;
@@ -197,17 +154,16 @@ namespace IngameScript
                             break;
                         case "POSITION":
                             CBT.AddToLogQueue($"Received position message: {incomingLog.Message}", STULogType.INFO);
-                            try
-                            {
+                            try {
+                                // log the arguments
+                                CBT.AddToLogQueue($"Arguments: {WirelessMessageParser.Argument(1)} {WirelessMessageParser.Argument(2)} {WirelessMessageParser.Argument(3)}", STULogType.INFO);
                                 double x = double.Parse(WirelessMessageParser.Argument(1).Trim());
                                 double y = double.Parse(WirelessMessageParser.Argument(2).Trim());
                                 double z = double.Parse(WirelessMessageParser.Argument(3).Trim());
                                 CBT.DockingModule.DockingPosition = new Vector3D(x, y, z);
                                 CBT.AddToLogQueue($"CBT Merge Block forward world vector: {CBT.MergeBlock.WorldMatrix.Forward}", STULogType.OK);
                                 CBT.AddToLogQueue($"CBT Remote Control forward world vector: {CBT.RemoteControl.WorldMatrix.Forward}", STULogType.OK);
-                            }
-                            catch (Exception e)
-                            {
+                            } catch (Exception e) {
                                 CBT.AddToLogQueue($"Failed to parse position message: {e.Message}", STULogType.ERROR);
                                 Echo($"Failed to parse position message: {e.Message}");
                             }
@@ -220,14 +176,11 @@ namespace IngameScript
             }
         }
 
-        public bool CheckSpecialCommandWord(string arg)
-        {
-            switch (arg)
-            {
+        public bool CheckSpecialCommandWord(string arg) {
+            switch (arg) {
                 case "CLOSEOUT":
                     CBT.AddToLogQueue($"Cancelling maneuver '{CurrentManeuver.Name}'...", STULogType.INFO);
-                    if (CurrentManeuver != null)
-                    {
+                    if (CurrentManeuver != null) {
                         CurrentManeuver.CurrentInternalState = STUStateMachine.InternalStates.Closeout;
                     }
                     return true;
@@ -332,8 +285,7 @@ namespace IngameScript
             }
         }
 
-        public bool ParseCommand(string arg)
-        {
+        public bool ParseCommand(string arg) {
             CBT.AddToLogQueue($"Parsing command string \"{arg}\"", STULogType.INFO);
             /// code to break up space-separated commands that might be entered into the terminal.
             /// e.g. "F5" should be interpreted as "move forward at 5m/s"
@@ -353,25 +305,19 @@ namespace IngameScript
             /// W = yaw left
 
             // loop through the passed string and act on valid direction qualifiers (listed above)
-            if (CommandLineParser.TryParse(arg))
-            {
-                for (int i = 0; i < CommandLineParser.ArgumentCount; i++)
-                {
+            if (CommandLineParser.TryParse(arg)) {
+                for (int i = 0; i < CommandLineParser.ArgumentCount; i++) {
                     string command = CommandLineParser.Argument(i);
-                    if (command.Length < 2)
-                    {
+                    if (command.Length < 2) {
                         CBT.AddToLogQueue($"Command '{command}' is too short to be valid. Skipping...", STULogType.WARNING);
                         continue;
                     }
 
                     char direction = command[0];
                     string secondCharacter = command.Substring(1);
-                    try
-                    {
+                    try {
                         float.Parse(secondCharacter);
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         CBT.AddToLogQueue($"Failed to parse command '{command}'. Skipping...", STULogType.WARNING);
                         Echo($"Program.cs: Exception: {e.Message} \n{e.StackTrace}");
                         Echo("Continuing...");
@@ -379,9 +325,8 @@ namespace IngameScript
                     }
                     float result;
                     float value = float.TryParse(command.Substring(1), out result) ? result : 0;
-                    
-                    switch (direction)
-                    {
+
+                    switch (direction) {
                         case 'F':
                             CBT.UserInputForwardVelocity = value;
                             ManeuverQueue.Enqueue(new CBT.GenericManeuver(
@@ -396,11 +341,11 @@ namespace IngameScript
                         case 'B':
                             CBT.UserInputForwardVelocity = (value) * -1;
                             ManeuverQueue.Enqueue(new CBT.GenericManeuver(
-                                CBT.UserInputForwardVelocity, 
-                                CBT.UserInputRightVelocity, 
-                                CBT.UserInputUpVelocity, 
-                                CBT.UserInputRollVelocity, 
-                                CBT.UserInputPitchVelocity, 
+                                CBT.UserInputForwardVelocity,
+                                CBT.UserInputRightVelocity,
+                                CBT.UserInputUpVelocity,
+                                CBT.UserInputRollVelocity,
+                                CBT.UserInputPitchVelocity,
                                 CBT.UserInputYawVelocity));
                             break;
 
@@ -449,8 +394,7 @@ namespace IngameScript
                             break;
 
                         case 'P':
-                            if (-1 <= value && value <= 1) 
-                            { 
+                            if (-1 <= value && value <= 1) {
                                 CBT.UserInputPitchVelocity = value * 3.14f * 0.5f;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -459,13 +403,11 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'H':
-                            if (-1 <= value && value <= 1) 
-                            { 
+                            if (-1 <= value && value <= 1) {
                                 CBT.UserInputPitchVelocity = value * 3.14f * 0.5f * -1;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -474,13 +416,11 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Pitch value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'O':
-                            if (-1 <= value && value <= Math.PI) 
-                            { 
+                            if (-1 <= value && value <= Math.PI) {
                                 CBT.UserInputRollVelocity = value * 3.14f;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -489,13 +429,11 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'Q':
-                            if (-1 <= value && value <= 1) 
-                            { 
+                            if (-1 <= value && value <= 1) {
                                 CBT.UserInputRollVelocity = value * 3.14f * -1;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -504,13 +442,11 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Roll value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'Y':
-                            if (-1 <= value && value <= 1) 
-                            { 
+                            if (-1 <= value && value <= 1) {
                                 CBT.UserInputYawVelocity = value * 3.14f;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -519,13 +455,11 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'W':
-                            if (-1 <= value && value <= 1) 
-                            { 
+                            if (-1 <= value && value <= 1) {
                                 CBT.UserInputYawVelocity = value * 3.14f * -1;
                                 ManeuverQueue.Enqueue(new CBT.GenericManeuver(
                                     CBT.UserInputForwardVelocity,
@@ -534,15 +468,14 @@ namespace IngameScript
                                     CBT.UserInputRollVelocity,
                                     CBT.UserInputPitchVelocity,
                                     CBT.UserInputYawVelocity));
-                            }
-                            else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
+                            } else { CBT.AddToLogQueue($"Yaw value '{value}' is out of range. Must be between -1 and +1. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'A':
-                            if (0 <= value) { 
+                            if (0 <= value) {
                                 CBT.AddToLogQueue($"Setting cruising altitude to {value}m", STULogType.INFO);
-                                CBT.SetCruisingAltitude(value); }
-                            else { CBT.AddToLogQueue($"Altitude value '{value}' is out of range. Must be greater than 0. Skipping...", STULogType.WARNING);                    }
+                                CBT.SetCruisingAltitude(value);
+                            } else { CBT.AddToLogQueue($"Altitude value '{value}' is out of range. Must be greater than 0. Skipping...", STULogType.WARNING); }
                             break;
 
                         case 'C':
@@ -552,12 +485,9 @@ namespace IngameScript
 
                         case 'G':
                             CBT.AddToLogQueue($"Gangway command value {value}", STULogType.INFO);
-                            if (value == 0 || value == 1)
-                            {
+                            if (value == 0 || value == 1) {
                                 CBT.Gangway.ToggleGangway(value);
-                            }
-                            else
-                            {
+                            } else {
                                 CBT.AddToLogQueue($"Gangway command value '{value}' is not valid. Must be 0 to retract or 1 to extend, or use full name 'gangway' to toggle. Skipping...", STULogType.WARNING);
                             }
                             break;
@@ -566,12 +496,11 @@ namespace IngameScript
                             CBT.AddToLogQueue($"Command letter {command} is not a valid operator. Skipping...", STULogType.WARNING);
                             break;
                     }
-                } 
+                }
                 return true;
-            }
-            else
-            {
-                CBT.AddToLogQueue($"damn this shit broken fr fr", STULogType.ERROR); return false;
+            } else {
+                CBT.AddToLogQueue($"damn this shit broken fr fr", STULogType.ERROR);
+                return false;
             }
         }
     }

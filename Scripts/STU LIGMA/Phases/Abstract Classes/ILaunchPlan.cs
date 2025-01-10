@@ -19,6 +19,8 @@
                         foreach (var tank in GasTanks) {
                             tank.Stockpile = false;
                         }
+                        // Disable merge block connecting vehicle to launch pad
+                        s_mainMergeBlock.Enabled = false;
                         IS_FIRST_RUN = false;
                     }
                 }

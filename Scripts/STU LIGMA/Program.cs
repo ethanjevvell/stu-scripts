@@ -8,6 +8,7 @@ namespace IngameScript {
     partial class Program : MyGridProgram {
 
         public bool ALREADY_RAN_FIRST_COMMAND = false;
+        private bool FINISHED_LOADING_HARDWARE = false;
 
         public Dictionary<string, Action> LIGMACommands = new Dictionary<string, Action>();
 
@@ -60,6 +61,13 @@ namespace IngameScript {
 
         void Main(string argument) {
 
+            if (!FINISHED_LOADING_HARDWARE) {
+                FINISHED_LOADING_HARDWARE = _missile.LoadHardware(GridTerminalSystem);
+                return;
+            }
+
+            Echo(LIGMA.CurrentPhase.ToString());
+
             try {
 
                 if (unicastListener.HasPendingMessage) {
@@ -69,8 +77,6 @@ namespace IngameScript {
                 }
 
                 LIGMA.UpdateState();
-                LIGMA.UpdateMeasurements();
-                LIGMA.SendTelemetry();
 
                 switch (LIGMA.CurrentPhase) {
 
@@ -128,7 +134,12 @@ namespace IngameScript {
                 }
 
             } catch (Exception e) {
-                LIGMA.CreateErrorBroadcast($"Error in main loop: {e}");
+                LIGMA.CreateErrorBroadcast($"Error in main loop: {e}. LIGMA terminating program execution.");
+                Runtime.UpdateFrequency = UpdateFrequency.None;
+                Echo(e.Message);
+            } finally {
+                LIGMA.UpdateMeasurements();
+                LIGMA.SendTelemetry();
             }
 
         }
