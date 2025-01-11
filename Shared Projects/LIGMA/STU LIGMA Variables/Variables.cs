@@ -22,6 +22,7 @@
                 public const string Detonate = "Detonate";
                 public const string UpdateTargetData = "UpdateTargetData";
                 public const string Test = "Test";
+                public const string SendGoodbye = "SendGoodbye";
             }
 
         }

@@ -254,14 +254,8 @@ namespace IngameScript {
             /// <returns></returns>
             public bool AlignShipToTarget(Vector3D targetPos, IMyTerminalBlock referenceBlock = null, string referenceBlockFace = null) {
                 ReinstateGyroControl();
-                return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, referenceBlock, referenceBlockFace);
+                return _orientationController.AlignShipToTarget(targetPos, referenceBlock, referenceBlockFace);
             }
-
-            //public bool AlignShipToTarget(Vector3D targetPos, Vector3D referenceBlockFace)
-            //{
-            //    ReinstateGyroControl();
-            //    return _orientationController.AlignShipToTarget(targetPos, CurrentPosition, referenceBlockFace);
-            //}
 
             /// <summary>
             /// Rolls the ship to optimize the ship's inertia vector for a given target position. Effectively allows the ship to turn faster, at the cost of more fuel.

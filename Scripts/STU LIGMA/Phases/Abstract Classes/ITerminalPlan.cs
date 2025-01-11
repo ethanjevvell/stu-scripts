@@ -9,6 +9,7 @@
                 public virtual void FirstRunTasks() {
                     if (IS_FIRST_RUN) {
                         FlightController.UpdateShipMass();
+                        CreateErrorBroadcast(LIGMA_VARIABLES.COMMANDS.SendGoodbye);
                         IS_FIRST_RUN = false;
                     }
                 }

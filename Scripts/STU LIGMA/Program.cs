@@ -56,6 +56,7 @@ namespace IngameScript {
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
+            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.SendGoodbye, SendGoodbye);
             LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
         }
 

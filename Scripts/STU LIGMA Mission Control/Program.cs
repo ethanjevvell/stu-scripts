@@ -26,13 +26,20 @@ namespace IngameScript {
         List<LogLCD> _logSubscribers = new List<LogLCD>();
         List<MainLCD> _mainSubscribers = new List<MainLCD>();
 
+        // Holds targets detected by the GOOCH system
         Queue<Dictionary<string, string>> _targets = new Queue<Dictionary<string, string>>();
-        Stack<Dictionary<string, string>> _idleMissiles = new Stack<Dictionary<string, string>>();
-
-        Dictionary<string, string> _TargetToLIGMA = new Dictionary<string, string>();
+        // Only used temporarily to hold idle missiles
+        Queue<Dictionary<string, string>> _idleMissiles = new Queue<Dictionary<string, string>>();
+        // Maps target ids to missile ids when a missile is dispatched
+        Dictionary<string, string> _targetToLIGMA = new Dictionary<string, string>();
+        // Maps missile ids to telemetry data
         Dictionary<string, Dictionary<string, string>> _LIGMATelemetryMap = new Dictionary<string, Dictionary<string, string>>();
-
+        // Used to store incoming telemetry data temporarily
         Dictionary<string, Dictionary<string, string>> _incomingTelemetryMap = new Dictionary<string, Dictionary<string, string>>();
+        // Used to store recently destroyed targets
+        List<string> _recentlyDestroyedTargets = new List<string>();
+        // Used to store recently destroyed LIGMAs
+        List<string> _recentlyDestroyedLIGMAs = new List<string>();
 
         StringBuilder telemetryRecords = new StringBuilder();
 
@@ -87,13 +94,13 @@ namespace IngameScript {
                 _incomingMessage = _targetListener.AcceptMessage();
                 try {
                     _incomingLog = STULog.Deserialize(_incomingMessage.Data.ToString());
-                    if (_TargetToLIGMA.ContainsKey(_incomingLog.Metadata["EntityId"])) {
+                    if (_targetToLIGMA.ContainsKey(_incomingLog.Metadata["EntityId"])) {
                         try {
-                            SendTargetDataToLIGMA(_TargetToLIGMA[_incomingLog.Metadata["EntityId"]], _incomingLog.Metadata);
+                            SendTargetDataToLIGMA(_targetToLIGMA[_incomingLog.Metadata["EntityId"]], _incomingLog.Metadata);
                         } catch {
                             CreateHQLog("Error parsing incoming target data", STULogType.ERROR);
                         }
-                    } else {
+                    } else if (!_recentlyDestroyedTargets.Contains(_incomingLog.Metadata["EntityId"])) {
                         _targets.Enqueue(_incomingLog.Metadata);
                     }
                 } catch {
@@ -113,6 +120,10 @@ namespace IngameScript {
                     _incomingLog = STULog.Deserialize(message.Data.ToString());
                     if (!string.IsNullOrEmpty(_incomingLog.Message)) {
                         PublishExternalLog(_incomingLog);
+                        if (_incomingLog.Message == LIGMA_VARIABLES.COMMANDS.SendGoodbye) {
+                            CreateHQLog($"Removing LIGMA {message.Source} from active duty", STULogType.WARNING);
+                            HandleGoodbye(message.Source);
+                        }
                     } else {
                         CreateHQLog("Message on the drone log channel did not contain a message field", STULogType.ERROR);
                     }
@@ -176,7 +187,7 @@ namespace IngameScript {
                             CreateHQLog($"LIGMA {id} has returned", STULogType.OK);
                         }
                         _LIGMATelemetryMap[id] = _incomingLog.Metadata;
-                    } else {
+                    } else if (!_recentlyDestroyedLIGMAs.Contains(id)) {
                         CreateHQLog($"New LIGMA detected: {id}", STULogType.OK);
                         _LIGMATelemetryMap.Add(id, _incomingLog.Metadata);
                     }
@@ -197,16 +208,36 @@ namespace IngameScript {
 
         }
 
+        void HandleGoodbye(long rawId) {
+            string ligmaId = rawId.ToString();
+            _LIGMATelemetryMap.Remove(ligmaId);
+            // Get the id of the target LIGMA is assinged to
+            string targetId = null;
+            foreach (var target in _targetToLIGMA) {
+                if (target.Value == ligmaId) {
+                    targetId = target.Key;
+                    break;
+                }
+            }
+            if (targetId != null && _targetToLIGMA.ContainsKey(targetId)) {
+                _targetToLIGMA.Remove(targetId);
+                _recentlyDestroyedTargets.Add(targetId);
+                _recentlyDestroyedLIGMAs.Add(ligmaId);
+            } else {
+                CreateHQLog($"Failed to remove LIGMA {ligmaId} from target {targetId}", STULogType.ERROR);
+            }
+        }
+
         void DispatchMissiles() {
             _idleMissiles.Clear();
             foreach (var missile in _LIGMATelemetryMap) {
                 if (missile.Value["Phase"] == "Idle") {
-                    _idleMissiles.Push(missile.Value);
+                    _idleMissiles.Enqueue(missile.Value);
                 }
             }
             while (_targets.Count > 0 && _idleMissiles.Count > 0) {
                 var target = _targets.Dequeue();
-                var missile = _idleMissiles.Pop();
+                var missile = _idleMissiles.Dequeue();
                 Dispatch(missile, target);
             }
         }
@@ -215,7 +246,7 @@ namespace IngameScript {
             SendTargetDataToLIGMA(missile["Id"], target);
             SendLaunchCommand(missile["Id"]);
             CreateHQLog($"Dispatched LIGMA {missile["Id"]} to target {target["EntityId"]}", STULogType.OK);
-            _TargetToLIGMA[target["EntityId"]] = missile["Id"];
+            _targetToLIGMA[target["EntityId"]] = missile["Id"];
             missile["Phase"] = "Launch";
         }
 
