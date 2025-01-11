@@ -182,7 +182,7 @@ namespace IngameScript
 
                 DockingModule = new CBTDockingModule();
                 ACM = new AirlockControlModule();
-                ACM.LoadAirlocks(grid, me);
+                ACM.LoadAirlocks(grid, me, runtime);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }

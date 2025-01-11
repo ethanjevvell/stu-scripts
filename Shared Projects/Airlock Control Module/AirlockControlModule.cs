@@ -41,6 +41,8 @@ namespace IngameScript
             public List<Airlock> Airlocks = new List<Airlock>();
             public List<SoloAirlock> SoloAirlocks = new List<SoloAirlock>();
 
+            public bool Enabled { get; set; } = true;
+
             public void LoadAirlocks(IMyGridTerminalSystem grid, IMyProgrammableBlock programmableBlock, IMyGridProgramRuntimeInfo runtime)
             {
                 // create a temporary list of all the doors on the grid
@@ -97,6 +99,8 @@ namespace IngameScript
 
             public void UpdateAirlocks()
             {
+                if (!Enabled) return;
+                
                 foreach (Airlock airlock in Airlocks)
                 {
                     airlock.StateMachine.Update();
@@ -105,6 +109,19 @@ namespace IngameScript
                 {
                     soloAirlock.StateMachine.Update();
                 }
+                
+            }
+
+            public void DisableAuomaticControl()
+            {
+                CBT.AddToLogQueue("Airlock control disabled");
+                Enabled = false;
+            }
+
+            public void EnableAutomaticControl()
+            {
+                CBT.AddToLogQueue("Airlock control enabled");
+                Enabled = true;
             }
         }
     }

@@ -56,6 +56,7 @@ namespace IngameScript
 
             public void Update()
             {
+                CBT.AddToLogQueue($"Current state: {CurrentState}");
                 CurrentTime += Runtime.TimeSinceLastRun.TotalMilliseconds;
                 switch (CurrentState)
                 {
@@ -65,25 +66,26 @@ namespace IngameScript
                         Timestamp = CurrentTime;
                         break;
                     case State.EnterA:
-                        if (DoorA.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS) 
+                        DoorA.OpenDoor();
+                        if (DoorA.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS)
                         {
-                            CurrentState = State.CloseA; 
+                            CurrentState = State.CloseA;
                             Timestamp = CurrentTime;
                         }
                         break;
                     case State.CloseA:
                         DoorA.CloseDoor();
-                        if (DoorA.Status == DoorStatus.Closed && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
-                            CurrentState = State.OpenB; 
+                        if (DoorA.Status == DoorStatus.Closed && CurrentTime > Timestamp + TimeBufferMS)
+                        {
+                            CurrentState = State.OpenB;
                             Timestamp = CurrentTime;
                         }
                         break;
                     case State.OpenB:
                         DoorB.OpenDoor();
-                        if (DoorB.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
-                            CurrentState = State.ExitB; 
+                        if (DoorB.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS)
+                        {
+                            CurrentState = State.ExitB;
                             Timestamp = CurrentTime;
                         }
                         break;
@@ -92,25 +94,26 @@ namespace IngameScript
                         if (DoorB.Status == DoorStatus.Closed) { CurrentState = State.Idle; }
                         break;
                     case State.EnterB:
-                        if (DoorB.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
+                        DoorB.OpenDoor();
+                        if (DoorB.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS)
+                        {
                             CurrentState = State.CloseB;
                             Timestamp = CurrentTime;
                         }
                         break;
                     case State.CloseB:
                         DoorB.CloseDoor();
-                        if (DoorB.Status == DoorStatus.Closed && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
-                            CurrentState = State.OpenA; 
+                        if (DoorB.Status == DoorStatus.Closed && CurrentTime > Timestamp + TimeBufferMS)
+                        {
+                            CurrentState = State.OpenA;
                             Timestamp = CurrentTime;
                         }
                         break;
                     case State.OpenA:
                         DoorA.OpenDoor();
-                        if (DoorA.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
-                            CurrentState = State.ExitA; 
+                        if (DoorA.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS)
+                        {
+                            CurrentState = State.ExitA;
                             Timestamp = CurrentTime;
                         }
                         break;
@@ -120,8 +123,6 @@ namespace IngameScript
                         break;
                 }
             }
-
         }
     }
-    
 }

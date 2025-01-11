@@ -56,9 +56,10 @@ namespace IngameScript
                         Timestamp = CurrentTime;
                         break;
                     case State.Enter:
-                        if (Door.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS) 
-                        { 
-                            CurrentState = State.Close; 
+                        Door.OpenDoor();
+                        if (Door.Status == DoorStatus.Open && CurrentTime > Timestamp + TimeBufferMS)
+                        {
+                            CurrentState = State.Close;
                             Timestamp = CurrentTime;
                         }
                         break;
@@ -68,8 +69,6 @@ namespace IngameScript
                         break;
                 }
             }
-
         }
     }
-
 }
