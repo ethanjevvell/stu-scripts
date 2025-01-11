@@ -18,12 +18,15 @@ namespace IngameScript
                 Idle,
                 WaitingForCRReady,
                 ConfirmWithPilot,
+                QueueManeuvers,
                 Docking,
             }
             public DockingModuleStates CurrentDockingModuleState { get; set; }
             public bool SendDockRequestFlag { get; set; }
             public bool CRReadyFlag { get; set; }
             public bool PilotConfirmation { get; set; }
+            public Vector3D LineUpPosition { get; set; }
+            public Vector3D RollReference { get; set; }
             public Vector3D DockingPosition { get; set; }
             public MatrixD CRWorldMatrix { get; set; }
 
@@ -52,6 +55,7 @@ namespace IngameScript
                         if (CRReadyFlag)
                         {
                             CBT.AddToLogQueue($"Received docking data from the Hyperdrive Ring.", STULogType.INFO);
+                            CBT.AddToLogQueue($"{LineUpPosition}", STULogType.INFO);
                             CBT.AddToLogQueue($"{DockingPosition}", STULogType.INFO);
                             CBT.AddToLogQueue($"Enter \"CONTINUE\" to proceed or \"CANCEL\" to abort.", STULogType.WARNING);
                             CurrentDockingModuleState = DockingModuleStates.ConfirmWithPilot;
@@ -60,19 +64,22 @@ namespace IngameScript
                     case DockingModuleStates.ConfirmWithPilot:
                         if (PilotConfirmation)
                         {
-                            CBT.AddToLogQueue($"Pilot has confirmed. Initiating docking sequence...", STULogType.INFO);
+                            CBT.AddToLogQueue($"Initiating docking sequence...", STULogType.WARNING);
                             PilotConfirmation = false;
-                            CurrentDockingModuleState = DockingModuleStates.Docking;
+                            CurrentDockingModuleState = DockingModuleStates.QueueManeuvers;
                         }
                         break;
+                    case DockingModuleStates.QueueManeuvers:
+                        // queueing docking maneuvers is handled at the Program level
+                        // this state should only be hit once, and the Program level should immediately move to the next state
+                        break;
                     case DockingModuleStates.Docking:
-                        // go to point in space behind the CR
-                        // align ship to CR
-                        // move forward
-                        // hover
-                        // relinquish control to pilot
                         if (CBT.MergeBlock.IsConnected)
                         {
+                            foreach (var g in CBT.GravityGenerators)
+                            {
+                                g.Enabled = false;
+                            }
                             CBT.AddToLogQueue($"Docking sequence complete.", STULogType.OK);
                             CBT.CreateBroadcast("DOCKED", false, STULogType.OK);
                             CurrentDockingModuleState = DockingModuleStates.Idle;

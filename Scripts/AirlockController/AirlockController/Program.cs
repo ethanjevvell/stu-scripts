@@ -31,36 +31,6 @@ namespace IngameScript
         // which doors are airlocks and which doors are related to
         // each other.
 
-        // v0.1 initial release
-
-        // v0.2 added logic that wait to ensure doors are fully closed
-        // in transition before opening the next door.
-        
-        // v0.2.1 changed the delay for the player to enter/exit the 
-        // airlock from 3 seconds to "instantaneously" and rely on the 
-        // fact that the script only runs in-game every 100 ticks (~1.4 seconds).
-
-        // v0.2.2 changed the update interval to 10 ticks, reinstated the 
-        // delay stages at 1500ms each, with the caveat that the faster-opening door
-        // stays open for 1500ms longer whenever it comes up in the script for 
-        // ease-of-use for the player character.
-
-        // v0.3 testing an AirlockFSM class and having the main loop enumerate
-        // across all such objects
-
-        // v0.3.1 adding verbosity to see whether grid terminal system is pulling
-        // the doors in the expected order
-
-        // v0.3.2 added logic to ensure the airlocks are being sorted before being
-        // tied to each other when they are passed as arguments to each new instance of
-        // the AirlockFSM object
-
-        // v0.3.3 removed some verbosity, cleaned up unused variables
-
-        // v0.3.4 implemented logging
-
-        // v0.3.5 improved logging, changed player character delay from 1500 to 1000 ms
-
         List<AirlockFSM> StateMachines = new List<AirlockFSM>();
 
         List<IMyTerminalBlock> airlocks = new List<IMyTerminalBlock>();

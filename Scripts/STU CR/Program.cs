@@ -47,6 +47,7 @@ namespace IngameScript {
             } 
             finally {
                 CR.UpdateLogScreens();
+                CR.ACM.UpdateAirlocks();
             }
 
         }
@@ -74,6 +75,12 @@ namespace IngameScript {
                             CR.AddToLogQueue($"Received DOCK request from {incomingLog.Sender}", STULogType.INFO);
                             CR.DockingModule.DockRequestReceivedFlag = true;
                             break;
+                        case "CANCEL":
+                            CR.AddToLogQueue($"{incomingLog.Sender} cancelled docking procedure. Resetting...");
+                            CR.DockingModule.DockRequestReceivedFlag= false;
+                            CR.DockingModule.CurrentDockingModuleState = CRDockingModule.DockingModuleStates.Idle;
+                            break;
+
                     }
                 }
 

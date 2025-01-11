@@ -22,6 +22,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CUCKS", "..\..\Shared Proje
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CBT_VARIABLES", "..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Airlock Control Module", "..\..\Shared Projects\Airlock Control Module\Airlock Control Module.shproj", "{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +40,7 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
+		..\..\Shared Projects\Airlock Control Module\Airlock_Control_Module.projitems*{55b3954f-b510-413d-b5aa-c786549a1fb1}*SharedItemsImports = 4
 		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{55b3954f-b510-413d-b5aa-c786549a1fb1}*SharedItemsImports = 4
 		..\..\Shared Projects\CUCKS\CUCKS.projitems*{55b3954f-b510-413d-b5aa-c786549a1fb1}*SharedItemsImports = 4
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{55b3954f-b510-413d-b5aa-c786549a1fb1}*SharedItemsImports = 4
@@ -48,6 +51,7 @@ Global
 		..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems*{61eba249-19f3-48b6-a25b-a4cee90168ba}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{6ee22094-1878-45bc-805c-d32278f9c704}*SharedItemsImports = 13
 		..\..\Shared Projects\CUCKS\CUCKS.projitems*{72fa855b-8930-42f8-b4da-a6db7688507d}*SharedItemsImports = 13
+		..\..\Shared Projects\Airlock Control Module\Airlock_Control_Module.projitems*{7760ba51-8c8d-41d2-a9de-649c33d7aa89}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{7d53f862-df1c-4fc4-92f8-49568e15c32b}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

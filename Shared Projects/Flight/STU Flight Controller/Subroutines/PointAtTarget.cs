@@ -14,14 +14,14 @@ namespace IngameScript
                 private STUFlightController FC;
                 Vector3D PointToLookAt;
                 IMyTerminalBlock ReferenceBlock;
-                Vector3D ReferenceFace;
+                string ReferenceFace;
 
-                public PointAtTarget(STUFlightController thisFlightController, Vector3D pointToLookAt, IMyTerminalBlock referenceBlock = null, Vector3D? referenceFace = null)
+                public PointAtTarget(STUFlightController thisFlightController, Vector3D pointToLookAt, IMyTerminalBlock referenceBlock = null, string referenceFace = null)
                 {
                     FC = thisFlightController;
                     PointToLookAt = pointToLookAt;
                     ReferenceBlock = referenceBlock;
-                    ReferenceFace = referenceFace ?? Vector3D.Zero;
+                    ReferenceFace = referenceFace;
                 }
 
                 public override bool Init()
@@ -32,7 +32,7 @@ namespace IngameScript
 
                 public override bool Run()
                 {
-                    return FC.AlignShipToTarget(PointToLookAt, ReferenceBlock);
+                    return FC.AlignShipToTarget(PointToLookAt, ReferenceBlock, ReferenceFace);
                 }
 
                 public override bool Closeout()

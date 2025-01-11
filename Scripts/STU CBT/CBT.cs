@@ -57,6 +57,7 @@ namespace IngameScript
             public static List<CBTAmmoLCD> AmmoChannel = new List<CBTAmmoLCD>();
             public static STUFlightController FlightController { get; set; }
             public static CBTDockingModule DockingModule { get; set; }
+            public static AirlockControlModule ACM { get; set; }
             public static CBTGangway Gangway { get; set; }
             public static CBTRearDock RearDock { get; set; }
             public static IMyProgrammableBlock Me { get; set; }
@@ -180,6 +181,8 @@ namespace IngameScript
                 FlightController = new STUFlightController(grid, RemoteControl, me);
 
                 DockingModule = new CBTDockingModule();
+                ACM = new AirlockControlModule();
+                ACM.LoadAirlocks(grid, me);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }

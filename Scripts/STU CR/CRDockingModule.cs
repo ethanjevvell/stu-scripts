@@ -29,7 +29,9 @@ namespace IngameScript
             public static IMyMotorStator MainDockHinge2 { get; set; }
             public static IMyPistonBase MainDockPiston { get; set; }
             public static IMyShipConnector MainDockConnector { get; set; }
-            private static Vector3D TransmitPosition { get; set; }
+            private static Vector3D CBTLineUpPosition { get; set; }
+            private static Vector3D CBTRollReference { get; set; }
+            private static Vector3D CBTFinalDockingPosition { get; set; }
             private static MatrixD ThisGridWorldMatrix { get; set; }
             
             public bool DockRequestReceivedFlag = false;
@@ -51,7 +53,11 @@ namespace IngameScript
             public void UpdateDockingModule()
             {
                 ThisGridWorldMatrix = CR.Me.CubeGrid.WorldMatrix;
-                TransmitPosition = CR.MergeBlock.GetPosition() + (CR.Me.CubeGrid.WorldMatrix.Up * 3.5);
+                // refactor the lines below so that the offset is calculated based on the merge block's orientation, rather than the PB's orientation
+                // fix later
+                CBTLineUpPosition = CR.MergeBlock.GetPosition() + (CR.MergeBlock.WorldMatrix.Backward * 120) + (CR.MergeBlock.WorldMatrix.Right * 5);
+                CBTRollReference = CR.MergeBlock.GetPosition() + (CR.MergeBlock.WorldMatrix.Right * 5) + (CR.MergeBlock.WorldMatrix.Backward * 120) + (CR.MergeBlock.WorldMatrix.Up * 120);
+                CBTFinalDockingPosition = CR.MergeBlock.GetPosition() + (CR.MergeBlock.WorldMatrix.Right * 5);
                 
                 switch (CurrentDockingModuleState)
                 {
@@ -61,6 +67,10 @@ namespace IngameScript
                             CR.AddToLogQueue("Docking request received", STULogType.INFO);
                             DockRequestReceivedFlag = false;
                             CurrentDockingModuleState = DockingModuleStates.AuxiliaryHardwareReset;
+                        }
+                        if (!CR.MergeBlock.IsConnected)
+                        {
+                            CR.GangwayHinge.TargetVelocityRPM = -1f;
                         }
                         break;
                     case DockingModuleStates.AuxiliaryHardwareReset:
@@ -81,9 +91,15 @@ namespace IngameScript
                         {
                             CR.AddToLogQueue("Auxiliary hardware reset complete. Ready for docking...", STULogType.INFO);
                             CR.CreateBroadcast($"POSITION " +
-                                $"{TransmitPosition.X} " +
-                                $"{TransmitPosition.Y} " +
-                                $"{TransmitPosition.Z} " +
+                                $"{CBTLineUpPosition.X} " +
+                                $"{CBTLineUpPosition.Y} " +
+                                $"{CBTLineUpPosition.Z} " +
+                                $"{CBTRollReference.X} " +
+                                $"{CBTRollReference.Y} " +
+                                $"{CBTRollReference.Z} " +
+                                $"{CBTFinalDockingPosition.X} " +
+                                $"{CBTFinalDockingPosition.Y} " +
+                                $"{CBTFinalDockingPosition.Z} " +
                                 $"EOT");
                             CR.CreateBroadcast("READY", false, STULogType.INFO);
                             CurrentDockingModuleState = DockingModuleStates.Ready;
@@ -94,6 +110,7 @@ namespace IngameScript
                         {
                             CR.AddToLogQueue("Docking complete", STULogType.OK);
                             CR.CreateBroadcast("Docking complete", false, STULogType.OK);
+                            CR.GangwayHinge.TargetVelocityRPM = GangwayHinge.TargetVelocityRPM * -1;
                             CurrentDockingModuleState = DockingModuleStates.Idle;
                         }
                         break;

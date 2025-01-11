@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{55B3954F-B510-413D-B5AA-C786549A1FB1}</ProjectGuid>
+    <ProjectGuid>{61E62F42-2A52-42BA-8ADF-1AB4D19696C3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>IngameScript</RootNamespace>
-    <AssemblyName>STU CR</AssemblyName>
+    <AssemblyName>Airlock Host</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -38,9 +38,6 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
-    <Compile Include="CR.cs" />
-    <Compile Include="CRDockingModule.cs" />
-    <Compile Include="Displays\CRLogLCD.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -53,12 +50,6 @@
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
   </ItemGroup>
-  <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Displays\STU Image\STU_Image.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Logging\STU Log\STU_Log.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\CUCKS\CUCKS.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\CBT_VARIABLES\CBT_VARIABLES.projitems" Label="Shared" />
   <Import Project="..\..\Shared Projects\Airlock Control Module\Airlock_Control_Module.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

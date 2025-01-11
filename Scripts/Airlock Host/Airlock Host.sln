@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Airlock Host", "Airlock Host.csproj", "{61E62F42-2A52-42BA-8ADF-1AB4D19696C3}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Airlock Control Module", "..\..\Shared Projects\Airlock Control Module\Airlock Control Module.shproj", "{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{61E62F42-2A52-42BA-8ADF-1AB4D19696C3}.Debug|x64.ActiveCfg = Debug|x64
+		{61E62F42-2A52-42BA-8ADF-1AB4D19696C3}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F9903F92-53CA-475A-927C-1155A268AA23}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Airlock Control Module\Airlock_Control_Module.projitems*{61e62f42-2a52-42ba-8adf-1ab4d19696c3}*SharedItemsImports = 4
+		..\..\Shared Projects\Airlock Control Module\Airlock_Control_Module.projitems*{7760ba51-8c8d-41d2-a9de-649c33d7aa89}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
