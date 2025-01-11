@@ -28,14 +28,35 @@ namespace IngameScript
         public Program()
         {
             ACM = new AirlockControlModule();
-            ACM.LoadAirlocks(GridTerminalSystem, Me);
+            ACM.LoadAirlocks(GridTerminalSystem, Me, Runtime);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
 
         public void Main(string argument, UpdateType updateSource)
         {
-            ACM.GetAirlockPairs();
+            double time;
+            try
+            {
+                time = double.Parse(argument);
+            }
+            catch 
+            {
+                time = 0f;
+            }
+            if (time > 0f)
+            {
+                foreach (var airlock in ACM.Airlocks)
+                {
+                    airlock.StateMachine.TimeBufferMS = time;
+                }
+                foreach (var soloAirlock in ACM.SoloAirlocks)
+                {
+                    soloAirlock.StateMachine.TimeBufferMS = time;
+                }
+            }
+            if (argument == "info") { ACM.GetAirlocks(); }
+            
             ACM.UpdateAirlocks();
         }
     }
