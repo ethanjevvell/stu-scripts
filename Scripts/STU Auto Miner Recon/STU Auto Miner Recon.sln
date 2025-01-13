@@ -19,4 +19,12 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C4463E03-D298-47BF-97D7-24F424F38332}
 	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU_Auto_Miner_Variables.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{aca12186-2062-4b42-a1b7-3420aadb2d19}*SharedItemsImports = 4
+	EndGlobalSection
 EndGlobal

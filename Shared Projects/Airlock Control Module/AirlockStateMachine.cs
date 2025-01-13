@@ -56,7 +56,6 @@ namespace IngameScript
 
             public void Update()
             {
-                CBT.AddToLogQueue($"Current state: {CurrentState}");
                 CurrentTime += Runtime.TimeSinceLastRun.TotalMilliseconds;
                 switch (CurrentState)
                 {

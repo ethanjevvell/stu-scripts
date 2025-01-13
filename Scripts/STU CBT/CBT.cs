@@ -36,7 +36,6 @@ namespace IngameScript
 
             public static CBTGangway.GangwayStates UserInputGangwayState;
             public static int UserInputRearDockPosition;
-            public static string UserInputRearDockPort;
 
             public bool CanDockWithCR = false;
 

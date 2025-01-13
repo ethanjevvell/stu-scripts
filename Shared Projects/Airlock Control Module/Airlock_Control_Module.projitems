@@ -11,6 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AirlockControlModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AirlockStateMachine.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SoloAirlockStateMaachine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SoloAirlockStateMachine.cs" />
   </ItemGroup>
 </Project>

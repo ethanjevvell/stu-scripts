@@ -329,6 +329,9 @@ namespace IngameScript
                 case "STINGERHEROBRINE":
                     CBT.UserInputRearDockPosition = 3;
                     return true;
+                case "STINGERCLAM":
+                    CBT.UserInputRearDockPosition = 4;
+                    return true;
                 case "DOCK":
                     CBT.AddToLogQueue("Sending dock request to Hyperdrive Ring...", STULogType.INFO);
                     CBT.DockingModule.SendDockRequestFlag = true;

@@ -49,6 +49,11 @@ namespace IngameScript
                 MainDockConnector = connector;
             }
 
+            public static float DegToRad(float degrees)
+            {
+                return degrees * (float)(Math.PI / 180);
+            }
+
             // state machine
             public void UpdateDockingModule()
             {
@@ -70,7 +75,10 @@ namespace IngameScript
                         }
                         if (!CR.MergeBlock.IsConnected)
                         {
-                            CR.GangwayHinge.TargetVelocityRPM = -1f;
+                            CR.GangwayHinge.TargetVelocityRPM = -2f;
+                            MainDockHinge1.TargetVelocityRPM = -2f;
+                            MainDockHinge2.TargetVelocityRPM = -2f;
+                            MainDockPiston.Velocity = -5f;
                         }
                         break;
                     case DockingModuleStates.AuxiliaryHardwareReset:
@@ -112,6 +120,14 @@ namespace IngameScript
                             CR.CreateBroadcast("Docking complete", false, STULogType.OK);
                             CR.GangwayHinge.TargetVelocityRPM = GangwayHinge.TargetVelocityRPM * -1;
                             CurrentDockingModuleState = DockingModuleStates.Idle;
+                            MainDockHinge1.UpperLimitDeg = 81f;
+                            MainDockHinge1.LowerLimitDeg = 0f;
+                            MainDockHinge1.TargetVelocityRPM = 2;
+                            MainDockHinge2.UpperLimitDeg = -9f;
+                            MainDockHinge2.LowerLimitDeg = -90f;
+                            MainDockHinge2.TargetVelocityRPM = 2;
+                            MainDockPiston.MaxLimit = 2.3f;
+                            MainDockPiston.Velocity = 5f;
                         }
                         break;
                     default:

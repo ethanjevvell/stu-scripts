@@ -1,25 +1,25 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.CoreCompileInputs.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\MDK\MDK.options.props
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\MDK\MDK.paths.props
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\STU CR.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\STU CR.exe
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\STU CR.pdb
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\MDKUtilities.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\VRage.Network.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\HavokWrapper.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\ProtoBuf.Net.Core.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\System.Memory.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\VRage.NativeWrapper.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\System.Buffers.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\System.Runtime.CompilerServices.Unsafe.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\SixLabors.ImageSharp.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\SixLabors.Core.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\System.Numerics.Vectors.dll
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\SixLabors.ImageSharp.xml
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\bin\SixLabors.Core.xml
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.CopyComplete
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.exe
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.pdb
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.AssemblyReference.cache
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.SuggestedBindingRedirects.cache
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.exe.config
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.CoreCompileInputs.cache
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\MDK\MDK.options.props
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\MDK\MDK.paths.props
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\STU CR.exe.config
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\STU CR.exe
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\STU CR.pdb
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\MDKUtilities.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\VRage.Network.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\HavokWrapper.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\ProtoBuf.Net.Core.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\System.Memory.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\VRage.NativeWrapper.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\System.Buffers.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\System.Runtime.CompilerServices.Unsafe.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\SixLabors.ImageSharp.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\SixLabors.Core.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\System.Numerics.Vectors.dll
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\SixLabors.ImageSharp.xml
+D:\vs-repositories\stu-scripts\Scripts\STU CR\bin\SixLabors.Core.xml
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.csproj.CopyComplete
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.exe
+D:\vs-repositories\stu-scripts\Scripts\STU CR\obj\x64\Debug\STU CR.pdb

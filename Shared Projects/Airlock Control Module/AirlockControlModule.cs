@@ -114,13 +114,11 @@ namespace IngameScript
 
             public void DisableAuomaticControl()
             {
-                CBT.AddToLogQueue("Airlock control disabled");
                 Enabled = false;
             }
 
             public void EnableAutomaticControl()
             {
-                CBT.AddToLogQueue("Airlock control enabled");
                 Enabled = true;
             }
         }

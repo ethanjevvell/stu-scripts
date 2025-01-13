@@ -40,6 +40,7 @@ namespace IngameScript
                 new ActuatorPosition { PistonDistance = 4, Hinge1Angle = 0, Hinge2Angle = 0 }, // neutral
                 new ActuatorPosition { PistonDistance = 10, Hinge1Angle = DegToRad(36), Hinge2Angle = DegToRad(-36) }, // lunar hq
                 new ActuatorPosition { PistonDistance = 3.5f, Hinge1Angle = DegToRad(-90), Hinge2Angle = DegToRad(-72) }, // herobrine on deck
+                new ActuatorPosition { PistonDistance = 10f, Hinge1Angle = DegToRad(81), Hinge2Angle = DegToRad(9) }, // CLAM
             };
 
             public RearDockStates CurrentRearDockPhase { get; set; } 
