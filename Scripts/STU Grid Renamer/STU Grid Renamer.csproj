@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{26109A1E-A22D-4E73-BD64-E3DF068F72A1}</ProjectGuid>
+    <ProjectGuid>{4FFA1566-7996-4FDC-A64E-947BEAB975EE}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>IngameScript</RootNamespace>
-    <AssemblyName>STU Auto Miner</AssemblyName>
+    <AssemblyName>STU Grid Renamer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -38,7 +38,6 @@
   <Import Project="MDK/MDK.options.props" />
   <Import Project="MDK/MDK.paths.props" Condition="exists('MDK/MDK.paths.props')" />
   <ItemGroup>
-    <Compile Include="LogLCD.cs" />
     <Compile Include="MDK\Bootstrapper.cs" />
     <AdditionalFiles Include="MDK\MDK.options.props">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -50,20 +49,7 @@
     <AdditionalFiles Include="Instructions.readme" />
     <AdditionalFiles Include="thumb.png" />
     <AdditionalFiles Include="MDK\whitelist.cache" />
-    <Compile Include="State Machines\DrillRoutine.cs" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="..\..\Shared Projects\Flight\STU Flight Controller\STU_Flight_Controller.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Logging\STU Log\STU_Log.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Displays\STU Display\STU_Display.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Displays\STU Image\STU_Image.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU_Auto_Miner_Variables.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems" Label="Shared" />
-  <Import Project="..\..\Shared Projects\Misc\STU Damage Monitor\STU_Damage_Monitor.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <Copy SourceFiles="MDK\MDK.options.props" DestinationFolder="$(TargetDir)\MDK" />

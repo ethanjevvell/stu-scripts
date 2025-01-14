@@ -61,6 +61,9 @@ namespace IngameScript {
         Dictionary<string, double> _tempInventoryEnumeratorDictionary = new Dictionary<string, double>();
         List<MyInventoryItem> _tempInventoryItems = new List<MyInventoryItem>();
 
+        STUDamageMonitor _damageMonitor;
+        List<IMyTerminalBlock> _tempDamagedBlocks = new List<IMyTerminalBlock>();
+
         public Program() {
 
             try {
@@ -91,6 +94,7 @@ namespace IngameScript {
                 inventoryBlocks.AddRange(_drills);
 
                 _inventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, inventoryBlocks, Me);
+                _damageMonitor = new STUDamageMonitor(GridTerminalSystem, Me);
 
                 // Set runtime frequency and initalize drone state
                 MinerMainState = MinerState.INITIALIZE;
@@ -127,6 +131,12 @@ namespace IngameScript {
             try {
 
                 _inventoryEnumerator.EnumerateInventories();
+                _damageMonitor.MonitorDamage();
+
+                // TODO: Implement emergency abort routine when any blocks are non-functional
+                // 1. Turn off all thrusters
+                // 2. Deploy parachutes
+                // 3. Activate emergency recovery beacon
 
                 if (MinerMainState != MinerState.IDLE) {
                     _flightController.UpdateState();

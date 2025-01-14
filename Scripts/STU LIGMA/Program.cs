@@ -8,26 +8,28 @@ namespace IngameScript {
     partial class Program : MyGridProgram {
 
         public bool ALREADY_RAN_FIRST_COMMAND = false;
-        private bool FINISHED_LOADING_HARDWARE = false;
+        bool FINISHED_LOADING_HARDWARE = false;
+        bool ALREADY_SAID_GOODBYE = false;
 
-        public Dictionary<string, Action> LIGMACommands = new Dictionary<string, Action>();
+        public Dictionary<string, Action> _LIGMACommands = new Dictionary<string, Action>();
 
-        MyCommandLine CommandLineParser = new MyCommandLine();
+        MyCommandLine _commandLineParser = new MyCommandLine();
+        STUInventoryEnumerator _inventoryEnumerator;
 
         LIGMA _missile;
         MissileReadout _display;
         static STUMasterLogBroadcaster s_telemetryBroadcaster;
         static STUMasterLogBroadcaster s_logBroadcaster;
-        IMyUnicastListener unicastListener;
+        IMyUnicastListener _unicastListener;
 
         MissileMode _mode;
 
-        LIGMA.ILaunchPlan MainLaunchPlan;
-        LIGMA.IFlightPlan MainFlightPlan;
-        LIGMA.IDescentPlan MainDescentPlan;
-        LIGMA.ITerminalPlan MainTerminalPlan;
+        LIGMA.ILaunchPlan _mainLaunchPlan;
+        LIGMA.IFlightPlan _mainFlightPlan;
+        LIGMA.IDescentPlan _mainDescentPlan;
+        LIGMA.ITerminalPlan _mainTerminalPlan;
 
-        STULog IncomingLog;
+        STULog _tempIncomingLog;
 
         enum Phase {
             Idle,
@@ -49,15 +51,15 @@ namespace IngameScript {
         public Program() {
             s_telemetryBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_TELEMETRY_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
             s_logBroadcaster = new STUMasterLogBroadcaster(LIGMA_VARIABLES.LIGMA_LOG_BROADCASTER, IGC, TransmissionDistance.AntennaRelay);
-            unicastListener = IGC.UnicastListener;
+            _unicastListener = IGC.UnicastListener;
             _missile = new LIGMA(s_telemetryBroadcaster, s_logBroadcaster, GridTerminalSystem, Me, Runtime);
             _display = new MissileReadout(Me, 0, _missile);
+            _inventoryEnumerator = new STUInventoryEnumerator(GridTerminalSystem, Me);
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
-            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
-            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
-            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
-            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.SendGoodbye, SendGoodbye);
-            LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
+            _LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Launch, Launch);
+            _LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Detonate, Detonate);
+            _LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.Test, Test);
+            _LIGMACommands.Add(LIGMA_VARIABLES.COMMANDS.UpdateTargetData, HandleIncomingTargetData);
         }
 
         void Main(string argument) {
@@ -71,8 +73,10 @@ namespace IngameScript {
 
             try {
 
-                if (unicastListener.HasPendingMessage) {
-                    var message = unicastListener.AcceptMessage();
+                _inventoryEnumerator.EnumerateInventories();
+
+                if (_unicastListener.HasPendingMessage) {
+                    var message = _unicastListener.AcceptMessage();
                     var command = message.Data.ToString();
                     ParseIncomingCommand(command);
                 }
@@ -86,7 +90,7 @@ namespace IngameScript {
 
                     case LIGMA.Phase.Launch:
 
-                        var finishedLaunch = MainLaunchPlan.Run();
+                        var finishedLaunch = _mainLaunchPlan.Run();
 
                         if (finishedLaunch) {
                             LIGMA.CurrentPhase = LIGMA.Phase.Flight;
@@ -100,7 +104,7 @@ namespace IngameScript {
                         break;
 
                     case LIGMA.Phase.Flight:
-                        var finishedFlight = MainFlightPlan.Run();
+                        var finishedFlight = _mainFlightPlan.Run();
                         if (finishedFlight) {
                             try {
                                 LIGMA.CurrentPhase = LIGMA.Phase.Descent;
@@ -117,7 +121,7 @@ namespace IngameScript {
                         break;
 
                     case LIGMA.Phase.Descent:
-                        var finishedDescent = MainDescentPlan.Run();
+                        var finishedDescent = _mainDescentPlan.Run();
                         if (finishedDescent) {
                             LIGMA.CurrentPhase = LIGMA.Phase.Terminal;
                             LIGMA.CreateWarningBroadcast("Entering terminal phase");
@@ -128,8 +132,16 @@ namespace IngameScript {
                         break;
 
                     case LIGMA.Phase.Terminal:
-                        var finishedTerminal = MainTerminalPlan.Run();
-                        // Detonation is handled purely by the DetonationSensor
+                        var finishedTerminal = _mainTerminalPlan.Run();
+                        if (!ALREADY_SAID_GOODBYE && Vector3D.Distance(LIGMA.FlightController.CurrentPosition, LIGMA.TargetData.Position) < _mainTerminalPlan.TERMINAL_VELOCITY / 2) {
+                            LIGMA.CreateErrorBroadcast(LIGMA_VARIABLES.COMMANDS.SendGoodbye);
+                            ALREADY_SAID_GOODBYE = true;
+                        }
+                        // Failsafe: If LIGMA runs out of fuel, self-destruct ONLY in terminal phase
+                        if (_inventoryEnumerator.GetItemTotals()["Hydrogen"] == 0) {
+                            LIGMA.ArmWarheads();
+                            LIGMA.SelfDestruct();
+                        }
                         break;
 
                 }
@@ -148,26 +160,26 @@ namespace IngameScript {
         public void ParseIncomingCommand(string logString) {
 
             try {
-                IncomingLog = STULog.Deserialize(logString);
+                _tempIncomingLog = STULog.Deserialize(logString);
             } catch {
                 LIGMA.CreateErrorBroadcast($"Failed to deserialize incoming log: {logString}");
                 return;
             }
 
-            string message = IncomingLog.Message;
+            string message = _tempIncomingLog.Message;
 
-            if (CommandLineParser.TryParse(message)) {
+            if (_commandLineParser.TryParse(message)) {
 
-                int arguments = CommandLineParser.ArgumentCount;
+                int arguments = _commandLineParser.ArgumentCount;
 
                 if (arguments != 1) {
                     LIGMA.CreateErrorBroadcast("LIGMA only accepts one argument at a time.");
                     return;
                 }
 
-                string commandString = CommandLineParser.Argument(0);
+                string commandString = _commandLineParser.Argument(0);
                 Action commandAction;
-                if (!LIGMACommands.TryGetValue(commandString, out commandAction)) {
+                if (!_LIGMACommands.TryGetValue(commandString, out commandAction)) {
                     LIGMA.CreateErrorBroadcast($"Command {commandString} not found in LIGMA commands dictionary.");
                     return;
                 }
@@ -188,43 +200,43 @@ namespace IngameScript {
             switch (_mode) {
 
                 case MissileMode.Intraplanetary:
-                    MainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
-                    MainFlightPlan = new LIGMA.IntraplanetaryFlightPlan();
-                    MainDescentPlan = new LIGMA.IntraplanetaryDescentPlan();
-                    MainTerminalPlan = new LIGMA.IntraplanetaryTerminalPlan();
+                    _mainLaunchPlan = new LIGMA.IntraplanetaryLaunchPlan();
+                    _mainFlightPlan = new LIGMA.IntraplanetaryFlightPlan();
+                    _mainDescentPlan = new LIGMA.IntraplanetaryDescentPlan();
+                    _mainTerminalPlan = new LIGMA.IntraplanetaryTerminalPlan();
                     break;
 
                 case MissileMode.PlanetToSpace:
-                    MainLaunchPlan = new LIGMA.PlanetToSpaceLaunchPlan();
-                    MainFlightPlan = new LIGMA.PlanetToSpaceFlightPlan();
-                    MainDescentPlan = new LIGMA.PlanetToSpaceDescentPlan();
-                    MainTerminalPlan = new LIGMA.PlanetToSpaceTerminalPlan();
+                    _mainLaunchPlan = new LIGMA.PlanetToSpaceLaunchPlan();
+                    _mainFlightPlan = new LIGMA.PlanetToSpaceFlightPlan();
+                    _mainDescentPlan = new LIGMA.PlanetToSpaceDescentPlan();
+                    _mainTerminalPlan = new LIGMA.PlanetToSpaceTerminalPlan();
                     break;
 
                 case MissileMode.SpaceToPlanet:
-                    MainLaunchPlan = new LIGMA.SpaceToPlanetLaunchPlan();
-                    MainFlightPlan = new LIGMA.SpaceToPlanetFlightPlan();
-                    MainDescentPlan = new LIGMA.SpaceToPlanetDescentPlan();
-                    MainTerminalPlan = new LIGMA.SpaceToPlanetTerminalPlan();
+                    _mainLaunchPlan = new LIGMA.SpaceToPlanetLaunchPlan();
+                    _mainFlightPlan = new LIGMA.SpaceToPlanetFlightPlan();
+                    _mainDescentPlan = new LIGMA.SpaceToPlanetDescentPlan();
+                    _mainTerminalPlan = new LIGMA.SpaceToPlanetTerminalPlan();
                     break;
 
                 case MissileMode.SpaceToSpace:
-                    MainLaunchPlan = new LIGMA.SpaceToSpaceLaunchPlan();
-                    MainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan();
-                    MainDescentPlan = new LIGMA.SpaceToSpaceDescentPlan();
-                    MainTerminalPlan = new LIGMA.SpaceToSpaceTerminalPlan();
+                    _mainLaunchPlan = new LIGMA.SpaceToSpaceLaunchPlan();
+                    _mainFlightPlan = new LIGMA.SpaceToSpaceFlightPlan();
+                    _mainDescentPlan = new LIGMA.SpaceToSpaceDescentPlan();
+                    _mainTerminalPlan = new LIGMA.SpaceToSpaceTerminalPlan();
                     break;
 
                 case MissileMode.Interplanetary:
-                    MainLaunchPlan = new LIGMA.InterplanetaryLaunchPlan();
-                    MainFlightPlan = new LIGMA.InterplanetaryFlightPlan();
-                    MainDescentPlan = new LIGMA.InterplanetaryDescentPlan();
-                    MainTerminalPlan = new LIGMA.InterplanetaryTerminalPlan();
+                    _mainLaunchPlan = new LIGMA.InterplanetaryLaunchPlan();
+                    _mainFlightPlan = new LIGMA.InterplanetaryFlightPlan();
+                    _mainDescentPlan = new LIGMA.InterplanetaryDescentPlan();
+                    _mainTerminalPlan = new LIGMA.InterplanetaryTerminalPlan();
                     break;
 
                 case MissileMode.Testing:
                     LIGMA.CreateWarningBroadcast("Entering testing mode");
-                    MainLaunchPlan = new LIGMA.TestSuite();
+                    _mainLaunchPlan = new LIGMA.TestSuite();
                     break;
 
                 default:
@@ -306,7 +318,7 @@ namespace IngameScript {
 
         public void HandleIncomingTargetData() {
             try {
-                LIGMA.UpdateTargetData(STURaycaster.DeserializeHitInfo(IncomingLog.Metadata));
+                LIGMA.UpdateTargetData(STURaycaster.DeserializeHitInfo(_tempIncomingLog.Metadata));
                 string x = LIGMA.TargetData.Position.X.ToString("0.00");
                 string y = LIGMA.TargetData.Position.Y.ToString("0.00");
                 string z = LIGMA.TargetData.Position.Z.ToString("0.00");
@@ -343,7 +355,7 @@ namespace IngameScript {
 
         public void Test() {
             LIGMA.CurrentPhase = LIGMA.Phase.Launch;
-            MainLaunchPlan = new LIGMA.TestSuite();
+            _mainLaunchPlan = new LIGMA.TestSuite();
         }
 
         public void Detonate() {

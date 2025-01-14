@@ -29,6 +29,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STUInventoryEnumerator", ".
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\Shared Projects\Flight\STU Galactic Map\STU Galactic Map.shproj", "{83207D78-9012-4EA3-AC3F-5FEA6193E59A}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Damage Monitor", "..\..\Shared Projects\Misc\STU Damage Monitor\STU Damage Monitor.shproj", "{465D6B4B-EC70-4A49-BF06-62DA8BC52DD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,9 +63,11 @@ Global
 		..\..\Shared Projects\Flight\STU Galactic Map\STU_Galactic_Map.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU Damage Monitor\STU_Damage_Monitor.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{26109a1e-a22d-4e73-bd64-e3df068f72a1}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU Damage Monitor\STU_Damage_Monitor.projitems*{465d6b4b-ec70-4a49-bf06-62da8bc52dd8}*SharedItemsImports = 13
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{4cac373a-9512-4083-b2f8-27ab57997cc4}*SharedItemsImports = 13
 		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{4fb19e00-bd67-4421-ad35-d02f6c4c181b}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Display\STU_Display.projitems*{57b50592-7beb-4012-a879-def8c4c735f0}*SharedItemsImports = 13

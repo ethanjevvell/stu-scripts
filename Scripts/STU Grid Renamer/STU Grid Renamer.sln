@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Grid Renamer", "STU Grid Renamer.csproj", "{4FFA1566-7996-4FDC-A64E-947BEAB975EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FFA1566-7996-4FDC-A64E-947BEAB975EE}.Debug|x64.ActiveCfg = Debug|x64
+		{4FFA1566-7996-4FDC-A64E-947BEAB975EE}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E2F4E2E6-9EC2-4B5D-A321-D939C3E4DE0B}
+	EndGlobalSection
+EndGlobal

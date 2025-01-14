@@ -3,7 +3,7 @@
         public partial class LIGMA {
             public class SpaceToSpaceTerminalPlan : ITerminalPlan {
 
-                private int TERMINAL_VELOCITY = 200;
+                public override int TERMINAL_VELOCITY => 200;
 
                 public override bool Run() {
                     FirstRunTasks();

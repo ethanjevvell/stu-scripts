@@ -9,6 +9,8 @@ using VRageMath;
 namespace IngameScript {
     partial class Program : MyGridProgram {
 
+        const int RECENTLY_DESTROYED_TIMER = 30;
+
         private const string LIGMA_MISSION_CONTROL_MAIN_LCDS_GROUP = "LIGMA_MISSION_CONTROL_MAIN_LCDS";
         private const string LIGMA_MISSION_CONTROL_LOG_LCDS_GROUP = "LIGMA_MISSION_CONTROL_LOG_LCDS";
         private const string LIGMA_MISSION_CONTROL_AUX_MAIN_LCD_TAG = "LIGMA_MISSION_CONTROL_AUX_MAIN_LCD:";
@@ -37,15 +39,18 @@ namespace IngameScript {
         // Used to store incoming telemetry data temporarily
         Dictionary<string, Dictionary<string, string>> _incomingTelemetryMap = new Dictionary<string, Dictionary<string, string>>();
         // Used to store recently destroyed targets
-        List<string> _recentlyDestroyedTargets = new List<string>();
+        Dictionary<string, double> _recentlyDestroyedTargetsTimestamps = new Dictionary<string, double>();
         // Used to store recently destroyed LIGMAs
-        List<string> _recentlyDestroyedLIGMAs = new List<string>();
+        Dictionary<string, double> _recentlyDestroyedLIGMAsTimestamps = new Dictionary<string, double>();
 
         StringBuilder telemetryRecords = new StringBuilder();
 
         // Holds log data temporarily for each run
         STULog _incomingLog;
         STULog _outgoingLog;
+        Dictionary<string, double> _tempTimestampUpdates = new Dictionary<string, double>();
+        List<string> _tempTargetsToRemove = new List<string>();
+        List<string> _tempLigmasToRemove = new List<string>();
         Dictionary<string, string> _tempMetadata;
 
         int TELEMETRY_WRITE_COUNTER = 0;
@@ -55,7 +60,6 @@ namespace IngameScript {
             _logListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_LOG_BROADCASTER);
             _telemetryListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_TELEMETRY_BROADCASTER);
             _targetListener = IGC.RegisterBroadcastListener(LIGMA_VARIABLES.LIGMA_GOOCH_TARGET_BROADCASTER);
-
             _logSubscribers = DiscoverLogSubscribers();
             _mainSubscribers = DiscoverMainSubscribers();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
@@ -64,6 +68,13 @@ namespace IngameScript {
         public void Main(string argument) {
 
             try {
+                foreach (var timestamp in _recentlyDestroyedTargetsTimestamps) {
+                    Echo($"Target: {timestamp.Key}, {timestamp.Value}");
+                }
+                foreach (var timestamp in _recentlyDestroyedLIGMAsTimestamps) {
+                    Echo($"LIGMA: {timestamp.Key}, {timestamp.Value}");
+                }
+                UpdateRecentlyDestroyedLists();
                 HandleIncomingBroadcasts();
                 DispatchMissiles();
 
@@ -100,7 +111,7 @@ namespace IngameScript {
                         } catch {
                             CreateHQLog("Error parsing incoming target data", STULogType.ERROR);
                         }
-                    } else if (!_recentlyDestroyedTargets.Contains(_incomingLog.Metadata["EntityId"])) {
+                    } else if (!_recentlyDestroyedTargetsTimestamps.ContainsKey(_incomingLog.Metadata["EntityId"])) {
                         _targets.Enqueue(_incomingLog.Metadata);
                     }
                 } catch {
@@ -187,9 +198,10 @@ namespace IngameScript {
                             CreateHQLog($"LIGMA {id} has returned", STULogType.OK);
                         }
                         _LIGMATelemetryMap[id] = _incomingLog.Metadata;
-                    } else if (!_recentlyDestroyedLIGMAs.Contains(id)) {
+                    } else if (!_recentlyDestroyedLIGMAsTimestamps.ContainsKey(id)) {
                         CreateHQLog($"New LIGMA detected: {id}", STULogType.OK);
                         _LIGMATelemetryMap.Add(id, _incomingLog.Metadata);
+                    } else {
                     }
 
                 } catch (Exception e) {
@@ -211,7 +223,7 @@ namespace IngameScript {
         void HandleGoodbye(long rawId) {
             string ligmaId = rawId.ToString();
             _LIGMATelemetryMap.Remove(ligmaId);
-            // Get the id of the target LIGMA is assinged to
+            // Get the id of the target LIGMA is assigned to
             string targetId = null;
             foreach (var target in _targetToLIGMA) {
                 if (target.Value == ligmaId) {
@@ -221,8 +233,9 @@ namespace IngameScript {
             }
             if (targetId != null && _targetToLIGMA.ContainsKey(targetId)) {
                 _targetToLIGMA.Remove(targetId);
-                _recentlyDestroyedTargets.Add(targetId);
-                _recentlyDestroyedLIGMAs.Add(ligmaId);
+                _recentlyDestroyedTargetsTimestamps.Add(targetId, 0);
+                _recentlyDestroyedLIGMAsTimestamps.Add(ligmaId, 0);
+                CreateHQLog($"Acknowledged LIGMA {ligmaId} has been removed from target {targetId}", STULogType.OK);
             } else {
                 CreateHQLog($"Failed to remove LIGMA {ligmaId} from target {targetId}", STULogType.ERROR);
             }
@@ -304,8 +317,37 @@ namespace IngameScript {
             });
         }
 
+        private void UpdateDestroyedEntities(Dictionary<string, double> timestamps, List<string> removeList) {
+            _tempTimestampUpdates.Clear();
+            removeList.Clear();
+
+            // Collect updates
+            foreach (var entity in timestamps) {
+                double newValue = entity.Value + Runtime.TimeSinceLastRun.TotalSeconds;
+                _tempTimestampUpdates[entity.Key] = newValue;
+
+                if (newValue >= RECENTLY_DESTROYED_TIMER) {
+                    removeList.Add(entity.Key);
+                }
+            }
+
+            // Apply updates
+            foreach (var update in _tempTimestampUpdates) {
+                timestamps[update.Key] = update.Value;
+            }
+
+            // Remove old entities
+            foreach (var key in removeList) {
+                timestamps.Remove(key);
+            }
+        }
+
+        void UpdateRecentlyDestroyedLists() {
+            UpdateDestroyedEntities(_recentlyDestroyedTargetsTimestamps, _tempTargetsToRemove);
+            UpdateDestroyedEntities(_recentlyDestroyedLIGMAsTimestamps, _tempLigmasToRemove);
+        }
+
         void WriteAllMainScreens() {
-            // FOR NOW, DO NOTHING
             foreach (var missile in _LIGMATelemetryMap) {
                 Echo(missile.Value["Id"]);
             }

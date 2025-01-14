@@ -35,6 +35,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU State Machine", "..\..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Gooch Node", "..\STU Gooch Node\STU Gooch Node.csproj", "{A112A62A-2BA6-43CB-8D17-7D6B2B6A2E6D}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STUInventoryEnumerator", "..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.shproj", "{9543D945-4F12-4CD2-9B70-938AE33C98C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -82,8 +84,10 @@ Global
 		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Master Log Broadcaster\STU_Master_Log_Broadcaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Misc\STU State Machine\STU_State_Machine.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
 		..\..\Shared Projects\Raycasting\STU Raycaster\STU_Raycaster.projitems*{90807971-daa9-41a1-86de-a9cdbce8af61}*SharedItemsImports = 4
+		..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.projitems*{9543d945-4f12-4cd2-9b70-938ae33c98c7}*SharedItemsImports = 13
 		..\..\Shared Projects\Displays\STU Image\STU_Image.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\LIGMA\STU LIGMA Variables\STU_LIGMA_Variables.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
 		..\..\Shared Projects\Logging\STU Log\STU_Log.projitems*{a112a62a-2ba6-43cb-8d17-7d6b2b6a2e6d}*SharedItemsImports = 4
