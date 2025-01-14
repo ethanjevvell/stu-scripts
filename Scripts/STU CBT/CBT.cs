@@ -36,7 +36,6 @@ namespace IngameScript
 
             public static CBTGangway.GangwayStates UserInputGangwayState;
             public static int UserInputRearDockPosition;
-            public static string UserInputRearDockPort;
 
             public bool CanDockWithCR = false;
 
@@ -182,7 +181,7 @@ namespace IngameScript
 
                 DockingModule = new CBTDockingModule();
                 ACM = new AirlockControlModule();
-                ACM.LoadAirlocks(grid, me);
+                ACM.LoadAirlocks(grid, me, runtime);
 
                 AddToLogQueue("CBT initialized", STULogType.OK);
             }

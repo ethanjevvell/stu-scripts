@@ -58,7 +58,7 @@ namespace IngameScript
 
                 DockingModule = new CRDockingModule(GangwayHinge, MainDockHinge1, MainDockHinge2, MainDockPiston, MergeBlock, MainDockConnector);
                 ACM = new AirlockControlModule();
-                ACM.LoadAirlocks(grid, me);
+                ACM.LoadAirlocks(grid, me, runtime);
 
                 AddToLogQueue("CR Initialized", STULogType.INFO);
                 echo("CR Initialized");
