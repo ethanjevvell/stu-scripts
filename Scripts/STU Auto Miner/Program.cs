@@ -264,6 +264,8 @@ namespace IngameScript {
                         break;
 
                     case MinerState.REFUELING:
+                        // Redundancy to ensure connector connects
+                        _droneConnector.Connect();
                         bool refueled = _hydrogenTanks.TrueForAll(tank => tank.FilledRatio == 1);
                         bool recharged = _batteries.TrueForAll(battery => battery.CurrentStoredPower == battery.MaxStoredPower);
                         if (refueled && recharged) {
