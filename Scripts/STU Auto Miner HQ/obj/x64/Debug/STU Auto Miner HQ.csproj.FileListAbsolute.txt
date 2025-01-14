@@ -1,7 +1,3 @@
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.AssemblyReference.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.SuggestedBindingRedirects.cache
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.exe.config
-C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\MDK\MDK.options.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\MDK\MDK.paths.props
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\STU Auto Miner HQ.exe.config
@@ -20,6 +16,10 @@ C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\SixLabors.Core.
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\System.Numerics.Vectors.dll
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\SixLabors.ImageSharp.xml
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\bin\SixLabors.Core.xml
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.SuggestedBindingRedirects.cache
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.exe.config
+C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.CoreCompileInputs.cache
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.csproj.CopyComplete
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.exe
 C:\Users\Admin\Desktop\stu-scripts\Scripts\STU Auto Miner HQ\obj\x64\Debug\STU Auto Miner HQ.pdb

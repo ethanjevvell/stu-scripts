@@ -1,22 +1,23 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
+using VRage.Game.ModAPI.Ingame;
 
 namespace IngameScript {
     partial class Program {
         public class STUDamageMonitor {
 
             IEnumerator<bool> _damageMonitorStateMachine;
-            IMyTerminalBlock _tempBlock;
+            IMyCubeBlock _tempBlock;
 
-            public List<IMyTerminalBlock> HealthyBlocks { get; private set; }
-            public List<IMyTerminalBlock> DamagedBlocks { get; private set; }
+            public List<IMyCubeBlock> HealthyBlocks { get; private set; }
+            public List<IMyCubeBlock> DamagedBlocks { get; private set; }
 
             public STUDamageMonitor(IMyGridTerminalSystem grid, IMyProgrammableBlock me) {
-                List<IMyTerminalBlock> allBlocks = new List<IMyTerminalBlock>();
-                grid.GetBlocksOfType<IMyTerminalBlock>(allBlocks, block => block.CubeGrid == me.CubeGrid);
-                HealthyBlocks = new List<IMyTerminalBlock>();
-                DamagedBlocks = new List<IMyTerminalBlock>();
-                foreach (IMyTerminalBlock block in allBlocks) {
+                List<IMyCubeBlock> allBlocks = new List<IMyCubeBlock>();
+                grid.GetBlocksOfType(allBlocks, block => block.CubeGrid == me.CubeGrid);
+                HealthyBlocks = new List<IMyCubeBlock>();
+                DamagedBlocks = new List<IMyCubeBlock>();
+                foreach (IMyCubeBlock block in allBlocks) {
                     if (block.IsFunctional) {
                         HealthyBlocks.Add(block);
                     } else {

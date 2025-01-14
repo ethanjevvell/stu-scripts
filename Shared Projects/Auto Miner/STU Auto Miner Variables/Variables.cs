@@ -184,6 +184,7 @@ namespace IngameScript {
             public const string DEPOSIT_ORES = "DEPOSIT_ORES";
             public const string DEPOSIT_IDLE = "DEPOSIT_IDLE";
             public const string ERROR = "ERROR";
+            public const string EMERGENCY_LANDING = "EMERGENCY_LANDING";
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame;
@@ -8,6 +9,9 @@ using VRageMath;
 namespace IngameScript {
 
     partial class Program : MyGridProgram {
+
+        bool ISSUED_PARACHUTE_WARNING = false;
+        bool EXECUTED_EMERGENCY_LANDING = false;
 
         MyIni _ini = new MyIni();
 
@@ -61,8 +65,13 @@ namespace IngameScript {
         Dictionary<string, double> _tempInventoryEnumeratorDictionary = new Dictionary<string, double>();
         List<MyInventoryItem> _tempInventoryItems = new List<MyInventoryItem>();
 
+        // Damage monitoring
         STUDamageMonitor _damageMonitor;
-        List<IMyTerminalBlock> _tempDamagedBlocks = new List<IMyTerminalBlock>();
+        List<IMyCubeBlock> _tempDamagedBlocks = new List<IMyCubeBlock>();
+
+        // Emergency systems
+        List<IMyParachute> _parachutes = new List<IMyParachute>();
+        IMyBeacon _emergencyBeacon { get; set; }
 
         public Program() {
 
@@ -74,6 +83,8 @@ namespace IngameScript {
                 _statusLights = GetStatusLights();
                 _remoteControl = GetRemoteControl();
                 _droneConnector = GetConnector();
+                _emergencyBeacon = GetEmergencyBeacon();
+                _parachutes = GetParachutes();
 
                 GridTerminalSystem.GetBlocksOfType(_drills, (block) => block.CubeGrid == Me.CubeGrid);
                 GridTerminalSystem.GetBlocksOfType(_hydrogenTanks, (block) => block.CubeGrid == Me.CubeGrid);
@@ -133,10 +144,17 @@ namespace IngameScript {
                 _inventoryEnumerator.EnumerateInventories();
                 _damageMonitor.MonitorDamage();
 
-                // TODO: Implement emergency abort routine when any blocks are non-functional
-                // 1. Turn off all thrusters
-                // 2. Deploy parachutes
-                // 3. Activate emergency recovery beacon
+                // Check for insufficient parachutes
+                if (!ISSUED_PARACHUTE_WARNING && _tempInventoryEnumeratorDictionary.ContainsKey("Canvas") && _tempInventoryEnumeratorDictionary["Canvas"] < _parachutes.Count) {
+                    CreateWarningBroadcast("Insufficient parachutes for emergency landing! Load miner before dispatch.");
+                    ISSUED_PARACHUTE_WARNING = true;
+                }
+
+                // If we're damaged, we need to land immediately
+                if (_damageMonitor.DamagedBlocks.Count > 0 && !EXECUTED_EMERGENCY_LANDING) {
+                    MinerMainState = MinerState.EMERGENCY_LANDING;
+                    EXECUTED_EMERGENCY_LANDING = true;
+                }
 
                 if (MinerMainState != MinerState.IDLE) {
                     _flightController.UpdateState();
@@ -283,6 +301,19 @@ namespace IngameScript {
                             ToggleCriticalFlightSystems(true, "C");
                             MinerMainState = MinerState.FLY_TO_JOB_SITE;
                         }
+                        break;
+
+                    case MinerState.EMERGENCY_LANDING:
+                        // deploy parachutes
+                        _parachutes.ForEach(parachute => parachute.Enabled = true);
+                        _parachutes.ForEach(parachute => parachute.OpenDoor());
+
+                        // turn off thrusters
+                        _flightController.ToggleThrusters(false);
+
+                        // turn on emergency beacon
+                        _emergencyBeacon.Enabled = true;
+                        MinerMainState = MinerState.ERROR;
                         break;
 
                     case MinerState.ERROR:
@@ -485,6 +516,7 @@ namespace IngameScript {
 
             // Debug output
             Echo(_tempMetadataDictionary["MinerDroneData"]);
+
         }
 
         List<IMyLightingBlock> GetStatusLights() {
@@ -531,6 +563,24 @@ namespace IngameScript {
                 throw new Exception("Multiple ship connectors found");
             }
             return connectors[0];
+        }
+
+        IMyBeacon GetEmergencyBeacon() {
+            IMyBeacon beacon = GridTerminalSystem.GetBlockWithName("Emergency Beacon") as IMyBeacon;
+            if (beacon == null) {
+                throw new Exception("No emergency beacon found");
+            }
+            return beacon;
+        }
+
+        List<IMyParachute> GetParachutes() {
+            List<IMyParachute> parachutes = new List<IMyParachute>();
+            GridTerminalSystem.GetBlocksOfType(parachutes, block => block.CubeGrid == Me.CubeGrid && MyIni.HasSection(block.CustomData, "MinerParachute"));
+            // if no parachutes, error
+            if (parachutes.Count == 0) {
+                throw new Exception("No parachutes found");
+            }
+            return parachutes;
         }
 
         void SetStatusLights(string status) {
