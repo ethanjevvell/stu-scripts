@@ -1,13 +1,13 @@
 ﻿using System;
 using VRageMath;
 
-
 namespace IngameScript {
     partial class Program {
         public partial class STUFlightController {
             public class NavigateOverPlanetSurface : STUStateMachine {
 
                 static class RunStates {
+                    public const string INITIAL_ASCENT = "INITIAL_ASCENT";
                     public const string ADJUST_VELOCITY = "ADJUST_VELOCITY";
                     public const string ADJUST_ALTITUDE = "ADJUST_ALTITUDE";
                     public const string CRUISE = "CRUISE";
@@ -30,6 +30,7 @@ namespace IngameScript {
                 double _descendVelocity { get; set; }
                 Vector3D _destination { get; set; }
                 STUGalacticMap.Planet? _currentPlanet { get; set; }
+                bool _initialAscentComplete { get; set; }
 
                 Vector3D _headingVector { get; set; }
 
@@ -41,6 +42,8 @@ namespace IngameScript {
                     _descendVelocity = descendVelocity;
                     _destination = destination;
                     _currentPlanet = STUGalacticMap.GetPlanetOfPoint(_flightController.CurrentPosition);
+                    _initialAscentComplete = false;
+
                     // If we're not on a planet, this state machine can't run
                     if (_currentPlanet == null) {
                         CreateFatalFlightLog("Cannot navigate over planet surface: current position is not on a planet");
@@ -50,7 +53,7 @@ namespace IngameScript {
                 public override string Name => "Navigate over planet surface";
 
                 public override bool Init() {
-                    RunState = RunStates.ADJUST_ALTITUDE;
+                    RunState = RunStates.INITIAL_ASCENT;
                     _flightController.ReinstateGyroControl();
                     _flightController.ReinstateThrusterControl();
                     _flightController.GotoAndStopManeuver = new GotoAndStop(_flightController, _destination, _cruiseVelocity);
@@ -68,14 +71,26 @@ namespace IngameScript {
                 }
 
                 public override bool Run() {
-
-                    if (ApproachingDestination()) {
+                    // Only check for final approach after initial ascent is complete
+                    if (_initialAscentComplete && ApproachingDestination()) {
                         RunState = RunStates.FINAL_APPROACH;
-                    } else if (_flightController.GetCurrentSurfaceAltitude() < 0.7 * _cruiseAltitude || _flightController.GetCurrentSurfaceAltitude() > 1.3 * _cruiseAltitude) {
+                    }
+                    // Altitude adjustment check only applies during cruise
+                    else if (_initialAscentComplete &&
+                            (RunState == RunStates.CRUISE || RunState == RunStates.ADJUST_VELOCITY) &&
+                            (_flightController.GetCurrentSurfaceAltitude() < 0.7 * _cruiseAltitude ||
+                             _flightController.GetCurrentSurfaceAltitude() > 1.3 * _cruiseAltitude)) {
                         RunState = RunStates.ADJUST_ALTITUDE;
                     }
 
                     switch (RunState) {
+                        case RunStates.INITIAL_ASCENT:
+                            if (_flightController.MaintainSurfaceAltitude(_cruiseAltitude, _ascendVelocity, _descendVelocity)) {
+                                _initialAscentComplete = true;
+                                RunState = RunStates.ADJUST_VELOCITY;
+                                _headingVector = GetGreatCircleCruiseVector(_flightController.CurrentPosition, _destination, _currentPlanet.Value);
+                            }
+                            break;
 
                         case RunStates.ADJUST_ALTITUDE:
                             if (_flightController.MaintainSurfaceAltitude(_cruiseAltitude, _ascendVelocity, _descendVelocity)) {
@@ -107,11 +122,9 @@ namespace IngameScript {
                                 return true;
                             }
                             break;
-
                     }
 
                     return false;
-
                 }
 
                 private bool ApproachingDestination() {

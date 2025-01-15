@@ -247,7 +247,7 @@ namespace IngameScript {
                         break;
 
                     case MinerState.DOCKING:
-                        _flightController.GotoAndStopManeuver.CruiseVelocity = Vector3D.Distance(_flightController.CurrentPosition, _homeBaseConnector.GetPosition()) < 50 ? 2 : 10;
+                        _flightController.GotoAndStopManeuver.CruiseVelocity = Vector3D.Distance(_flightController.CurrentPosition, _homeBaseConnector.GetPosition()) < 50 ? 2 : _descendVelocity;
                         _flightController.GotoAndStopManeuver.ExecuteStateMachine();
                         _droneConnector.Connect();
                         // Keep aligning until we're _cruiseAltitude / 2 meters from the home base connector
@@ -266,7 +266,7 @@ namespace IngameScript {
                     case MinerState.REFUELING:
                         // Redundancy to ensure connector connects
                         _droneConnector.Connect();
-                        bool refueled = _hydrogenTanks.TrueForAll(tank => tank.FilledRatio == 1);
+                        bool refueled = _hydrogenTanks.TrueForAll(tank => tank.FilledRatio >= 0.98);
                         bool recharged = _batteries.TrueForAll(battery => battery.CurrentStoredPower == battery.MaxStoredPower);
                         if (refueled && recharged) {
                             MinerMainState = MinerState.DEPOSIT_ORES;
