@@ -1,0 +1,4 @@
+﻿namespace IngameScript {
+    class Data {
+    }
+}
