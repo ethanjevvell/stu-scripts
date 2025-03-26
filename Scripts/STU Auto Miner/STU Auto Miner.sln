@@ -19,10 +19,6 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU State Machine", "..\..\
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Raycaster", "..\..\Shared Projects\Raycasting\STU Raycaster\STU Raycaster.shproj", "{B77AA568-7B92-49E3-B6C3-61FA11E47EC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner Recon", "..\STU Auto Miner Recon\STU Auto Miner Recon.csproj", "{ACA12186-2062-4B42-A1B7-3420AADB2D19}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner HQ", "..\STU Auto Miner HQ\STU Auto Miner HQ.csproj", "{2127A69C-7877-4AFD-ADA2-460648FD1E06}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Auto Miner Variables", "..\..\Shared Projects\Auto Miner\STU Auto Miner Variables\STU Auto Miner Variables.shproj", "{61EBA249-19F3-48B6-A25B-A4CEE90168BA}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STUInventoryEnumerator", "..\..\Shared Projects\Misc\STU Inventory Enumerator\STUInventoryEnumerator.shproj", "{9543D945-4F12-4CD2-9B70-938AE33C98C7}"
@@ -31,6 +27,10 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Galactic Map", "..\..\S
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "STU Damage Monitor", "..\..\Shared Projects\Misc\STU Damage Monitor\STU Damage Monitor.shproj", "{465D6B4B-EC70-4A49-BF06-62DA8BC52DD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner HQ", "..\STU Auto Miner HQ\STU Auto Miner HQ.csproj", "{2127A69C-7877-4AFD-ADA2-460648FD1E06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU Auto Miner Recon", "..\STU Auto Miner Recon\STU Auto Miner Recon.csproj", "{ACA12186-2062-4B42-A1B7-3420AADB2D19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,10 +38,10 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{26109A1E-A22D-4E73-BD64-E3DF068F72A1}.Debug|x64.ActiveCfg = Debug|x64
 		{26109A1E-A22D-4E73-BD64-E3DF068F72A1}.Debug|x64.Build.0 = Debug|x64
-		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.ActiveCfg = Debug|x64
-		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.Build.0 = Debug|x64
 		{2127A69C-7877-4AFD-ADA2-460648FD1E06}.Debug|x64.ActiveCfg = Debug|x64
 		{2127A69C-7877-4AFD-ADA2-460648FD1E06}.Debug|x64.Build.0 = Debug|x64
+		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.ActiveCfg = Debug|x64
+		{ACA12186-2062-4B42-A1B7-3420AADB2D19}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

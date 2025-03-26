@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STU CBT 2", "STU CBT 2.csproj", "{4C64963D-ED60-420E-9CD1-F77C96E85147}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C64963D-ED60-420E-9CD1-F77C96E85147}.Debug|x64.ActiveCfg = Debug|x64
+		{4C64963D-ED60-420E-9CD1-F77C96E85147}.Debug|x64.Build.0 = Debug|x64
+		{4C64963D-ED60-420E-9CD1-F77C96E85147}.Release|x64.ActiveCfg = Release|x64
+		{4C64963D-ED60-420E-9CD1-F77C96E85147}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
