@@ -5,6 +5,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{4C64963D-ED60-420E-9CD1-F77C96E85147}|STU CBT 2.csproj|d:\\vs-repositories\\stu-scripts\\scripts\\stu cbt 2\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4C64963D-ED60-420E-9CD1-F77C96E85147}|STU CBT 2.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C64963D-ED60-420E-9CD1-F77C96E85147}|STU CBT 2.csproj|d:\\vs-repositories\\stu-scripts\\scripts\\stu cbt 2\\cbt.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4C64963D-ED60-420E-9CD1-F77C96E85147}|STU CBT 2.csproj|solutionrelative:cbt.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,8 +18,21 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CBT.cs",
+              "DocumentMoniker": "D:\\vs-repositories\\stu-scripts\\Scripts\\STU CBT 2\\CBT.cs",
+              "RelativeDocumentMoniker": "CBT.cs",
+              "ToolTip": "D:\\vs-repositories\\stu-scripts\\Scripts\\STU CBT 2\\CBT.cs",
+              "RelativeToolTip": "CBT.cs",
+              "ViewState": "AgIAACgDAAAAAAAAAAAYwNkDAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-26T23:57:32.662Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -24,7 +41,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "D:\\vs-repositories\\stu-scripts\\Scripts\\STU CBT 2\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAACAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAGYCAAAAAAAAAAAqwJgCAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-20T00:16:24.558Z",
               "EditorCaption": ""
