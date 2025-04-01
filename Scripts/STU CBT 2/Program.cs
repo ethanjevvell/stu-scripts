@@ -630,6 +630,27 @@ namespace IngameScript
                             }
                             break;
 
+                        case "POWER":
+                            int powerLevel;
+                            if (int.TryParse(predicate, out powerLevel))
+                            {
+                                if (0 <= powerLevel && powerLevel <= 7)
+                                {
+                                    CBT.SetPowerLevel(powerLevel);
+                                    break;
+                                }
+                                else
+                                {
+                                    CBT.AddToLogQueue($"Power level {powerLevel} is out of range. Must be between 0 and 7 (inclusive).");
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                CBT.AddToLogQueue($"Failed to parse noun {predicate} on verb {subject}. Skipping...");
+                            }
+                            break;
+
                         case "HELP":
                             switch (predicate)
                             {

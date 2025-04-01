@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|d:\\vs-repositories\\stu-scripts\\shared projects\\airlock control module\\soloairlockstatemachine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|solutionrelative:soloairlockstatemachine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|d:\\vs-repositories\\stu-scripts\\shared projects\\airlock control module\\airlockstatemachine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|solutionrelative:airlockstatemachine.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|d:\\vs-repositories\\stu-scripts\\shared projects\\airlock control module\\airlockcontrolmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7760BA51-8C8D-41D2-A9DE-649C33D7AA89}|Airlock Control Module.shproj|solutionrelative:airlockcontrolmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "SoloAirlockStateMachine.cs",
+              "DocumentMoniker": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\SoloAirlockStateMachine.cs",
+              "RelativeDocumentMoniker": "SoloAirlockStateMachine.cs",
+              "ToolTip": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\SoloAirlockStateMachine.cs",
+              "RelativeToolTip": "SoloAirlockStateMachine.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-27T00:31:32.864Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AirlockStateMachine.cs",
+              "DocumentMoniker": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\AirlockStateMachine.cs",
+              "RelativeDocumentMoniker": "AirlockStateMachine.cs",
+              "ToolTip": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\AirlockStateMachine.cs",
+              "RelativeToolTip": "AirlockStateMachine.cs",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAQwH8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-11T20:39:30.757Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AirlockControlModule.cs",
+              "DocumentMoniker": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\AirlockControlModule.cs",
+              "RelativeDocumentMoniker": "AirlockControlModule.cs",
+              "ToolTip": "D:\\vs-repositories\\stu-scripts\\Shared Projects\\Airlock Control Module\\AirlockControlModule.cs",
+              "RelativeToolTip": "AirlockControlModule.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAQwH4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-11T20:39:30.939Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
