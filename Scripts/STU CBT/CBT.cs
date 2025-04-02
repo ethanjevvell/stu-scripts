@@ -29,6 +29,17 @@ namespace IngameScript
             public static float Timestamp = 0;
             public static Phase CurrentPhase = Phase.Idle;
 
+            private static int _powerLevel;
+            public static int PowerLevel
+            {
+                get { return _powerLevel; }
+                set
+                {
+                    _powerLevel = value;
+                    SetPowerLevel(value);
+                }
+            }
+
             public static float UserInputForwardVelocity = 0;
             public static float UserInputRightVelocity = 0;
             public static float UserInputUpVelocity = 0;
@@ -127,7 +138,7 @@ namespace IngameScript
                 Executing,
             }
 
-            public static Dictionary<int, List<IMyFunctionalBlock>> PowerLevelClassificationTable = new Dictionary<int, List<IMyFunctionalBlock>>()
+            public static Dictionary<int, List<IMyFunctionalBlock>> PowerClasses = new Dictionary<int, List<IMyFunctionalBlock>>()
             {
                 { 0, new List<IMyFunctionalBlock> { } },
                 { 1, new List<IMyFunctionalBlock> { } },
@@ -984,7 +995,7 @@ namespace IngameScript
                 {
                     level1blocks.Add(item);
                 }
-                PowerLevelClassificationTable[1] = level1blocks;
+                PowerClasses[1] = level1blocks;
 
                 /// level 2 power class:
                 /// O2 tanks
@@ -1006,7 +1017,7 @@ namespace IngameScript
                     level2blocks.Add(item);
                 }
                 level2blocks.Add(Connector);
-                PowerLevelClassificationTable[2] = level2blocks;
+                PowerClasses[2] = level2blocks;
 
                 /// level 3 power class:
                 /// doors
@@ -1053,7 +1064,7 @@ namespace IngameScript
                 {
                     level3blocks.Add(item as IMyFunctionalBlock);
                 }
-                PowerLevelClassificationTable[3] = level3blocks;
+                PowerClasses[3] = level3blocks;
 
                 /// level 4 power class:
                 /// Antenna
@@ -1071,7 +1082,7 @@ namespace IngameScript
                 {
                     level4blocks.Add(item);
                 }
-                PowerLevelClassificationTable[4] = level4blocks;
+                PowerClasses[4] = level4blocks;
 
                 /// level 5 power class:
                 /// Assault Cannons
@@ -1090,7 +1101,7 @@ namespace IngameScript
                 {
                     level5blocks.Add(item);
                 }
-                PowerLevelClassificationTable[5] = level5blocks;
+                PowerClasses[5] = level5blocks;
 
                 /// level 6 power class:
                 /// Assembler
@@ -1098,7 +1109,7 @@ namespace IngameScript
                 List<IMyFunctionalBlock> level6blocks = new List<IMyFunctionalBlock>();
                 level6blocks.Add(Assembler);
                 level6blocks.Add(Refinery);
-                PowerLevelClassificationTable[6] = level6blocks;
+                PowerClasses[6] = level6blocks;
 
                 /// level 7 power class:
                 /// sensors
@@ -1109,7 +1120,7 @@ namespace IngameScript
                     level7blocks.Add(item);
                 }
                 level7blocks.Add(OreDetector);
-                PowerLevelClassificationTable[7] = level7blocks;
+                PowerClasses[7] = level7blocks;
                 
             }
             #endregion Hardware Initialization
@@ -1223,11 +1234,11 @@ namespace IngameScript
                 SetAutopilotControl(thrusters, gyros, dampeners);
             }
 
-            public static void SetPowerLevel(int powerLevel)
+            private static void SetPowerLevel(int powerLevel)
             {
-                for (int i = 0; i < PowerLevelClassificationTable.Count; i++)
+                for (int i = 0; i < PowerClasses.Count; i++)
                 {
-                    foreach (var item in PowerLevelClassificationTable[i])
+                    foreach (var item in PowerClasses[i])
                     {
                         if (i <= powerLevel) { item.Enabled = true; }
                         else { item.Enabled = false; }

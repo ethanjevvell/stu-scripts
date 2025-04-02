@@ -636,7 +636,7 @@ namespace IngameScript
                             {
                                 if(0 <= powerLevel && powerLevel <= 7)
                                 {
-                                    CBT.SetPowerLevel(powerLevel);
+                                    CBT.PowerLevel = powerLevel;
                                     break;
                                 }
                                 else
